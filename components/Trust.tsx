@@ -14,8 +14,8 @@ export function Trust() {
       <div className="mt-9 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {trustStats.map((s, i) => (
           <Reveal key={s.label} delay={i * 0.04}>
-            <div className="rounded-2xl border border-ink-15 bg-white p-5">
-              <p className="font-display text-[28px] font-extrabold leading-none tracking-[-0.5px] text-ink-100 sm:text-[34px]">
+            <div className="group rounded-2xl border border-ink-15 bg-white p-5 transition-colors duration-200 hover:border-ink-30">
+              <p className="num font-display text-[28px] font-extrabold leading-none tracking-[-0.6px] text-ink-100 sm:text-[34px]">
                 {s.num}
                 <span className="text-iris">{s.suffix}</span>
               </p>

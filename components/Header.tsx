@@ -26,13 +26,17 @@ export function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-[background,backdrop-filter,border-color] duration-200 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-[background,backdrop-filter,border-color] duration-300 ${
         scrolled
-          ? "border-b border-ink-15 bg-white/80 backdrop-blur-md"
+          ? "border-b border-ink-15 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/70"
           : "border-b border-transparent bg-transparent"
       }`}
     >
-      <div className="flex h-16 w-full items-center justify-between px-5 sm:px-8 lg:px-12">
+      <div
+        className={`flex w-full items-center justify-between px-5 transition-[height] duration-300 sm:px-8 lg:px-12 ${
+          scrolled ? "h-14" : "h-16"
+        }`}
+      >
         <Link href="/" aria-label="STUDIO BODA — Home" className="flex items-center gap-2.5">
           <LogoSymbol size={28} />
           <span className="text-[17px] font-extrabold tracking-tight text-ink-100">

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowGlyph, LinkButton } from "./ui/Button";
-import { heroStats, dashboardJobs } from "@/lib/site-data";
+import { heroStats, dashboardJobs, heroQueue, type DashboardJob } from "@/lib/site-data";
+
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 export function Hero() {
   const reduce = useReducedMotion();
@@ -14,22 +17,24 @@ export function Hero() {
       <div className="relative grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-6 lg:pt-4">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 14 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-iris/45 bg-iris/20 px-3.5 py-1.5"
+            transition={{ duration: 0.55, ease: EASE }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-iris/45 bg-iris/15 px-3.5 py-1.5 backdrop-blur-sm"
           >
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky animate-soft-pulse" />
+            <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-sky live-ring">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky" />
+            </span>
             <span className="text-[12px] font-semibold text-sky">
               AI 기반 콘텐츠 제작 플랫폼
             </span>
           </motion.div>
 
           <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 16 }}
+            initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-7 max-w-[620px] font-display text-[40px] font-extrabold leading-[1.12] tracking-[-1.2px] text-white sm:text-[48px] lg:text-[56px] xl:text-[60px]"
+            transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
+            className="mt-7 max-w-[640px] font-display text-[40px] font-extrabold leading-[1.08] tracking-[-1.4px] text-white sm:text-[48px] lg:text-[56px] xl:text-[62px]"
           >
             콘텐츠 제작,
             <br />
@@ -40,19 +45,19 @@ export function Hero() {
           </motion.h1>
 
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 16 }}
+            initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-6 max-w-[500px] text-[15px] leading-[1.75] text-ink-30 sm:text-[16px]"
+            transition={{ duration: 0.65, delay: 0.14, ease: EASE }}
+            className="mt-6 max-w-[520px] text-[15px] leading-[1.75] text-ink-30 sm:text-[16px]"
           >
             상세페이지, 광고 배너, SNS 콘텐츠, 유튜브 썸네일, 브랜드 디자인까지.
             정보만 입력하면 AI가 초안을 잡고 디렉터가 완성합니다.
           </motion.p>
 
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 16 }}
+            initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.65, delay: 0.2, ease: EASE }}
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <LinkButton href="#quote" size="lg">
@@ -62,13 +67,31 @@ export function Hero() {
               포트폴리오 보기
             </LinkButton>
           </motion.div>
+
+          <motion.div
+            initial={reduce ? false : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.32 }}
+            className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-ink-30"
+          >
+            <span className="font-display font-bold uppercase tracking-eyebrow text-ink-50">
+              TRUSTED BY
+            </span>
+            <span>D2C 브랜드</span>
+            <span className="h-3 w-px bg-white/[0.08]" />
+            <span>스마트스토어 셀러</span>
+            <span className="h-3 w-px bg-white/[0.08]" />
+            <span>스타트업</span>
+            <span className="h-3 w-px bg-white/[0.08]" />
+            <span>광고대행사</span>
+          </motion.div>
         </div>
 
         <div className="lg:col-span-6">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 20 }}
+            initial={reduce ? false : { opacity: 0, y: 18 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
           >
             <HeroDashboard />
           </motion.div>
@@ -97,7 +120,7 @@ function HeroStat({
         divider ? "lg:border-r lg:border-white/[0.08]" : ""
       } [&:not(:first-child)]:lg:pl-9`}
     >
-      <div className="font-display text-[28px] font-extrabold leading-none tracking-[-0.5px] text-white sm:text-[30px]">
+      <div className="num font-display text-[28px] font-extrabold leading-none tracking-[-0.6px] text-white sm:text-[32px]">
         {stat.num}
         <span className="text-iris">{stat.suffix}</span>
       </div>
@@ -107,81 +130,188 @@ function HeroStat({
 }
 
 function HeroDashboard() {
+  const [now, setNow] = useState<string>("");
+  const [activeJob, setActiveJob] = useState(0);
+
+  useEffect(() => {
+    const fmt = () => {
+      const d = new Date();
+      const hh = d.getHours().toString().padStart(2, "0");
+      const mm = d.getMinutes().toString().padStart(2, "0");
+      const ss = d.getSeconds().toString().padStart(2, "0");
+      setNow(`${hh}:${mm}:${ss}`);
+    };
+    fmt();
+    const id = setInterval(fmt, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveJob((i) => (i + 1) % 3);
+    }, 2400);
+    return () => clearInterval(id);
+  }, []);
+
   const jobs = dashboardJobs.slice(0, 3);
+
   return (
-    <div className="relative rounded-[20px] border border-ink-90 bg-ink-90/40 backdrop-blur-sm">
-      <div className="flex items-center gap-3 border-b border-ink-90 px-5 py-3.5">
-        <span className="text-[13px] font-semibold text-white">
+    <div className="relative rounded-[20px] border border-ink-90 bg-ink-100/90 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-3 border-b border-ink-90 px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <span className="relative inline-flex h-2 w-2 items-center justify-center text-success live-ring">
+            <span className="inline-block h-2 w-2 rounded-full bg-success" />
+          </span>
+          <span className="font-display text-[13px] font-semibold text-white">
+            BODA · Studio OS
+          </span>
+        </div>
+        <span className="hidden text-[11px] text-ink-50 sm:inline">
           내 주문 현황
         </span>
-        <span className="ml-auto rounded-full bg-iris/20 px-2.5 py-1 text-[11px] font-semibold text-sky">
-          진행 중 2건
-        </span>
-        <span className="rounded-full bg-[rgba(74,222,128,0.14)] px-2.5 py-1 text-[11px] font-semibold text-success">
-          완료 8건
+        <span className="ml-auto num font-mono text-[11px] tracking-wide text-ink-30">
+          {now || "00:00:00"} KST
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-ink-90 px-5 py-3">
+        <Pill tone="iris">진행 {heroQueue.rendering}</Pill>
+        <Pill tone="sky">검수 {heroQueue.review}</Pill>
+        <Pill tone="warning">내보내는 중 {heroQueue.exporting}</Pill>
+        <Pill tone="success">오늘 완료 {heroQueue.doneToday}</Pill>
+      </div>
+
       <div className="space-y-2 p-4 sm:p-5">
-        {jobs.map((job) => (
-          <HeroJobRow key={job.title} job={job} />
+        {jobs.map((job, i) => (
+          <HeroJobRow key={job.id} job={job} active={i === activeJob} />
         ))}
-        <div className="flex items-center justify-between rounded-xl border border-ink-90 bg-ink-100/40 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris animate-soft-pulse" />
-            <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
-              AVG · 24H DELIVERY
-            </span>
-          </div>
-          <span className="text-[11px] text-sky">실시간 동기화</span>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-ink-90 px-5 py-3">
+        <div className="flex items-center gap-2">
+          <i className="ti ti-bolt text-[13px] text-iris" aria-hidden />
+          <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
+            AVG · 24H DELIVERY
+          </span>
         </div>
+        <span className="text-[11px] text-sky">실시간 동기화</span>
       </div>
     </div>
   );
 }
 
-function HeroJobRow({ job }: { job: (typeof dashboardJobs)[number] }) {
-  const barColor =
-    job.tone === "iris"
-      ? "bg-iris"
-      : job.tone === "sky"
-      ? "bg-sky"
-      : "bg-success";
-  const dotBg =
-    job.tone === "iris"
-      ? "bg-iris/20 text-sky"
-      : job.tone === "sky"
-      ? "bg-sky/20 text-sky"
-      : "bg-[rgba(74,222,128,0.14)] text-success";
+function Pill({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "iris" | "sky" | "warning" | "success";
+}) {
+  const map: Record<typeof tone, string> = {
+    iris: "bg-iris/20 text-sky",
+    sky: "bg-sky/20 text-sky",
+    warning: "bg-warning/15 text-warning",
+    success: "bg-success/15 text-success",
+  };
+  return (
+    <span
+      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${map[tone]}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function HeroJobRow({
+  job,
+  active,
+}: {
+  job: DashboardJob;
+  active: boolean;
+}) {
+  const stateMap: Record<DashboardJob["state"], {
+    bar: string;
+    icon: string;
+    badge: string;
+    label: string;
+  }> = {
+    rendering: {
+      bar: "bg-iris",
+      icon: "bg-iris/20 text-sky",
+      badge: "bg-iris/15 text-sky",
+      label: "RENDERING",
+    },
+    review: {
+      bar: "bg-sky",
+      icon: "bg-sky/20 text-sky",
+      badge: "bg-sky/15 text-sky",
+      label: "REVIEW",
+    },
+    export: {
+      bar: "bg-warning",
+      icon: "bg-warning/15 text-warning",
+      badge: "bg-warning/15 text-warning",
+      label: "EXPORT",
+    },
+    done: {
+      bar: "bg-success",
+      icon: "bg-success/15 text-success",
+      badge: "bg-success/15 text-success",
+      label: "DELIVERED",
+    },
+  };
+
+  const m = stateMap[job.state];
 
   return (
-    <div className="flex items-center gap-3 rounded-[11px] bg-ink-90 px-3 py-3 sm:px-4">
+    <div
+      className={`flex items-start gap-3 rounded-[12px] border bg-ink-90 px-3 py-3 transition-colors duration-200 sm:px-4 ${
+        active
+          ? "border-iris/35 bg-iris/[0.07]"
+          : "border-ink-90"
+      }`}
+    >
       <div
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-[9px] ${dotBg}`}
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] ${m.icon}`}
       >
-        <i className={`ti ${job.icon} text-[15px]`} aria-hidden />
+        <i className={`ti ${job.icon} text-[16px]`} aria-hidden />
       </div>
+
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[12px] font-semibold text-white">
-          {job.title}
-        </p>
-        <p className="mt-0.5 truncate text-[11px] text-ink-50">{job.sub}</p>
-      </div>
-      <div className="ml-auto hidden text-right sm:block">
-        <div className="mb-1 h-1 w-[90px] overflow-hidden rounded-full bg-white/[0.07]">
-          <div
-            className={`h-full rounded-full ${barColor}`}
-            style={{ width: `${job.progress}%` }}
-          />
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p className="truncate font-display text-[12px] font-semibold text-white">
+            {job.title}
+          </p>
+          <span className="num font-mono text-[10px] text-ink-50">
+            {job.id}
+          </span>
         </div>
-        <span className="text-[10px] font-semibold text-sky">
-          {job.progress}% · {job.status}
-        </span>
+        <p className="mt-0.5 truncate text-[11px] text-ink-50">
+          {job.client} · {job.sub}
+        </p>
+
+        {job.state === "rendering" ? (
+          <div className="mt-2.5 flex items-center gap-3">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
+              <div
+                className={`h-full rounded-full ${m.bar} transition-[width] duration-700`}
+                style={{ width: `${job.progress}%` }}
+              />
+            </div>
+            <span className="num text-[10px] font-semibold text-sky">
+              {job.progress}%
+            </span>
+          </div>
+        ) : null}
       </div>
-      <div className="sm:hidden">
-        <span className="rounded-full bg-ink-100 px-2 py-1 text-[10px] font-semibold text-sky">
-          {job.status}
+
+      <div className="flex flex-col items-end gap-1.5">
+        <span
+          className={`rounded-full px-2 py-0.5 font-display text-[9px] font-bold uppercase tracking-[0.08em] ${m.badge}`}
+        >
+          {m.label}
         </span>
+        <span className="text-[10px] text-ink-50">{job.eta}</span>
       </div>
     </div>
   );

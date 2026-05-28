@@ -20,7 +20,7 @@ type BaseProps = {
 };
 
 const base =
-  "group inline-flex items-center justify-center gap-2 font-display font-bold tracking-tight transition-[opacity,background,border,color] duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-50 disabled:pointer-events-none";
+  "group inline-flex items-center justify-center gap-2 font-display font-bold tracking-tight transition-[opacity,background,border,color,transform] duration-150 select-none active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-50 disabled:pointer-events-none";
 
 const sizes: Record<Size, string> = {
   sm: "h-9 px-4 text-[12px] rounded-lg",

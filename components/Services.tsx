@@ -59,16 +59,26 @@ function ServiceCard({ service }: { service: Service }) {
 
   if (featured) {
     return (
-      <article className="group relative cursor-pointer rounded-2xl border border-ink-90 bg-ink-100 p-6 transition-transform duration-150 hover:-translate-y-0.5">
-        {service.badge && (
-          <span className="absolute right-4 top-4 rounded-full bg-iris px-2.5 py-0.5 text-[10px] font-bold text-white">
-            {service.badge}
-          </span>
-        )}
-        <div className="mb-4 grid h-10 w-10 place-items-center rounded-[10px] bg-iris/20 text-[20px] text-sky">
-          <i className={`ti ${service.icon}`} aria-hidden />
+      <article className="group relative cursor-pointer overflow-hidden rounded-2xl border border-ink-90 bg-ink-100 p-6 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-ink-70">
+        <div className="flex items-center justify-between">
+          <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-iris/20 text-[20px] text-sky">
+            <i className={`ti ${service.icon}`} aria-hidden />
+          </div>
+          {service.badge && (
+            <span className="rounded-full bg-iris px-2.5 py-0.5 text-[10px] font-bold text-white">
+              {service.badge}
+            </span>
+          )}
         </div>
-        <h3 className="font-display text-[15px] font-bold text-white">
+        <div className="mt-4 flex items-center gap-2">
+          <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-sky">
+            {service.tagline}
+          </span>
+          <span className="num font-mono text-[10px] text-ink-50">
+            {service.key.toUpperCase()}
+          </span>
+        </div>
+        <h3 className="mt-1.5 font-display text-[16px] font-bold text-white">
           {service.name}
         </h3>
         <p className="mt-1.5 text-[12px] leading-[1.65] text-ink-30">
@@ -87,7 +97,7 @@ function ServiceCard({ service }: { service: Service }) {
         <div className="mt-4 flex items-center justify-between border-t border-white/[0.08] pt-4">
           <div>
             <span className="block text-[11px] text-ink-30">시작가</span>
-            <span className="text-[16px] font-bold text-white">
+            <span className="num font-display text-[16px] font-bold text-white">
               {service.price}
             </span>
           </div>
@@ -98,16 +108,27 @@ function ServiceCard({ service }: { service: Service }) {
             신청하기 →
           </a>
         </div>
+        <div className="pointer-events-none absolute -bottom-20 -right-20 h-44 w-44 rounded-full bg-iris/20 blur-3xl" />
       </article>
     );
   }
 
   return (
-    <article className="group relative cursor-pointer rounded-2xl border border-ink-15 bg-ink-5 p-6 transition-[background,border,transform] duration-150 hover:-translate-y-0.5 hover:border-iris hover:bg-white">
-      <div className="mb-4 grid h-10 w-10 place-items-center rounded-[10px] bg-iris-light text-[20px] text-iris">
-        <i className={`ti ${service.icon}`} aria-hidden />
+    <article className="group relative cursor-pointer rounded-2xl border border-ink-15 bg-ink-5 p-6 transition-[background,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-iris hover:bg-white">
+      <div className="flex items-center justify-between">
+        <div className="grid h-10 w-10 place-items-center rounded-[10px] bg-iris-light text-[20px] text-iris">
+          <i className={`ti ${service.icon}`} aria-hidden />
+        </div>
+        <span className="num font-mono text-[10px] text-ink-50">
+          {service.key.toUpperCase()}
+        </span>
       </div>
-      <h3 className="font-display text-[15px] font-bold text-ink-100">
+      <div className="mt-4 flex items-center gap-2">
+        <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-iris">
+          {service.tagline}
+        </span>
+      </div>
+      <h3 className="mt-1.5 font-display text-[16px] font-bold text-ink-100">
         {service.name}
       </h3>
       <p className="mt-1.5 text-[12px] leading-[1.65] text-ink-50">
@@ -126,7 +147,7 @@ function ServiceCard({ service }: { service: Service }) {
       <div className="mt-4 flex items-center justify-between border-t border-ink-15 pt-4">
         <div>
           <span className="block text-[11px] text-ink-50">시작가</span>
-          <span className="text-[16px] font-bold text-ink-100">
+          <span className="num font-display text-[16px] font-bold text-ink-100">
             {service.price}
           </span>
         </div>

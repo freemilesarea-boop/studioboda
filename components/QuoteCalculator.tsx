@@ -157,8 +157,15 @@ function ResultBox({ total }: { total: number }) {
   return (
     <div className="mt-5 flex flex-col items-stretch gap-4 rounded-[14px] bg-ink-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
       <div>
-        <p className="text-[13px] text-ink-50">예상 견적</p>
-        <p className="mt-1 font-display text-[28px] font-extrabold leading-none tracking-[-0.5px] text-white sm:text-[30px]">
+        <div className="flex items-center gap-2">
+          <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-success live-ring">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
+          </span>
+          <p className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
+            LIVE ESTIMATE
+          </p>
+        </div>
+        <p className="num mt-2 font-display text-[28px] font-extrabold leading-none tracking-[-0.7px] text-white sm:text-[32px]">
           <motion.span
             key={total}
             initial={reduce ? false : { opacity: 0, y: 8 }}
@@ -166,9 +173,9 @@ function ResultBox({ total }: { total: number }) {
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="inline-block"
           >
-            {total.toLocaleString()}원
+            ₩{total.toLocaleString()}
           </motion.span>
-          <span className="ml-2 text-[13px] font-normal text-sky">
+          <span className="num ml-2 text-[13px] font-normal text-sky">
             VAT 별도
           </span>
         </p>

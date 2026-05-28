@@ -52,7 +52,7 @@ export function FAQ() {
                     initial={reduce ? undefined : { height: 0, opacity: 0 }}
                     animate={reduce ? undefined : { height: "auto", opacity: 1 }}
                     exit={reduce ? undefined : { height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     className="overflow-hidden"
                   >
                     <p className="max-w-2xl px-4 pb-5 text-[13px] leading-[1.75] text-ink-50 sm:px-5">

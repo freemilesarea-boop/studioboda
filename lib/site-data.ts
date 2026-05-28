@@ -147,42 +147,90 @@ export const aiFeatures = [
   },
 ] as const;
 
-export const portfolio = [
+export type PortfolioMetric = { label: string; value: string };
+
+export type PortfolioItem = {
+  code: string;
+  cat: string;
+  catKey: string;
+  title: string;
+  summary: string;
+  client: string;
+  sector: string;
+  channels: readonly string[];
+  metrics: readonly PortfolioMetric[];
+  shipped: string;
+  duration: string;
+  rating: string;
+  status: "Live" | "Shipped" | "Ongoing";
+  bg: string;
+  fg: string;
+  label: string;
+};
+
+export const portfolio: readonly PortfolioItem[] = [
   {
     code: "PF·01",
     cat: "상세페이지",
     catKey: "detail",
     title: "비건 스킨케어 세럼 런칭 페이지",
-    summary: "AI 초안 → 디자이너 완성",
-    rating: "5.0",
+    summary: "신제품 출시 상세페이지 · 모바일 우선 설계",
+    client: "AURA",
+    sector: "Beauty · D2C",
+    channels: ["Smartstore", "자사몰"],
+    metrics: [
+      { label: "CTR", value: "+38%" },
+      { label: "체류", value: "1.7×" },
+      { label: "제작", value: "22h" },
+    ],
+    shipped: "2026 · Mar",
     duration: "22h",
-    result: "CTR +38%",
+    rating: "5.0",
+    status: "Live",
     bg: "#EEEEFF",
     fg: "#5847FF",
-    label: "상세페이지 · 뷰티",
+    label: "DETAIL · BEAUTY",
   },
   {
     code: "PF·02",
     cat: "광고 배너",
     catKey: "ad",
-    title: "패션 SS 시즌 캠페인 12종",
-    summary: "A/B 변형 + 채널별 사이즈",
-    rating: "4.9",
+    title: "SS 시즌 캠페인 광고 배너 12종",
+    summary: "Meta · GDN · Naver 채널별 A/B 12 variants",
+    client: "MOEL",
+    sector: "Fashion",
+    channels: ["Meta", "GDN", "Naver"],
+    metrics: [
+      { label: "CPA", value: "−29%" },
+      { label: "CTR", value: "+44%" },
+      { label: "변형", value: "12종" },
+    ],
+    shipped: "2026 · Mar",
     duration: "24h",
-    result: "CPA -29%",
+    rating: "4.9",
+    status: "Live",
     bg: "#F3EEFF",
     fg: "#7C3AED",
-    label: "광고 · 패션",
+    label: "ADS · FASHION",
   },
   {
     code: "PF·03",
     cat: "SNS",
     catKey: "sns",
-    title: "F&B 브랜드 인스타 시리즈",
-    summary: "월 단위 카드뉴스 + 릴스",
-    rating: "5.0",
+    title: "F&B 브랜드 인스타 콘텐츠 시리즈",
+    summary: "월 단위 카드뉴스 + 릴스 · 톤앤매너 통합",
+    client: "PIVOT",
+    sector: "F&B",
+    channels: ["Instagram", "Reels"],
+    metrics: [
+      { label: "저장", value: "+112%" },
+      { label: "도달", value: "1.9×" },
+      { label: "운영", value: "월 단위" },
+    ],
+    shipped: "2026 · Feb",
     duration: "20h",
-    result: "저장 +112%",
+    rating: "5.0",
+    status: "Ongoing",
     bg: "#EDFFF4",
     fg: "#16A34A",
     label: "SNS · F&B",
@@ -191,42 +239,69 @@ export const portfolio = [
     code: "PF·04",
     cat: "썸네일",
     catKey: "thumb",
-    title: "유튜브 채널 썸네일 시리즈 8종",
-    summary: "CTR 최적화 + 톤앤매너",
-    rating: "5.0",
+    title: "유튜브 채널 시리즈 썸네일 8종",
+    summary: "CTR 중심 비주얼 + 시리즈 톤 일관성",
+    client: "STILL",
+    sector: "Lifestyle",
+    channels: ["YouTube", "Shorts"],
+    metrics: [
+      { label: "CTR", value: "8.7%" },
+      { label: "이전", value: "4.2%" },
+      { label: "제작", value: "12h" },
+    ],
+    shipped: "2026 · Feb",
     duration: "12h",
-    result: "CTR 8.7%",
+    rating: "5.0",
+    status: "Shipped",
     bg: "#EEF4FF",
     fg: "#2563EB",
-    label: "썸네일 · YT",
+    label: "THUMB · YT",
   },
   {
     code: "PF·05",
     cat: "브랜드",
     catKey: "brand",
     title: "D2C 리빙 브랜드 아이덴티티",
-    summary: "로고·컬러·타이포 시스템",
-    rating: "5.0",
+    summary: "로고 · 컬러 · 타이포 · 운영 가이드 전체",
+    client: "TONE",
+    sector: "Living",
+    channels: ["Identity", "Guideline"],
+    metrics: [
+      { label: "범위", value: "Full" },
+      { label: "가이드", value: "48p" },
+      { label: "제작", value: "5d" },
+    ],
+    shipped: "2026 · Jan",
     duration: "5d",
-    result: "리브랜딩 완료",
+    rating: "5.0",
+    status: "Live",
     bg: "#FFF2EE",
     fg: "#EA580C",
-    label: "브랜드 · 리빙",
+    label: "BRAND · LIVING",
   },
   {
     code: "PF·06",
     cat: "상세페이지",
     catKey: "detail",
-    title: "건강식품 스마트스토어 페이지",
-    summary: "단일 상품 매출 확장",
-    rating: "4.9",
+    title: "건강식품 스마트스토어 단일 상품 페이지",
+    summary: "단일 SKU 매출 확장 · 모바일 전환 흐름",
+    client: "DAILY BREW",
+    sector: "Health · F&B",
+    channels: ["Smartstore", "Coupang"],
+    metrics: [
+      { label: "ROAS", value: "4.1×" },
+      { label: "이전", value: "2.4×" },
+      { label: "제작", value: "18h" },
+    ],
+    shipped: "2026 · Jan",
     duration: "18h",
-    result: "ROAS 4.1",
+    rating: "4.9",
+    status: "Live",
     bg: "#FFFBEE",
     fg: "#CA8A04",
-    label: "상세페이지 · F&B",
+    label: "DETAIL · F&B",
   },
-] as const;
+];
 
 export const quoteOptions = {
   service: [
@@ -249,40 +324,168 @@ export const quoteOptions = {
   ],
 } as const;
 
-export const dashboardJobs = [
+export type JobState = "rendering" | "review" | "export" | "done";
+
+export type DashboardJob = {
+  id: string;
+  icon: string;
+  title: string;
+  sub: string;
+  client: string;
+  progress: number;
+  status: string;
+  state: JobState;
+  eta: string;
+};
+
+export const dashboardJobs: readonly DashboardJob[] = [
   {
+    id: "#BODA-2841",
     icon: "ti-layout-rows",
     title: "비건 세럼 상세페이지",
-    sub: "AI 초안 완성 → 디자이너 작업 중",
+    sub: "AI 초안 완성 → 디자이너 정제 중",
+    client: "AURA · Beauty D2C",
     progress: 68,
-    status: "D-1",
-    tone: "iris" as const,
+    status: "RENDERING",
+    state: "rendering",
+    eta: "D-1 · 22h",
   },
   {
+    id: "#BODA-2839",
     icon: "ti-photo-edit",
-    title: "패션 SS 광고 배너 12종",
-    sub: "A/B 변형 생성 중",
+    title: "SS 시즌 광고 배너 12종",
+    sub: "A/B 카피 6/12 생성 완료",
+    client: "MOEL · Fashion",
     progress: 94,
-    status: "오늘",
-    tone: "sky" as const,
+    status: "RENDERING",
+    state: "rendering",
+    eta: "오늘 · 4h",
   },
   {
+    id: "#BODA-2836",
     icon: "ti-brand-instagram",
-    title: "F&B 인스타 카드뉴스 8컷",
-    sub: "디렉터 검수 대기",
+    title: "인스타 카드뉴스 8컷",
+    sub: "디렉터 검수 단계",
+    client: "PIVOT · F&B",
     progress: 100,
-    status: "DONE",
-    tone: "done" as const,
+    status: "IN REVIEW",
+    state: "review",
+    eta: "12분 후",
   },
   {
+    id: "#BODA-2828",
     icon: "ti-player-play",
-    title: "유튜브 썸네일 시리즈",
-    sub: "스크립트 분석 중",
-    progress: 22,
-    status: "D-2",
-    tone: "iris" as const,
+    title: "유튜브 썸네일 시리즈 8종",
+    sub: "에셋 내보내는 중",
+    client: "STILL · Lifestyle",
+    progress: 100,
+    status: "EXPORT",
+    state: "export",
+    eta: "곧 납품",
   },
-] as const;
+  {
+    id: "#BODA-2820",
+    icon: "ti-aperture",
+    title: "리빙 브랜드 비주얼 가이드",
+    sub: "납품 완료 · 운영 단계",
+    client: "TONE · Living",
+    progress: 100,
+    status: "DELIVERED",
+    state: "done",
+    eta: "3일 전",
+  },
+];
+
+export const heroQueue = {
+  rendering: 2,
+  review: 1,
+  exporting: 1,
+  doneToday: 8,
+};
+
+export type ActivityEvent = {
+  time: string;
+  type: "ai" | "director" | "export" | "client" | "queue";
+  message: string;
+  meta?: string;
+};
+
+export const activityFeed: readonly ActivityEvent[] = [
+  {
+    time: "12:08",
+    type: "ai",
+    message: "AI가 SS 시즌 광고 배너 A/B 변형 6종을 생성했습니다.",
+    meta: "#BODA-2839",
+  },
+  {
+    time: "11:52",
+    type: "director",
+    message: "디렉터 J가 ‘비건 세럼 상세페이지’ 1차 시안을 승인했습니다.",
+    meta: "#BODA-2841",
+  },
+  {
+    time: "11:30",
+    type: "export",
+    message: "유튜브 썸네일 8종이 내보내기 큐에 추가되었습니다.",
+    meta: "1.2GB · 8 assets",
+  },
+  {
+    time: "10:14",
+    type: "client",
+    message: "AURA 팀이 컨셉 B에 코멘트 3건을 남겼습니다.",
+    meta: "#BODA-2841",
+  },
+  {
+    time: "09:02",
+    type: "queue",
+    message: "오늘 납기 예정 4건이 자동 우선순위로 정렬되었습니다.",
+    meta: "AVG · 24H",
+  },
+];
+
+export type Export = {
+  title: string;
+  format: string;
+  size: string;
+  bg: string;
+  fg: string;
+  label: string;
+};
+
+export const recentExports: readonly Export[] = [
+  {
+    title: "비건 세럼 · Hero KV",
+    format: "PNG · 2160×2700",
+    size: "4.1MB",
+    bg: "#EEEEFF",
+    fg: "#5847FF",
+    label: "DETAIL",
+  },
+  {
+    title: "SS 캠페인 · Banner A",
+    format: "JPG · 1080×1080",
+    size: "1.2MB",
+    bg: "#F3EEFF",
+    fg: "#7C3AED",
+    label: "ADS",
+  },
+  {
+    title: "F&B · Carousel 03",
+    format: "PNG · 1080×1350",
+    size: "2.4MB",
+    bg: "#EDFFF4",
+    fg: "#16A34A",
+    label: "SNS",
+  },
+  {
+    title: "STILL · Thumb 05",
+    format: "JPG · 1280×720",
+    size: "0.8MB",
+    bg: "#EEF4FF",
+    fg: "#2563EB",
+    label: "YT",
+  },
+];
 
 export type SidebarItem = {
   icon: string;
@@ -388,6 +591,19 @@ export const pricing: readonly PricingPlan[] = [
   },
 ];
 
+export const enterprise = {
+  title: "Enterprise · 운영 단위 파트너십",
+  sub: "월 10건 이상의 콘텐츠 운영, 멀티브랜드, 광고대행사 화이트라벨까지. 전담 디렉터 + 운영 매니저 + 우선 큐로 운영합니다.",
+  bullets: [
+    "전담 디렉터 + 운영 매니저",
+    "우선 큐 (Priority Queue)",
+    "전용 작업실 채널 · 보안 NDA",
+    "주간 퍼포먼스 리포트",
+    "API · 워크플로우 연동 지원",
+  ],
+  cta: "Enterprise 상담 신청",
+};
+
 export const faqs = [
   {
     q: "정말 24시간 안에 가능한가요?",
@@ -427,23 +643,42 @@ export const footerLinks = [
     ],
   },
   {
+    title: "전문 분야",
+    items: [
+      { label: "Beauty · D2C", href: "#portfolio" },
+      { label: "Fashion · Apparel", href: "#portfolio" },
+      { label: "F&B · Health", href: "#portfolio" },
+      { label: "Lifestyle · Living", href: "#portfolio" },
+      { label: "B2B · SaaS", href: "#portfolio" },
+    ],
+  },
+  {
     title: "리소스",
     items: [
       { label: "포트폴리오", href: "#portfolio" },
       { label: "제작 프로세스", href: "#process" },
       { label: "가격 정책", href: "#pricing" },
       { label: "FAQ", href: "#faq" },
+      { label: "견적 계산기", href: "#quote" },
     ],
   },
   {
     title: "스튜디오",
     items: [
       { label: "문의하기", href: "#contact" },
-      { label: "견적 계산기", href: "#quote" },
-      { label: `이메일 · ${"hello@studioboda.kr"}`, href: "mailto:hello@studioboda.kr" },
+      { label: "Enterprise", href: "#pricing" },
+      { label: "대시보드", href: "#dashboard" },
+      { label: "hello@studioboda.kr", href: "mailto:hello@studioboda.kr" },
     ],
   },
 ] as const;
+
+export const footerMeta = {
+  status: "운영 중 · 평균 회신 24시간 이내",
+  hq: "Seoul, KR · KST (UTC+9)",
+  business: "사업자번호 000-00-00000",
+  privacy: "개인정보 보호 · SSL 보안 · NDA 가능",
+};
 
 export type Portfolio = (typeof portfolio)[number];
 export type Pricing = PricingPlan;
