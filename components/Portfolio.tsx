@@ -1,269 +1,242 @@
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
-import { portfolio } from "@/lib/site-data";
-
-type Item = (typeof portfolio)[number];
+import { portfolio, type Portfolio as PortfolioItem } from "@/lib/site-data";
 
 export function Portfolio() {
   return (
-    <section className="section bg-ink-05" id="portfolio">
-      <div className="container">
-        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
-          <SectionHeader
-            eyebrow="PORTFOLIO · SELECTED WORKS"
-            title={
-              <>
-                숫자로 증명되는
-                <br />
-                크리에이티브.
-              </>
-            }
-            desc="실제 운영 데이터에 기반한 결과 중심의 작업들입니다. 모든 케이스는 디렉터 큐레이션을 거쳐 정제되었습니다."
-          />
-          <div className="meta hidden sm:block">{`0${portfolio.length} CASES`}</div>
-        </div>
+    <section className="section bg-white" id="portfolio">
+      <SectionHeader
+        eyebrow="Portfolio"
+        title="실제로 운영되는 결과물"
+        subtitle="데이터로 증명된 케이스 중심으로 정리했습니다. 모든 산출물은 시니어 디렉터 큐레이션을 거쳐 정제되었습니다."
+        action={
+          <a
+            href="#contact"
+            className="text-[13px] font-semibold text-iris transition-opacity hover:opacity-80"
+          >
+            전체 포트폴리오 요청 →
+          </a>
+        }
+      />
 
-        <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {portfolio.map((item, i) => (
-            <Reveal key={item.code} delay={i * 0.04}>
-              <PortfolioCard item={item} index={i} />
-            </Reveal>
-          ))}
-
-          <Reveal delay={portfolio.length * 0.04}>
-            <a
-              href="#contact"
-              className="group flex h-full min-h-[360px] flex-col justify-between rounded-3xl border border-dashed border-ink-30 bg-white p-6 transition-colors hover:border-ink-100"
-            >
-              <div>
-                <div className="meta">MORE CASES</div>
-                <h3 className="mt-3 max-w-[14ch] font-sans text-2xl font-semibold tracking-tightest text-ink-100">
-                  더 많은 작업이 궁금하신가요?
-                </h3>
-              </div>
-              <span className="inline-flex items-center gap-2 text-sm text-ink-70 transition-colors group-hover:text-ink-100">
-                전체 포트폴리오 요청 →
-              </span>
-            </a>
+      <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {portfolio.map((p, i) => (
+          <Reveal key={p.code} delay={i * 0.04}>
+            <PortfolioCard item={p} index={i} />
           </Reveal>
-        </div>
+        ))}
       </div>
     </section>
   );
 }
 
-function PortfolioCard({ item, index }: { item: Item; index: number }) {
+function PortfolioCard({
+  item,
+  index,
+}: {
+  item: PortfolioItem;
+  index: number;
+}) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-ink-15 bg-white transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-ink-30 hover:shadow-soft">
-      <div
-        className="relative aspect-[4/3] w-full overflow-hidden"
-        style={{ background: item.palette[2] }}
-      >
-        <Visual item={item} index={index} />
-        <div className="absolute left-4 top-4 flex items-center gap-2">
-          <span className="meta inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-ink-70 backdrop-blur">
-            {item.category}
+    <article className="group cursor-pointer overflow-hidden rounded-2xl border border-ink-15 bg-white transition-transform duration-150 hover:-translate-y-0.5">
+      <PortfolioThumb item={item} index={index} />
+      <div className="px-4 py-3.5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-iris">
+          {item.cat}
+        </p>
+        <h4 className="mt-1 line-clamp-2 font-display text-[13px] font-bold leading-[1.45] text-ink-100">
+          {item.title}
+        </h4>
+        <p className="mt-1.5 text-[11px] text-ink-50">{item.summary}</p>
+        <div className="mt-3 flex items-center justify-between border-t border-ink-15 pt-3">
+          <span className="text-[11px] text-ink-50">
+            제작 {item.duration} · {item.result}
           </span>
-        </div>
-        <div className="absolute right-4 top-4">
-          <span className="meta inline-flex items-center gap-1 rounded-full bg-ink-100/85 px-2.5 py-1 text-white backdrop-blur">
-            {item.code}
+          <span className="text-[11px] font-semibold text-ink-70">
+            ★ {item.rating}
           </span>
-        </div>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-4 p-5">
-        <div>
-          <h3 className="font-sans text-xl font-semibold tracking-tightest text-ink-100">
-            {item.title}
-          </h3>
-          <p className="mt-2 text-sm text-ink-70">{item.goal}</p>
-        </div>
-
-        <div className="mt-auto grid grid-cols-2 gap-3 border-t border-ink-15 pt-4">
-          <Kv k="제작시간" v={item.duration} />
-          <Kv k="결과" v={item.result} mono />
         </div>
       </div>
     </article>
   );
 }
 
-function Kv({ k, v, mono = false }: { k: string; v: string; mono?: boolean }) {
-  return (
-    <div className="min-w-0">
-      <div className="meta">{k}</div>
-      <div
-        className={`mt-1 truncate text-sm text-ink-100 ${
-          mono ? "font-mono text-xs sm:text-sm" : ""
-        }`}
-      >
-        {v}
-      </div>
-    </div>
-  );
-}
-
-function Visual({ item, index }: { item: Item; index: number }) {
-  if (index === 0) return <BeautyDetail palette={item.palette} />;
-  if (index === 1) return <FnBSmartstore palette={item.palette} />;
-  if (index === 2) return <FashionBanner palette={item.palette} />;
-  if (index === 3) return <Carousel palette={item.palette} />;
-  return <Thumbnail palette={item.palette} />;
-}
-
-function BeautyDetail({ palette }: { palette: string[] }) {
-  return (
-    <div className="absolute inset-0 p-5" style={{ background: palette[2] }}>
-      <div className="flex h-full flex-col gap-3 rounded-2xl border border-ink-15 bg-white p-4 shadow-soft">
-        <div className="flex items-center justify-between">
-          <span className="meta">DETAIL · 01</span>
-          <span className="font-mono text-[10px] text-ink-50">SS · BEAUTY</span>
-        </div>
-        <div
-          className="h-20 w-full rounded-xl"
-          style={{
-            background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
-          }}
-        />
-        <div className="space-y-1.5">
-          <div className="h-2 w-3/4 rounded-full bg-ink-15" />
-          <div className="h-2 w-1/2 rounded-full bg-ink-15" />
-        </div>
-        <div className="mt-auto grid grid-cols-3 gap-1.5">
-          <div className="aspect-square rounded-md bg-ink-05" />
-          <div className="aspect-square rounded-md bg-ink-05" />
-          <div className="aspect-square rounded-md" style={{ background: palette[0] }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FnBSmartstore({ palette }: { palette: string[] }) {
-  return (
-    <div className="absolute inset-0 p-5" style={{ background: palette[2] }}>
-      <div className="flex h-full gap-3">
-        <div
-          className="relative w-2/5 overflow-hidden rounded-2xl"
-          style={{
-            background: `linear-gradient(160deg, ${palette[1]} 0%, ${palette[0]} 100%)`,
-          }}
-        >
-          <div className="absolute inset-x-3 bottom-3">
-            <div className="meta-dark mb-1">F&B</div>
-            <div className="font-sans text-sm font-semibold text-white">
-              Daily Brew
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col gap-2 rounded-2xl border border-ink-15 bg-white p-3">
-          <div className="meta">SMARTSTORE</div>
-          <div className="h-2 w-3/4 rounded-full bg-ink-15" />
-          <div className="h-2 w-1/2 rounded-full bg-ink-15" />
-          <div className="mt-auto flex items-end justify-between">
-            <div className="font-mono text-[10px] text-ink-50">ROAS</div>
-            <div className="font-sans text-2xl font-semibold tracking-tightest text-ink-100">
-              4.1
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FashionBanner({ palette }: { palette: string[] }) {
+function PortfolioThumb({
+  item,
+  index,
+}: {
+  item: PortfolioItem;
+  index: number;
+}) {
+  const variants = [
+    DetailMock,
+    AdMock,
+    SnsMock,
+    ThumbMock,
+    BrandMock,
+    DetailAltMock,
+  ];
+  const Mock = variants[index % variants.length] ?? DetailMock;
   return (
     <div
-      className="absolute inset-0 p-5"
-      style={{
-        background: `linear-gradient(135deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
-      }}
+      className="relative h-[148px] w-full overflow-hidden"
+      style={{ background: item.bg }}
     >
-      <div className="flex h-full flex-col justify-between text-white">
-        <div className="flex items-start justify-between">
-          <span className="meta-dark">CAMPAIGN · SS</span>
-          <span className="font-mono text-[10px] text-white/60">A / B / C / D</span>
-        </div>
-        <div>
-          <div className="font-sans text-2xl font-semibold leading-tight tracking-tightest">
-            Made for
-            <br />
-            tomorrow.
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
-            <span className="font-mono text-[10px] uppercase tracking-meta text-white/70">
-              SHOP NOW
-            </span>
-          </div>
+      <Mock item={item} />
+    </div>
+  );
+}
+
+type MockProps = { item: PortfolioItem };
+
+function DetailMock({ item }: MockProps) {
+  return (
+    <div className="flex h-full items-center justify-center px-4">
+      <div className="flex w-full max-w-[180px] flex-col gap-1.5 rounded-md bg-white/70 p-2.5 backdrop-blur-sm">
+        <div
+          className="h-8 w-full rounded"
+          style={{ background: item.fg, opacity: 0.85 }}
+        />
+        <div className="h-1.5 w-3/4 rounded-full" style={{ background: item.fg, opacity: 0.6 }} />
+        <div className="h-1.5 w-1/2 rounded-full" style={{ background: item.fg, opacity: 0.4 }} />
+        <div className="mt-1 grid grid-cols-3 gap-1">
+          <div className="aspect-square rounded-sm bg-white" />
+          <div className="aspect-square rounded-sm" style={{ background: item.fg, opacity: 0.5 }} />
+          <div className="aspect-square rounded-sm bg-white" />
         </div>
       </div>
     </div>
   );
 }
 
-function Carousel({ palette }: { palette: string[] }) {
+function AdMock({ item }: MockProps) {
   return (
-    <div className="absolute inset-0 p-5" style={{ background: palette[2] }}>
-      <div className="flex h-full items-center gap-2">
-        {[0, 1, 2].map((i) => (
+    <div className="flex h-full flex-col items-center justify-center gap-1.5 px-4">
+      <div className="grid w-full max-w-[210px] grid-cols-2 gap-1.5">
+        {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="relative flex h-full flex-1 flex-col justify-between overflow-hidden rounded-2xl border border-ink-15 p-3"
-            style={{
-              background: i === 1 ? palette[0] : "#ffffff",
-              color: i === 1 ? "#ffffff" : undefined,
-            }}
+            className="relative aspect-[4/3] overflow-hidden rounded-md"
+            style={{ background: i % 2 === 0 ? item.fg : "#ffffff" }}
           >
             <div
-              className={`meta ${i === 1 ? "meta-dark" : ""}`}
-            >
-              {`0${i + 1}/03`}
-            </div>
-            <div>
-              <div
-                className={`h-2 w-3/4 rounded-full ${
-                  i === 1 ? "bg-white/70" : "bg-ink-15"
-                }`}
-              />
-              <div
-                className={`mt-1.5 h-2 w-1/2 rounded-full ${
-                  i === 1 ? "bg-white/40" : "bg-ink-15"
-                }`}
-              />
-            </div>
+              className="absolute bottom-1 left-1 h-1 w-3/5 rounded-full"
+              style={{ background: i % 2 === 0 ? "rgba(255,255,255,0.7)" : item.fg, opacity: 0.7 }}
+            />
           </div>
         ))}
       </div>
+      <span className="font-display text-[9px] font-bold uppercase tracking-[0.12em] text-ink-50">
+        A / B / C / D
+      </span>
     </div>
   );
 }
 
-function Thumbnail({ palette }: { palette: string[] }) {
+function SnsMock({ item }: MockProps) {
   return (
-    <div
-      className="absolute inset-0"
-      style={{
-        background: `linear-gradient(160deg, ${palette[0]} 0%, ${palette[1]} 110%)`,
-      }}
-    >
-      <div className="absolute inset-0 flex items-center justify-center text-white">
-        <div className="text-center">
-          <div className="meta-dark">YT · THUMBNAIL</div>
-          <div className="mt-2 font-sans text-3xl font-semibold leading-none tracking-tightest">
-            BIG IDEA
-          </div>
-          <div className="mt-1 font-sans text-3xl font-semibold leading-none tracking-tightest text-white/60">
-            in 24h.
+    <div className="flex h-full items-center justify-center gap-1.5 px-4">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="flex aspect-[4/5] w-[64px] flex-col justify-between rounded-md p-1.5"
+          style={{
+            background: i === 1 ? item.fg : "#ffffff",
+            border: i === 1 ? "none" : `1px solid ${item.fg}33`,
+          }}
+        >
+          <span
+            className="font-display text-[8px] font-bold uppercase tracking-[0.1em]"
+            style={{
+              color: i === 1 ? "rgba(255,255,255,0.8)" : item.fg,
+            }}
+          >
+            {`0${i + 1}`}
+          </span>
+          <div
+            className="h-1 w-3/4 rounded-full"
+            style={{
+              background:
+                i === 1 ? "rgba(255,255,255,0.7)" : `${item.fg}55`,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ThumbMock({ item }: MockProps) {
+  return (
+    <div className="relative flex h-full items-center justify-center px-4">
+      <div
+        className="relative flex aspect-video w-full max-w-[200px] items-center justify-center overflow-hidden rounded-md"
+        style={{ background: item.fg }}
+      >
+        <span className="font-display text-[18px] font-extrabold tracking-[-0.5px] text-white">
+          BIG IDEA
+        </span>
+        <span className="absolute bottom-1 right-1 rounded bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold text-white">
+          {item.result}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function BrandMock({ item }: MockProps) {
+  return (
+    <div className="flex h-full items-center justify-center px-4">
+      <div className="flex items-center gap-3">
+        <div
+          className="grid h-14 w-14 place-items-center rounded-full"
+          style={{ background: item.fg }}
+        >
+          <div className="h-5 w-5 rounded-full bg-white" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <div className="h-2 w-20 rounded-full" style={{ background: item.fg }} />
+          <div className="h-1.5 w-16 rounded-full" style={{ background: `${item.fg}66` }} />
+          <div className="mt-0.5 flex gap-1">
+            <div
+              className="h-3 w-3 rounded-sm"
+              style={{ background: item.fg }}
+            />
+            <div className="h-3 w-3 rounded-sm bg-white border border-current" style={{ color: `${item.fg}55` }} />
+            <div className="h-3 w-3 rounded-sm" style={{ background: `${item.fg}44` }} />
           </div>
         </div>
       </div>
-      <div className="absolute bottom-4 right-4">
-        <span className="meta-dark rounded-full bg-white/10 px-2 py-1 backdrop-blur">
-          CTR · 8.7%
-        </span>
+    </div>
+  );
+}
+
+function DetailAltMock({ item }: MockProps) {
+  return (
+    <div className="flex h-full items-center justify-center px-4">
+      <div className="flex w-full max-w-[200px] gap-2">
+        <div
+          className="h-[112px] w-[60px] shrink-0 rounded-md"
+          style={{ background: item.fg }}
+        />
+        <div className="flex flex-1 flex-col gap-1.5 rounded-md bg-white p-2">
+          <div className="font-display text-[9px] font-bold uppercase tracking-[0.1em] text-ink-70">
+            {item.label}
+          </div>
+          <div className="h-1.5 w-3/4 rounded-full bg-ink-15" />
+          <div className="h-1.5 w-1/2 rounded-full bg-ink-15" />
+          <div className="mt-auto flex items-end justify-between">
+            <span className="text-[8px] uppercase tracking-[0.1em] text-ink-50">
+              ROAS
+            </span>
+            <span
+              className="font-display text-[14px] font-extrabold"
+              style={{ color: item.fg }}
+            >
+              {item.result.replace(/[^0-9.]/g, "") || "4.1"}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

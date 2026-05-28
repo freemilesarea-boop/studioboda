@@ -1,210 +1,186 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowIcon, LinkButton } from "./ui/Button";
-import { brand, heroDashboard } from "@/lib/site-data";
+import { ArrowGlyph, LinkButton } from "./ui/Button";
+import { heroStats, dashboardJobs } from "@/lib/site-data";
 
 export function Hero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative overflow-hidden pt-28 sm:pt-32 lg:pt-36">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[680px] bg-soft-grad" />
-      <div className="absolute inset-x-0 top-[420px] -z-10 h-[1px] bg-ink-15" />
-      <div className="container">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-10">
-          <div className="lg:col-span-6">
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 12 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="meta inline-flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris animate-pulse-soft" />
-                {brand.values.join(" · ")}
-              </div>
-            </motion.div>
+    <section className="relative overflow-hidden bg-ink-100 px-5 pb-0 pt-20 sm:px-8 sm:pt-24 lg:px-12 lg:pt-28">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[680px] bg-ink-soft" />
 
-            <motion.h1
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-6 text-balance font-sans text-[44px] font-semibold leading-[1.04] tracking-tightest text-ink-100 sm:text-[60px] lg:text-[72px]"
-            >
-              See it. Make it.
-              <br />
-              <span className="gradient-text">Ship it tomorrow.</span>
-            </motion.h1>
+      <div className="relative grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-10">
+        <div className="lg:col-span-6 lg:pt-4">
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 14 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-iris/45 bg-iris/20 px-3.5 py-1.5"
+          >
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky animate-soft-pulse" />
+            <span className="text-[12px] font-semibold text-sky">
+              AI 기반 콘텐츠 제작 플랫폼
+            </span>
+          </motion.div>
 
-            <motion.p
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-6 max-w-xl text-balance text-lg leading-[1.6] text-ink-70 sm:text-xl"
-            >
-              <span className="text-ink-100">당신의 브랜드를 한 번 더 보다.</span>{" "}
-              AI로 상세페이지, 광고, 콘텐츠를 24시간 안에 완성하는 프리미엄 크리에이티브 스튜디오.
-            </motion.p>
+          <motion.h1
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-7 max-w-[620px] font-display text-[40px] font-extrabold leading-[1.12] tracking-[-1.2px] text-white sm:text-[48px] lg:text-[56px] xl:text-[60px]"
+          >
+            콘텐츠 제작,
+            <br />
+            <span className="text-iris">AI</span>와{" "}
+            <span className="text-sky">전문가</span>가
+            <br />
+            함께 완성합니다
+          </motion.h1>
 
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
-            >
-              <LinkButton href="#contact" size="lg">
-                프로젝트 문의하기 <ArrowIcon />
-              </LinkButton>
-              <LinkButton href="#portfolio" size="lg" variant="secondary">
-                포트폴리오 보기
-              </LinkButton>
-            </motion.div>
+          <motion.p
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-6 max-w-[500px] text-[15px] leading-[1.75] text-ink-30 sm:text-[16px]"
+          >
+            상세페이지, 광고 배너, SNS 콘텐츠, 유튜브 썸네일, 브랜드 디자인까지.
+            정보만 입력하면 AI가 초안을 잡고 디렉터가 완성합니다.
+          </motion.p>
 
-            <motion.div
-              initial={reduce ? false : { opacity: 0 }}
-              animate={reduce ? undefined : { opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.32 }}
-              className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-ink-50"
-            >
-              <span className="meta">TRUSTED BY</span>
-              <span className="text-ink-70">스마트스토어 셀러</span>
-              <span className="h-3 w-px bg-ink-15" />
-              <span className="text-ink-70">D2C 브랜드</span>
-              <span className="h-3 w-px bg-ink-15" />
-              <span className="text-ink-70">스타트업</span>
-              <span className="h-3 w-px bg-ink-15" />
-              <span className="text-ink-70">광고대행사</span>
-            </motion.div>
-          </div>
-
-          <div className="lg:col-span-6">
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 24 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <DashboardCard />
-            </motion.div>
-          </div>
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-9 flex flex-col gap-3 sm:flex-row"
+          >
+            <LinkButton href="#quote" size="lg">
+              무료 견적 받기 <ArrowGlyph />
+            </LinkButton>
+            <LinkButton href="#portfolio" size="lg" variant="ghost-light">
+              포트폴리오 보기
+            </LinkButton>
+          </motion.div>
         </div>
+
+        <div className="lg:col-span-6">
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 20 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <HeroDashboard />
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="relative mt-16 grid grid-cols-2 border-t border-white/[0.08] sm:mt-20 lg:mt-16 lg:grid-cols-4">
+        {heroStats.map((s, i) => (
+          <HeroStat key={s.label} stat={s} divider={i < heroStats.length - 1} />
+        ))}
       </div>
     </section>
   );
 }
 
-function DashboardCard() {
-  return (
-    <div className="relative">
-      <div className="absolute -inset-3 -z-10 rounded-[2.25rem] bg-iris-grad opacity-[0.10] blur-xl" />
-      <div className="rounded-3xl border border-ink-15 bg-white/95 p-5 shadow-soft backdrop-blur sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-iris" />
-            <span className="meta text-ink-70">BODA · STUDIO OS</span>
-          </div>
-          <div className="meta">LIVE</div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <StatTile label="생성 중" value={heroDashboard.inProgress} suffix="건" tone="iris" />
-          <StatTile label="완료" value={heroDashboard.completed} suffix="건" tone="ink" />
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {heroDashboard.jobs.map((job) => (
-            <JobRow key={job.title} job={job} />
-          ))}
-        </div>
-
-        <div className="mt-5 flex items-center justify-between rounded-2xl bg-ink-05 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris animate-pulse-soft" />
-            <span className="meta text-ink-70">AVG · 24H DELIVERY</span>
-          </div>
-          <span className="font-mono text-xs text-ink-90">+38% CTR</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatTile({
-  label,
-  value,
-  suffix,
-  tone,
+function HeroStat({
+  stat,
+  divider,
 }: {
-  label: string;
-  value: number;
-  suffix: string;
-  tone: "iris" | "ink";
+  stat: (typeof heroStats)[number];
+  divider: boolean;
 }) {
   return (
     <div
-      className={`rounded-2xl border p-4 ${
-        tone === "iris"
-          ? "border-iris/20 bg-iris/5"
-          : "border-ink-15 bg-white"
-      }`}
+      className={`flex flex-col py-7 ${
+        divider ? "lg:border-r lg:border-white/[0.08]" : ""
+      } [&:not(:first-child)]:lg:pl-9`}
     >
-      <div className="meta">{label}</div>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span
-          className={`font-sans text-3xl font-semibold tracking-tightest ${
-            tone === "iris" ? "text-iris" : "text-ink-100"
-          }`}
-        >
-          {value}
+      <div className="font-display text-[28px] font-extrabold leading-none tracking-[-0.5px] text-white sm:text-[30px]">
+        {stat.num}
+        <span className="text-iris">{stat.suffix}</span>
+      </div>
+      <div className="mt-2 text-[12px] text-ink-50">{stat.label}</div>
+    </div>
+  );
+}
+
+function HeroDashboard() {
+  const jobs = dashboardJobs.slice(0, 3);
+  return (
+    <div className="relative rounded-[20px] border border-ink-90 bg-ink-90/40 backdrop-blur-sm">
+      <div className="flex items-center gap-3 border-b border-ink-90 px-5 py-3.5">
+        <span className="text-[13px] font-semibold text-white">
+          내 주문 현황
         </span>
-        <span className="text-sm text-ink-50">{suffix}</span>
+        <span className="ml-auto rounded-full bg-iris/20 px-2.5 py-1 text-[11px] font-semibold text-sky">
+          진행 중 2건
+        </span>
+        <span className="rounded-full bg-[rgba(74,222,128,0.14)] px-2.5 py-1 text-[11px] font-semibold text-success">
+          완료 8건
+        </span>
+      </div>
+
+      <div className="space-y-2 p-4 sm:p-5">
+        {jobs.map((job) => (
+          <HeroJobRow key={job.title} job={job} />
+        ))}
+        <div className="flex items-center justify-between rounded-xl border border-ink-90 bg-ink-100/40 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris animate-soft-pulse" />
+            <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
+              AVG · 24H DELIVERY
+            </span>
+          </div>
+          <span className="text-[11px] text-sky">실시간 동기화</span>
+        </div>
       </div>
     </div>
   );
 }
 
-function JobRow({
-  job,
-}: {
-  job: (typeof heroDashboard.jobs)[number];
-}) {
-  const done = job.progress >= 100;
+function HeroJobRow({ job }: { job: (typeof dashboardJobs)[number] }) {
   const barColor =
     job.tone === "iris"
       ? "bg-iris"
       : job.tone === "sky"
-      ? "bg-sky-drift"
-      : "bg-plum-halo";
+      ? "bg-sky"
+      : "bg-success";
+  const dotBg =
+    job.tone === "iris"
+      ? "bg-iris/20 text-sky"
+      : job.tone === "sky"
+      ? "bg-sky/20 text-sky"
+      : "bg-[rgba(74,222,128,0.14)] text-success";
 
   return (
-    <div className="rounded-2xl border border-ink-15 bg-white p-4">
-      <div className="flex items-center justify-between">
-        <div className="min-w-0">
-          <div className="meta text-ink-50">{job.meta}</div>
-          <div className="mt-1 truncate text-sm font-medium text-ink-100">
-            {job.title}
-          </div>
-        </div>
-        <div className="ml-3 shrink-0">
-          {done ? (
-            <span className="meta inline-flex items-center gap-1 rounded-full bg-ink-100 px-2.5 py-1 text-white">
-              DONE
-            </span>
-          ) : (
-            <span className="meta inline-flex items-center gap-1 rounded-full bg-ink-05 px-2.5 py-1 text-ink-70">
-              {job.status}
-            </span>
-          )}
-        </div>
+    <div className="flex items-center gap-3 rounded-[11px] bg-ink-90 px-3 py-3 sm:px-4">
+      <div
+        className={`grid h-8 w-8 shrink-0 place-items-center rounded-[9px] ${dotBg}`}
+      >
+        <i className={`ti ${job.icon} text-[15px]`} aria-hidden />
       </div>
-      <div className="mt-3 flex items-center gap-3">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-15">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12px] font-semibold text-white">
+          {job.title}
+        </p>
+        <p className="mt-0.5 truncate text-[11px] text-ink-50">{job.sub}</p>
+      </div>
+      <div className="ml-auto hidden text-right sm:block">
+        <div className="mb-1 h-1 w-[90px] overflow-hidden rounded-full bg-white/[0.07]">
           <div
-            className={`h-full rounded-full ${barColor} transition-all`}
+            className={`h-full rounded-full ${barColor}`}
             style={{ width: `${job.progress}%` }}
           />
         </div>
-        <span className="w-12 text-right font-mono text-xs text-ink-70">
-          {job.progress}%
+        <span className="text-[10px] font-semibold text-sky">
+          {job.progress}% · {job.status}
+        </span>
+      </div>
+      <div className="sm:hidden">
+        <span className="rounded-full bg-ink-100 px-2 py-1 text-[10px] font-semibold text-sky">
+          {job.status}
         </span>
       </div>
     </div>

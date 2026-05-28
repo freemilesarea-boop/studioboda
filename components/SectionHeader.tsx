@@ -4,35 +4,57 @@ import { Reveal } from "./ui/Reveal";
 type Props = {
   eyebrow: string;
   title: ReactNode;
-  desc?: ReactNode;
+  subtitle?: ReactNode;
   align?: "left" | "center";
+  tone?: "light" | "dark";
   className?: string;
+  action?: ReactNode;
 };
 
 export function SectionHeader({
   eyebrow,
   title,
-  desc,
+  subtitle,
   align = "left",
+  tone = "light",
   className = "",
+  action,
 }: Props) {
+  const titleColor = tone === "dark" ? "text-white" : "text-ink-100";
+  const subColor = tone === "dark" ? "text-ink-30" : "text-ink-50";
+
   return (
     <div
-      className={`max-w-3xl ${align === "center" ? "mx-auto text-center" : ""} ${className}`}
+      className={`flex flex-col gap-6 ${
+        align === "center" ? "items-center text-center" : "items-start"
+      } md:flex-row md:items-end md:justify-between ${className}`}
     >
-      <Reveal>
-        <div className="meta">{eyebrow}</div>
-      </Reveal>
-      <Reveal delay={0.06}>
-        <h2 className="mt-4 text-balance font-sans text-[32px] font-semibold leading-[1.1] tracking-tightest text-ink-100 sm:text-[44px] lg:text-[52px]">
-          {title}
-        </h2>
-      </Reveal>
-      {desc && (
-        <Reveal delay={0.12}>
-          <p className="mt-5 max-w-2xl text-balance text-base leading-[1.7] text-ink-70 sm:text-lg">
-            {desc}
+      <div className={align === "center" ? "max-w-3xl" : "max-w-2xl"}>
+        <Reveal>
+          <p className={tone === "dark" ? "eyebrow-light" : "eyebrow"}>
+            {eyebrow}
           </p>
+        </Reveal>
+        <Reveal delay={0.06}>
+          <h2
+            className={`mt-2.5 font-display text-[28px] font-extrabold leading-[1.2] tracking-[-0.5px] sm:text-[32px] lg:text-[36px] ${titleColor}`}
+          >
+            {title}
+          </h2>
+        </Reveal>
+        {subtitle && (
+          <Reveal delay={0.12}>
+            <p
+              className={`mt-2.5 max-w-xl text-[14px] leading-[1.65] ${subColor}`}
+            >
+              {subtitle}
+            </p>
+          </Reveal>
+        )}
+      </div>
+      {action && (
+        <Reveal delay={0.15}>
+          <div className="shrink-0">{action}</div>
         </Reveal>
       )}
     </div>

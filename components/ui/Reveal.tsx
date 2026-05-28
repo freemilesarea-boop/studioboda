@@ -14,7 +14,7 @@ type Props = {
 export function Reveal({
   children,
   delay = 0,
-  y = 16,
+  y = 14,
   className = "",
   as = "div",
 }: Props) {
@@ -26,7 +26,7 @@ export function Reveal({
       initial={reduce ? false : { opacity: 0, y }}
       whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
     >
       {children}

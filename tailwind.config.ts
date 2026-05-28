@@ -13,6 +13,7 @@ const config: Config = {
         DEFAULT: "1.25rem",
         sm: "1.5rem",
         lg: "2rem",
+        xl: "3rem",
       },
       screens: {
         sm: "640px",
@@ -25,82 +26,80 @@ const config: Config = {
     extend: {
       colors: {
         iris: {
-          DEFAULT: "#5B47FF",
-          50: "#EFEBFF",
-          100: "#DDD5FF",
-          200: "#BBA9FF",
-          300: "#998AFF",
-          400: "#7766FF",
-          500: "#5B47FF",
-          600: "#4632DB",
-          700: "#3322B0",
-          800: "#221780",
-          900: "#150E55",
+          DEFAULT: "#5847FF",
+          light: "#EEEDFF",
         },
-        sky: {
-          drift: "#7C9CFF",
-        },
-        plum: {
-          halo: "#8A6CFF",
-        },
+        sky: "#7C9CFF",
+        plum: "#8A6CFF",
         ink: {
-          "05": "#F6F6FA",
-          "15": "#E6E6EC",
-          "30": "#C7C7D0",
-          "50": "#7E7E8C",
-          "70": "#494956",
-          "90": "#1B1B26",
-          "100": "#0A0A12",
+          100: "#0A0A12",
+          90: "#181826",
+          70: "#494956",
+          50: "#7E7E8C",
+          30: "#C6C7D0",
+          15: "#E6E6EC",
+          5: "#F6F6FA",
         },
+        success: "#4ADE80",
+        warning: "#F59E0B",
+        error: "#F87171",
       },
       fontFamily: {
-        sans: [
-          "Pretendard",
-          "Pretendard Variable",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "system-ui",
-          "Roboto",
-          "Helvetica Neue",
-          "Segoe UI",
-          "Apple SD Gothic Neo",
+        display: [
+          "Plus Jakarta Sans",
           "Noto Sans KR",
-          "Malgun Gothic",
+          "Apple SD Gothic Neo",
+          "Pretendard",
+          "system-ui",
           "sans-serif",
         ],
-        mono: [
-          "JetBrains Mono",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "Consolas",
-          "monospace",
+        sans: [
+          "Noto Sans KR",
+          "Plus Jakarta Sans",
+          "Apple SD Gothic Neo",
+          "Pretendard",
+          "system-ui",
+          "sans-serif",
         ],
       },
-      letterSpacing: {
-        tightest: "-0.04em",
-        tighter: "-0.025em",
-        meta: "0.18em",
+      fontSize: {
+        display: ["52px", { lineHeight: "1.12", letterSpacing: "-1.5px", fontWeight: "800" }],
+        h1: ["32px", { lineHeight: "1.2", letterSpacing: "-0.5px", fontWeight: "800" }],
+        h2: ["24px", { lineHeight: "1.3", letterSpacing: "-0.3px", fontWeight: "700" }],
+        h3: ["18px", { lineHeight: "1.4", letterSpacing: "-0.1px", fontWeight: "700" }],
+        price: ["34px", { lineHeight: "1.1", letterSpacing: "-0.5px", fontWeight: "800" }],
+      },
+      spacing: {
+        "4.5": "18px",
+        "9.5": "38px",
+        "13": "52px",
+        "18": "72px",
       },
       borderRadius: {
-        "4xl": "2rem",
-        "5xl": "2.5rem",
+        "4xl": "22px",
       },
-      boxShadow: {
-        soft: "0 1px 2px rgba(10,10,18,0.04), 0 8px 24px rgba(10,10,18,0.04)",
-        lift: "0 10px 40px -10px rgba(91,71,255,0.25)",
-        ring: "0 0 0 1px rgba(10,10,18,0.06)",
+      letterSpacing: {
+        eyebrow: "0.1em",
+        tightish: "-0.3px",
       },
       backgroundImage: {
         "iris-grad":
-          "linear-gradient(135deg, #5B47FF 0%, #7C9CFF 60%, #8A6CFF 100%)",
-        "soft-grad":
-          "radial-gradient(60% 50% at 50% 0%, rgba(91,71,255,0.18) 0%, rgba(124,156,255,0.06) 45%, rgba(255,255,255,0) 80%)",
-        grid:
-          "linear-gradient(rgba(10,10,18,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(10,10,18,0.05) 1px, transparent 1px)",
+          "linear-gradient(135deg, #5847FF 0%, #7C9CFF 60%, #8A6CFF 100%)",
+        "iris-soft":
+          "radial-gradient(60% 60% at 50% 0%, rgba(88,71,255,0.20) 0%, rgba(124,156,255,0.05) 55%, rgba(255,255,255,0) 80%)",
+        "ink-soft":
+          "radial-gradient(80% 60% at 50% 0%, rgba(88,71,255,0.18) 0%, rgba(10,10,18,0) 70%)",
       },
       keyframes: {
-        "pulse-soft": {
+        "progress-pulse": {
+          "0%": { width: "60%" },
+          "100%": { width: "80%" },
+        },
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "soft-pulse": {
           "0%, 100%": { opacity: "0.7" },
           "50%": { opacity: "1" },
         },
@@ -108,15 +107,12 @@ const config: Config = {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
       },
       animation: {
-        "pulse-soft": "pulse-soft 2.6s ease-in-out infinite",
-        marquee: "marquee 30s linear infinite",
-        shimmer: "shimmer 2.8s linear infinite",
+        "progress-pulse": "progress-pulse 2s ease-in-out infinite alternate",
+        "fade-up": "fade-up 0.5s ease both",
+        "soft-pulse": "soft-pulse 2.4s ease-in-out infinite",
+        marquee: "marquee 32s linear infinite",
       },
     },
   },

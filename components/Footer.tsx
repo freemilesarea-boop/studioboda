@@ -1,67 +1,57 @@
 import Link from "next/link";
-import { Logo } from "./Logo";
-import { brand, nav } from "@/lib/site-data";
+import { LogoSymbol } from "./Logo";
+import { brand, footerLinks } from "@/lib/site-data";
 
 export function Footer() {
   return (
-    <footer className="border-t border-ink-15 bg-white">
-      <div className="container py-16 sm:py-20">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-12">
-          <div className="md:col-span-5">
-            <Logo variant="stacked" size={28} />
-            <p className="mt-6 max-w-md text-[15px] leading-[1.7] text-ink-70">
-              {brand.mainMessage} {brand.description}
-            </p>
+    <footer className="bg-ink-100 px-5 pb-7 pt-13 sm:px-8 lg:px-12">
+      <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:grid-cols-[2.2fr_1fr_1fr_1fr]">
+        <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+          <div className="mb-3.5 flex items-center gap-2">
+            <LogoSymbol size={28} />
+            <span className="font-display text-[17px] font-extrabold text-white">
+              BODA
+            </span>
           </div>
+          <p className="max-w-[260px] text-[12px] leading-[1.75] text-ink-50">
+            AI와 전문가가 함께 만드는 콘텐츠 제작 스튜디오. {brand.location}에서
+            전 세계 브랜드와 일합니다.
+          </p>
+        </div>
 
-          <div className="md:col-span-3">
-            <div className="meta">SITEMAP</div>
-            <ul className="mt-5 space-y-2.5">
-              {nav.map((n) => (
-                <li key={n.href}>
+        {footerLinks.map((col) => (
+          <div key={col.title}>
+            <p className="mb-3.5 font-display text-[11px] font-bold uppercase tracking-eyebrow text-ink-30">
+              {col.title}
+            </p>
+            <ul className="space-y-2">
+              {col.items.map((it) => (
+                <li key={it.label}>
                   <Link
-                    href={n.href}
-                    className="text-[15px] text-ink-70 transition-colors hover:text-ink-100"
+                    href={it.href}
+                    className="block text-[12px] text-ink-50 transition-colors hover:text-ink-30"
                   >
-                    {n.label}
+                    {it.label}
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link
-                  href="#contact"
-                  className="text-[15px] text-ink-70 transition-colors hover:text-ink-100"
-                >
-                  Contact
-                </Link>
-              </li>
             </ul>
           </div>
+        ))}
+      </div>
 
-          <div className="md:col-span-4">
-            <div className="meta">CONTACT</div>
-            <ul className="mt-5 space-y-2.5 text-[15px] text-ink-70">
-              <li>
-                <a
-                  href={`mailto:${brand.email}`}
-                  className="font-mono transition-colors hover:text-ink-100"
-                >
-                  {brand.email}
-                </a>
-              </li>
-              <li>{brand.location}</li>
-              <li className="meta pt-2">AI · CREATIVE · STUDIO</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-ink-15 pt-8 sm:flex-row sm:items-center">
-          <p className="text-xs text-ink-50">
-            © 2026 STUDIO BODA. All rights reserved.
-          </p>
-          <p className="font-mono text-[11px] uppercase tracking-meta text-ink-50">
-            BUILT IN SEOUL · SHIPPED TOMORROW
-          </p>
+      <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-ink-90 pt-5 sm:flex-row sm:items-center">
+        <p className="text-[11px] text-ink-70">{brand.copyright}</p>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-ink-90 px-2.5 py-0.5 text-[10px] text-ink-70">
+            SSL 보안
+          </span>
+          <span className="rounded-full border border-ink-90 px-2.5 py-0.5 text-[10px] text-ink-70">
+            개인정보 보호
+          </span>
+          <span className="rounded-full border border-ink-90 px-2.5 py-0.5 text-[10px] text-ink-70">
+            전자세금계산서
+          </span>
         </div>
       </div>
     </footer>

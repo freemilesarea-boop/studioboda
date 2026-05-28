@@ -1,12 +1,15 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { BrandKeywords } from "@/components/BrandKeywords";
-import { ServiceLineup } from "@/components/ServiceLineup";
-import { Process } from "@/components/Process";
+import { Services } from "@/components/Services";
+import { HowItWorks } from "@/components/HowItWorks";
+import { AIFeature } from "@/components/AIFeature";
+import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { Portfolio } from "@/components/Portfolio";
-import { Packages } from "@/components/Packages";
+import { DashboardPreview } from "@/components/DashboardPreview";
+import { Trust } from "@/components/Trust";
+import { Pricing } from "@/components/Pricing";
 import { FAQ } from "@/components/FAQ";
-import { FinalCTA } from "@/components/FinalCTA";
+import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { MobileCTA } from "@/components/MobileCTA";
 
@@ -18,7 +21,7 @@ const jsonLd = {
   url: "https://studioboda.kr",
   email: "hello@studioboda.kr",
   description:
-    "AI로 상세페이지, 광고, 콘텐츠를 24시간 안에 완성하는 프리미엄 크리에이티브 스튜디오.",
+    "AI가 초안을 잡고 디렉터가 완성합니다. 상세페이지, 광고, SNS, 썸네일, 브랜드 디자인까지.",
   slogan: "See it. Make it. Ship it tomorrow.",
   address: {
     "@type": "PostalAddress",
@@ -38,13 +41,16 @@ export default function Page() {
       <Header />
       <main id="top">
         <Hero />
-        <BrandKeywords />
-        <ServiceLineup />
-        <Process />
+        <Services />
+        <HowItWorks />
+        <AIFeature />
+        <QuoteCalculator />
         <Portfolio />
-        <Packages />
+        <DashboardPreview />
+        <Trust />
+        <Pricing />
         <FAQ />
-        <FinalCTA />
+        <CTASection />
       </main>
       <Footer />
       <MobileCTA />

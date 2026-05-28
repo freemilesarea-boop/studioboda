@@ -1,86 +1,46 @@
 type LogoProps = {
   size?: number;
   className?: string;
-  variant?: "mark" | "lockup" | "stacked";
+};
+
+export function LogoSymbol({ size = 34, className = "" }: LogoProps) {
+  const stroke = size >= 60 ? 4 : size >= 30 ? 3 : 2.5;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 34 34"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      role="img"
+      aria-label="STUDIO BODA"
+    >
+      <circle cx="17" cy="17" r="14.5" stroke="#5847FF" strokeWidth={stroke} />
+      <rect x="15.5" y="1.5" width="3" height="5" rx="1.5" fill="#5847FF" />
+      <circle cx="17" cy="17" r="8" fill="#5847FF" />
+      <circle cx="17" cy="17" r="3.2" fill="#ffffff" />
+    </svg>
+  );
+}
+
+type LockupProps = {
+  size?: number;
+  className?: string;
   tone?: "light" | "dark";
 };
 
-export function Logo({
-  size = 24,
-  className = "",
-  variant = "lockup",
-  tone = "dark",
-}: LogoProps) {
+export function Logo({ size = 24, className = "", tone = "dark" }: LockupProps) {
   const fg = tone === "dark" ? "#0A0A12" : "#FFFFFF";
-  const muted = tone === "dark" ? "#7E7E8C" : "rgba(255,255,255,0.6)";
-
-  if (variant === "mark") {
-    return <LogoMark size={size} className={className} fg={fg} />;
-  }
-
-  if (variant === "stacked") {
-    return (
-      <div className={`flex flex-col items-start gap-2 ${className}`}>
-        <LogoMark size={size + 8} fg={fg} />
-        <div className="leading-none">
-          <div
-            className="font-sans font-semibold tracking-tightest"
-            style={{ color: fg, fontSize: size * 0.62 }}
-          >
-            STUDIO BODA
-          </div>
-          <div
-            className="mt-1 font-mono uppercase tracking-meta"
-            style={{ color: muted, fontSize: size * 0.32 }}
-          >
-            AI · CREATIVE · STUDIO
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <LogoMark size={size} fg={fg} />
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      <LogoSymbol size={size + 8} />
       <span
-        className="font-sans font-semibold tracking-tightest leading-none"
+        className="font-display font-extrabold tracking-tight leading-none"
         style={{ color: fg, fontSize: size * 0.74 }}
       >
         STUDIO BODA
       </span>
     </div>
-  );
-}
-
-function LogoMark({
-  size,
-  fg,
-  className = "",
-}: {
-  size: number;
-  fg: string;
-  className?: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      className={className}
-      aria-label="STUDIO BODA"
-      role="img"
-    >
-      <circle cx="16" cy="16" r="14.25" stroke={fg} strokeWidth="1.5" />
-      <circle cx="16" cy="16" r="7.5" stroke={fg} strokeWidth="1.5" />
-      <circle cx="16" cy="2.5" r="1.6" fill="#5B47FF" />
-      <path
-        d="M16 8.5 A7.5 7.5 0 0 1 23.5 16"
-        stroke="#5B47FF"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
