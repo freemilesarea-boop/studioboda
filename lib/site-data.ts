@@ -26,13 +26,16 @@ export const heroStats = [
   { num: "70", suffix: "%", label: "비용 절감" },
 ] as const;
 
+export type ServiceTabKey = "all" | "detail" | "deck" | "shorts" | "package";
+
 export type Service = {
   key: string;
+  tabKey: Exclude<ServiceTabKey, "all">;
   icon: string;
   name: string;
-  tagline: string;
   desc: string;
   tags: readonly string[];
+  priceLabel?: string;
   price: string;
   featured?: boolean;
   badge?: string;
@@ -41,61 +44,70 @@ export type Service = {
 export const services: readonly Service[] = [
   {
     key: "detail",
+    tabKey: "detail",
     icon: "ti-layout-rows",
     name: "상세페이지",
-    tagline: "DETAIL PAGE",
-    desc: "AI가 제품 정보와 채널 가이드를 분석해 전환율 높은 상세페이지 초안을 생성하고, 디렉터가 톤을 정제합니다.",
-    tags: ["스마트스토어", "자사몰", "쿠팡"],
+    desc: "AI가 제품 정보를 분석해 구매 전환율 높은 상세페이지 초안을 생성합니다. 스마트스토어, 쿠팡, 자사몰 최적화.",
+    tags: ["스마트스토어", "쿠팡", "자사몰"],
     price: "99,000원~",
     featured: true,
     badge: "인기",
   },
   {
-    key: "ad",
-    icon: "ti-photo-edit",
-    name: "광고 배너",
-    tagline: "PERFORMANCE AD",
-    desc: "메타·구글·카카오·네이버까지 채널별 사이즈와 A/B 변형을 한 번에. CTR과 ROAS를 고려한 카피와 레이아웃.",
-    tags: ["Meta", "Google", "Naver"],
-    price: "49,000원~",
+    key: "deck",
+    tabKey: "deck",
+    icon: "ti-presentation",
+    name: "회사소개서",
+    desc: "기업 강점과 수치를 바탕으로 투자자, 파트너, 고객을 설득하는 전문 소개서를 제작합니다.",
+    tags: ["PPT", "PDF", "웹슬라이드"],
+    price: "149,000원~",
   },
   {
-    key: "sns",
-    icon: "ti-brand-instagram",
-    name: "SNS 콘텐츠",
-    tagline: "SNS · INSTAGRAM",
-    desc: "피드·릴스·카드뉴스까지 브랜드 톤이 일관된 콘텐츠 시리즈. 월 단위 운영도 가능합니다.",
-    tags: ["Feed", "Reels", "Carousel"],
-    price: "39,000원~",
+    key: "shorts",
+    tabKey: "shorts",
+    icon: "ti-video",
+    name: "쇼츠 · 릴스",
+    desc: "AI 스크립트 작성부터 자막, 편집까지. 알고리즘 최적화된 숏폼 콘텐츠를 빠르게 제작합니다.",
+    tags: ["유튜브", "인스타", "틱톡"],
+    price: "79,000원~",
   },
   {
-    key: "thumb",
-    icon: "ti-player-play",
-    name: "유튜브 썸네일",
-    tagline: "THUMBNAIL · YT",
-    desc: "유튜브와 영상 콘텐츠에 최적화된 시선 잡는 썸네일. 시리즈 단위로 톤앤매너를 유지합니다.",
-    tags: ["YouTube", "Shorts", "Series"],
-    price: "29,000원~",
+    key: "brand-pkg",
+    tabKey: "package",
+    icon: "ti-package",
+    name: "브랜드 패키지",
+    desc: "상세페이지 + 소개서 + 영상 3종을 일관된 브랜드 메시지로 제작하는 풀패키지 서비스.",
+    tags: ["신규 브랜드", "리브랜딩"],
+    price: "280,000원~",
   },
   {
-    key: "brand",
-    icon: "ti-aperture",
-    name: "브랜드 디자인",
-    tagline: "IDENTITY",
-    desc: "로고·컬러·타이포그래피 시스템까지. 브랜드의 시각 언어를 미니멀하게 설계합니다.",
-    tags: ["Logo", "System", "Guideline"],
-    price: "290,000원~",
+    key: "renewal",
+    tabKey: "package",
+    icon: "ti-refresh",
+    name: "콘텐츠 리뉴얼",
+    desc: "기존 자료를 AI가 분석해 전환율·가독성 개선 포인트를 찾고 업그레이드합니다.",
+    tags: ["A/B 테스트", "데이터 기반"],
+    price: "59,000원~",
+  },
+  {
+    key: "subscription",
+    tabKey: "package",
+    icon: "ti-calendar",
+    name: "정기 구독",
+    desc: "매월 정해진 수량의 콘텐츠를 전담 팀이 지속 제작. 브랜드 일관성과 비용 절감을 동시에.",
+    tags: ["월 구독", "전담 팀"],
+    priceLabel: "월",
+    price: "390,000원~",
   },
 ];
 
-export const serviceTabs = [
+export const serviceTabs: readonly { key: ServiceTabKey; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "detail", label: "상세페이지" },
-  { key: "ad", label: "광고 배너" },
-  { key: "sns", label: "SNS" },
-  { key: "thumb", label: "썸네일" },
-  { key: "brand", label: "브랜드" },
-] as const;
+  { key: "deck", label: "회사소개서" },
+  { key: "shorts", label: "쇼츠·릴스" },
+  { key: "package", label: "패키지" },
+];
 
 export const flowSteps = [
   {
@@ -461,10 +473,11 @@ export const portfolio: readonly PortfolioItem[] = [
 export const quoteOptions = {
   service: [
     { key: "detail", label: "상세페이지", base: 99000 },
-    { key: "ad", label: "광고 배너 세트", base: 49000 },
-    { key: "sns", label: "SNS 카드뉴스 세트", base: 39000 },
-    { key: "thumb", label: "유튜브 썸네일", base: 29000 },
-    { key: "brand", label: "브랜드 디자인", base: 290000 },
+    { key: "deck", label: "회사소개서", base: 149000 },
+    { key: "shorts", label: "쇼츠·릴스", base: 79000 },
+    { key: "renewal", label: "콘텐츠 리뉴얼", base: 59000 },
+    { key: "brand-pkg", label: "브랜드 패키지", base: 280000 },
+    { key: "subscription", label: "정기 구독 (월)", base: 390000 },
   ],
   delivery: [
     { key: "normal", label: "보통 (3-5일)", multiplier: 1 },
@@ -473,9 +486,10 @@ export const quoteOptions = {
   ],
   addons: [
     { key: "english", label: "영문 버전", price: 30000 },
+    { key: "revision", label: "추가 수정 1회", price: 20000 },
     { key: "multi", label: "멀티포맷 변환", price: 50000 },
-    { key: "copy", label: "카피라이팅 포함", price: 40000 },
-    { key: "ab", label: "A/B 변형 추가", price: 35000 },
+    { key: "guide", label: "브랜드 가이드", price: 40000 },
+    { key: "cover", label: "SNS 커버 이미지", price: 15000 },
   ],
 } as const;
 

@@ -13,7 +13,7 @@ type AddonKey = (typeof quoteOptions.addons)[number]["key"];
 export function QuoteCalculator() {
   const [service, setService] = useState<ServiceKey>("detail");
   const [delivery, setDelivery] = useState<DeliveryKey>("normal");
-  const [addons, setAddons] = useState<AddonKey[]>(["multi"]);
+  const [addons, setAddons] = useState<AddonKey[]>([]);
 
   const total = useMemo(() => {
     const s = quoteOptions.service.find((x) => x.key === service);
@@ -35,9 +35,10 @@ export function QuoteCalculator() {
   return (
     <section className="section bg-ink-5" id="quote">
       <SectionHeader
-        eyebrow="Quote"
+        eyebrow="Price Calculator"
         title="실시간 견적 계산기"
-        subtitle="원하는 서비스와 옵션을 선택하면 예상 견적을 즉시 확인할 수 있습니다. 정확한 견적은 1:1 상담을 통해 확정됩니다."
+        subtitle="옵션을 선택하면 즉시 견적이 계산됩니다."
+        align="center"
       />
 
       <Reveal delay={0.1}>
@@ -60,11 +61,13 @@ export function QuoteCalculator() {
                 onChange={(v) => setDelivery(v as DeliveryKey)}
                 options={quoteOptions.delivery.map((d) => ({
                   value: d.key,
-                  label: d.label + (d.multiplier === 1
-                    ? ""
-                    : d.multiplier > 1
-                    ? ` (+${Math.round((d.multiplier - 1) * 100)}%)`
-                    : ` (-${Math.round((1 - d.multiplier) * 100)}%)`),
+                  label:
+                    d.label +
+                    (d.multiplier === 1
+                      ? ""
+                      : d.multiplier > 1
+                      ? ` (+${Math.round((d.multiplier - 1) * 100)}%)`
+                      : ` (-${Math.round((1 - d.multiplier) * 100)}%)`),
                 }))}
               />
             </Field>
@@ -86,9 +89,9 @@ export function QuoteCalculator() {
                         : "border-ink-15 bg-white text-ink-70 hover:border-iris hover:text-iris"
                     }`}
                   >
-                    {a.label}{" "}
+                    {a.label}
                     <span
-                      className={on ? "text-white/85" : "text-ink-50"}
+                      className={on ? "ml-1 text-white/85" : "ml-1 text-ink-50"}
                     >{`(+${a.price.toLocaleString()}원)`}</span>
                   </button>
                 );
@@ -157,23 +160,16 @@ function ResultBox({ total }: { total: number }) {
   return (
     <div className="mt-5 flex flex-col items-stretch gap-4 rounded-[14px] bg-ink-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
       <div>
-        <div className="flex items-center gap-2">
-          <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-success live-ring">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
-          </span>
-          <p className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
-            LIVE ESTIMATE
-          </p>
-        </div>
-        <p className="num mt-2 font-display text-[28px] font-extrabold leading-none tracking-[-0.7px] text-white sm:text-[32px]">
+        <p className="text-[13px] text-ink-30">예상 견적</p>
+        <p className="num mt-1 font-display text-[28px] font-extrabold leading-none tracking-[-0.7px] text-white sm:text-[32px]">
           <motion.span
             key={total}
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="inline-block"
           >
-            ₩{total.toLocaleString()}
+            {total.toLocaleString()}원
           </motion.span>
           <span className="num ml-2 text-[13px] font-normal text-sky">
             VAT 별도
@@ -184,7 +180,7 @@ function ResultBox({ total }: { total: number }) {
         href={`mailto:hello@studioboda.kr?subject=STUDIO%20BODA%20견적%20문의&body=${encodeURIComponent(
           `예상 견적 ${total.toLocaleString()}원 기준으로 문의드립니다.`,
         )}`}
-        className="group inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-iris px-6 text-[13px] font-bold text-white transition-opacity hover:opacity-90 focus-ring"
+        className="group inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-iris px-6 text-[13px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-ring"
       >
         이 견적으로 시작하기
         <span className="transition-transform duration-150 group-hover:translate-x-0.5">
