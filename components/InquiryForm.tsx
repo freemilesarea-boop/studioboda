@@ -7,9 +7,11 @@ import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
 
 const SERVICES = [
   "상세페이지",
-  "회사소개서",
-  "쇼츠·릴스",
+  "SNS 콘텐츠",
   "광고 배너",
+  "썸네일",
+  "브랜드 디자인",
+  "회사소개서",
   "브랜드 패키지",
   "정기 구독",
   "기타",

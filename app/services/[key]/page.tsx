@@ -4,17 +4,37 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { MobileCTA } from "@/components/MobileCTA";
-import { StartCTA } from "@/components/StartCTA";
+import { InquiryForm } from "@/components/InquiryForm";
 import {
   getServiceByKey,
   listPrimaryServices,
   listServiceOptions,
 } from "@/lib/queries/services";
-import { SERVICE_CATEGORY_LABELS } from "@/lib/types/db";
+import { SERVICE_CATEGORY_LABELS, type ServiceOption } from "@/lib/types/db";
 
 export const revalidate = 60;
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
+
+function buildPrefillMessage(
+  name: string,
+  basePrice: number,
+  key: string,
+  options: ServiceOption[],
+) {
+  const lines = [
+    `[서비스 문의] ${name}`,
+    `시작가: ${fmt(basePrice)}원`,
+    `선택 페이지: /services/${key}`,
+  ];
+  if (options.length > 0) {
+    lines.push(
+      `추가 옵션 후보: ${options.map((o) => o.label).join(", ")}`,
+    );
+  }
+  lines.push("", "프로젝트 목표·예산·납기·레퍼런스를 자유롭게 적어주세요.");
+  return lines.join("\n");
+}
 
 // ---- per-service editorial copy (kept in code; admin-editable later) ----
 const SERVICE_DETAILS: Record<
@@ -245,12 +265,18 @@ export default async function ServiceDetailPage({
                 {service.description}
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <StartCTA size="lg" plan={service.key}>
-                  견적 요청하기 →
-                </StartCTA>
+                <a
+                  href="#inquiry"
+                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-iris px-7 font-display text-[14px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                >
+                  견적 요청하기
+                  <span className="transition-transform duration-150 group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </a>
                 <Link
                   href="/services"
-                  className="inline-flex h-12 items-center rounded-xl border border-ink-15 bg-white px-6 text-[14px] font-bold text-ink-70 transition-colors hover:border-ink-30 hover:text-ink-100"
+                  className="inline-flex h-12 items-center rounded-xl border border-ink-15 bg-white px-6 text-[14px] font-bold text-ink-70 transition-colors hover:border-ink-30 hover:text-ink-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2"
                 >
                   전체 서비스 보기
                 </Link>
@@ -370,28 +396,101 @@ export default async function ServiceDetailPage({
           </>
         ) : null}
 
-        <section className="border-t border-ink-15 bg-ink-100 px-5 py-14 text-white sm:px-8 lg:px-12 lg:py-20">
-          <div className="relative mx-auto max-w-[820px] text-center">
-            <div className="pointer-events-none absolute -inset-x-24 -inset-y-12 -z-0 rounded-full bg-iris-grad opacity-15 blur-3xl" />
-            <p className="relative font-display text-[11px] font-bold uppercase tracking-eyebrow text-iris-glow">
-              Get started
-            </p>
-            <h2 className="relative mt-3 font-display text-[28px] font-extrabold leading-[1.15] tracking-display sm:text-[36px]">
-              지금 {service.name} 견적을 받아보세요
-            </h2>
-            <p className="relative mx-auto mt-3 max-w-[520px] text-[14px] leading-body text-ink-30">
-              브리프만 보내주시면 24시간 안에 회신드립니다.
-            </p>
-            <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
-              <StartCTA size="lg" plan={service.key} variant="white">
-                견적 요청하기 →
-              </StartCTA>
-              <Link
-                href="/services"
-                className="inline-flex h-12 items-center rounded-xl border border-white/15 bg-white/[0.05] px-6 text-[14px] font-bold text-white hover:bg-white/[0.10]"
-              >
-                다른 서비스 보기
-              </Link>
+        <section
+          id="inquiry"
+          className="relative overflow-hidden border-t border-ink-15 bg-ink-100 px-5 py-14 text-white sm:px-8 lg:px-12 lg:py-20"
+        >
+          <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-iris-grad opacity-25 blur-3xl" />
+          <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-iris-grad opacity-15 blur-3xl" />
+
+          <div className="relative mx-auto grid w-full max-w-[1080px] grid-cols-1 items-start gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <p className="font-display text-[11px] font-bold uppercase tracking-eyebrow text-iris-glow">
+                Get started
+              </p>
+              <h2 className="mt-3 font-display text-[28px] font-extrabold leading-[1.15] tracking-display sm:text-[34px]">
+                이 서비스로 견적을
+                <br />
+                받아보세요
+              </h2>
+              <p className="mt-3 max-w-[440px] text-[14px] leading-body text-ink-30">
+                <b className="text-white">{service.name}</b>{" "}
+                {service.name_en ? (
+                  <span className="font-mono text-[11px] text-ink-50">
+                    ({service.name_en})
+                  </span>
+                ) : null}{" "}
+                · 시작가 {fmt(service.base_price)}원, 기본 납기{" "}
+                {service.default_delivery_days}일. 브리프만 보내주시면 24시간 안에
+                회신드립니다.
+              </p>
+
+              <ul className="mt-6 hidden flex-col gap-2 sm:flex">
+                <Step
+                  n="01"
+                  label="브리프 작성"
+                  desc="이 폼에 목표·예산·일정을 적어주세요"
+                />
+                <Step
+                  n="02"
+                  label="견적 발행"
+                  desc="평균 24시간 이내 견적서 발송"
+                />
+                <Step
+                  n="03"
+                  label="작업 시작"
+                  desc="수락 + 결제 후 제작 자동 시작"
+                />
+              </ul>
+
+              <p className="mt-6 text-[11.5px] text-ink-30">
+                회원이라면{" "}
+                <Link
+                  href={`/login?next=/services/${service.key}`}
+                  className="font-bold text-iris-glow hover:text-white"
+                >
+                  로그인
+                </Link>
+                해서 더 빠르게, 처음이라면{" "}
+                <Link
+                  href="/signup"
+                  className="font-bold text-iris-glow hover:text-white"
+                >
+                  회원가입
+                </Link>
+                도 가능합니다. 비회원도 이 폼으로 문의 가능합니다.
+              </p>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="rounded-[20px] border border-ink-90 bg-ink-90/40 p-5 backdrop-blur-sm sm:p-6">
+                <div className="flex items-center justify-between border-b border-ink-90 pb-3.5">
+                  <p className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
+                    {service.name} · Inquiry
+                  </p>
+                  <span className="num font-mono text-[10px] text-ink-50">
+                    AVG · 24H
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <InquiryForm
+                    variant="dark"
+                    defaults={{
+                      service_type: service.name,
+                      message: buildPrefillMessage(service.name, service.base_price, service.key, options),
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <Link
+                  href="/services"
+                  className="text-[12px] font-bold text-ink-30 hover:text-white"
+                >
+                  ← 다른 서비스 보기
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -424,5 +523,27 @@ function Meta({
         {value}
       </p>
     </div>
+  );
+}
+
+function Step({
+  n,
+  label,
+  desc,
+}: {
+  n: string;
+  label: string;
+  desc: string;
+}) {
+  return (
+    <li className="flex items-start gap-3 rounded-xl border border-ink-90 bg-ink-100/60 px-3.5 py-2.5">
+      <span className="num grid h-7 w-7 shrink-0 place-items-center rounded-md bg-iris/20 font-display text-[11px] font-bold text-iris-glow">
+        {n}
+      </span>
+      <div className="min-w-0">
+        <p className="font-display text-[13px] font-bold text-white">{label}</p>
+        <p className="mt-0.5 text-[11px] text-ink-30">{desc}</p>
+      </div>
+    </li>
   );
 }
