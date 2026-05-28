@@ -63,6 +63,7 @@ export const billingStatusLabels: Record<BillingStatus, string> = {
 
 export type Payment = {
   id: string;
+  organization_id: string | null;
   quote_id: string | null;
   project_id: string | null;
   user_id: string | null;
@@ -86,6 +87,7 @@ export type Payment = {
 
 export type BrandProfile = {
   id: string;
+  organization_id: string | null;
   user_id: string;
   brand_name: string | null;
   brand_colors: string | null;
@@ -102,6 +104,7 @@ export type BrandProfile = {
 
 export type Service = {
   id: string;
+  organization_id: string | null;
   key: string;
   name: string;
   name_en: string | null;
@@ -169,6 +172,7 @@ export type Profile = {
 
 export type Inquiry = {
   id: string;
+  organization_id: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -190,6 +194,7 @@ export type QuoteOption = {
 
 export type Quote = {
   id: string;
+  organization_id: string | null;
   inquiry_id: string | null;
   user_id: string | null;
   title: string;
@@ -217,6 +222,7 @@ export type Quote = {
 
 export type Project = {
   id: string;
+  organization_id: string | null;
   project_no: string;
   quote_id: string | null;
   inquiry_id: string | null;
@@ -267,12 +273,58 @@ export type Notification = {
   created_at: string;
 };
 
+export type Organization = {
+  id: string;
+  slug: string;
+  name: string;
+  display_name: string | null;
+  brand_color: string | null;
+  description: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AIAssetKind =
+  | "brief"
+  | "copy"
+  | "headline"
+  | "cta"
+  | "description"
+  | "design_prompt";
+
+export const aiAssetKindLabels: Record<AIAssetKind, string> = {
+  brief: "제작 브리프",
+  copy: "광고 카피",
+  headline: "헤드라인",
+  cta: "CTA",
+  description: "상품 설명",
+  design_prompt: "디자인 프롬프트",
+};
+
+export type AIAsset = {
+  id: string;
+  organization_id: string | null;
+  project_id: string | null;
+  quote_id: string | null;
+  user_id: string | null;
+  kind: AIAssetKind;
+  prompt: string | null;
+  output: string;
+  provider: string | null;
+  model: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectComment = {
   id: string;
   project_id: string;
   author_id: string | null;
   body: string;
   is_internal: boolean;
+  attachments: unknown[];
   created_at: string;
 };
 

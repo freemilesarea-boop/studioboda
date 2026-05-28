@@ -1,15 +1,22 @@
 "use client";
 
 import { logoutAction } from "@/lib/actions/auth";
+import { OrgSwitcher } from "./OrgSwitcher";
+import type { Organization } from "@/lib/types/db";
 
 export function Topbar({
   title,
   userName,
   role,
+  orgs,
 }: {
   title: string;
   userName: string;
   role: string;
+  orgs?: Pick<
+    Organization,
+    "id" | "slug" | "name" | "display_name" | "brand_color" | "active"
+  >[];
 }) {
   return (
     <header className="sticky top-0 z-10 flex h-[60px] shrink-0 items-center gap-4 border-b border-ink-15 bg-white px-5 lg:px-8">
@@ -17,6 +24,7 @@ export function Topbar({
         {title}
       </h1>
       <div className="ml-auto flex items-center gap-3">
+        {orgs && orgs.length > 0 ? <OrgSwitcher orgs={orgs} /> : null}
         <div className="hidden text-right sm:block">
           <p className="font-display text-[12px] font-semibold text-ink-100">
             {userName}

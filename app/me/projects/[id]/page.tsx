@@ -16,6 +16,7 @@ import {
 } from "@/lib/types/db";
 import { ClientFilesPanel } from "./ClientFilesPanel";
 import { ClientCommentForm } from "./ClientCommentForm";
+import { RealtimeProjectRefresh } from "./RealtimeProjectRefresh";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 
 export const metadata: Metadata = {
@@ -67,6 +68,7 @@ export default async function MyProjectDetailPage({
 
   return (
     <div className="space-y-5">
+      <RealtimeProjectRefresh projectId={project.id} />
       <Link
         href="/me/projects"
         className="inline-flex items-center gap-1 text-[12px] text-ink-50 hover:text-iris"

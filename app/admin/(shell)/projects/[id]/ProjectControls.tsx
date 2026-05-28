@@ -32,6 +32,7 @@ const PRIORITIES: Priority[] = ["low", "normal", "high", "urgent"];
 export function ProjectControls({
   project,
   team,
+  compact = false,
 }: {
   project: {
     id: string;
@@ -42,6 +43,7 @@ export function ProjectControls({
     assigned_to: string | null;
   };
   team: { id: string; label: string }[];
+  compact?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [progress, setProgress] = useState(project.progress);
@@ -60,6 +62,136 @@ export function ProjectControls({
         push(r.error ?? "실패", "error");
       }
     });
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+            상태
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                disabled={pending || s === project.status}
+                onClick={() =>
+                  call(() => setProjectStatusAction(project.id, s), "상태 변경")
+                }
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                  s === project.status
+                    ? "border-ink-100 bg-ink-100 text-white"
+                    : "border-ink-15 bg-white text-ink-70 hover:border-ink-30 disabled:opacity-50"
+                }`}
+              >
+                {projectStatusLabels[s]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+            우선순위
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {PRIORITIES.map((pr) => (
+              <button
+                key={pr}
+                type="button"
+                disabled={pending || pr === project.priority}
+                onClick={() =>
+                  call(
+                    () => setProjectPriorityAction(project.id, pr),
+                    "우선순위 변경",
+                  )
+                }
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                  pr === project.priority
+                    ? "border-ink-100 bg-ink-100 text-white"
+                    : "border-ink-15 bg-white text-ink-70 hover:border-ink-30 disabled:opacity-50"
+                }`}
+              >
+                {priorityLabels[pr]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+            진행률 {progress}%
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={progress}
+              onChange={(e) => setProgress(Number(e.target.value))}
+              className="flex-1 accent-iris"
+            />
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                call(
+                  () => setProjectProgressAction(project.id, progress),
+                  "진행률 저장",
+                )
+              }
+              className="rounded-md bg-ink-100 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-60"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+            담당 · 납기
+          </p>
+          <select
+            value={assigned}
+            onChange={(e) => setAssigned(e.target.value)}
+            className="mt-2 h-9 w-full rounded-md border border-ink-15 bg-white px-2.5 text-[12.5px] outline-none focus:border-iris/60"
+          >
+            <option value="">미지정</option>
+            {team.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            className="mt-2 h-9 w-full rounded-md border border-ink-15 bg-white px-2.5 text-[12.5px] outline-none focus:border-iris/60"
+          />
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              call(
+                () =>
+                  updateProjectAction(project.id, {
+                    assigned_to: assigned || null,
+                    due_date: due || null,
+                  }),
+                "저장됨",
+              )
+            }
+            className="mt-2 h-9 w-full rounded-md bg-ink-100 font-display text-[12px] font-bold text-white hover:bg-ink-90 disabled:opacity-60"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

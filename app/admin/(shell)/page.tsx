@@ -4,6 +4,8 @@ import { ko } from "date-fns/locale";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { paymentAggregates } from "@/lib/queries/payments";
 import { dashboardKpis } from "@/lib/queries/dashboard";
+import { aiMetrics } from "@/lib/queries/ai";
+import { aiAssetKindLabels } from "@/lib/types/db";
 import {
   BarChart,
   FunnelTile,
@@ -114,7 +116,11 @@ async function loadDashboard() {
 }
 
 export default async function DashboardPage() {
-  const [data, kpis] = await Promise.all([loadDashboard(), dashboardKpis()]);
+  const [data, kpis, ai] = await Promise.all([
+    loadDashboard(),
+    dashboardKpis(),
+    aiMetrics(),
+  ]);
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -202,6 +208,51 @@ export default async function DashboardPage() {
           tone="warning"
         />
       </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="AI 자산 누적"
+          value={ai.total}
+          trend={`최근 30일 ${ai.last30Days}건`}
+          tone="iris"
+        />
+        <StatCard
+          label="프로젝트당 평균 AI 생성"
+          value={`${ai.perProject}건`}
+          trend="brief + copy + design"
+        />
+        <StatCard
+          label="추정 절감 시간"
+          value={`${ai.estimatedHoursSaved}시간`}
+          trend="conservative 기준"
+          tone="success"
+        />
+        <StatCard
+          label="가장 많이 생성한 서비스"
+          value={ai.topService?.service ?? "—"}
+          trend={
+            ai.topService ? `${ai.topService.count}건` : "AI 미사용"
+          }
+        />
+      </div>
+
+      <AdminCard title="AI 자산 종류별 분포">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          {(Object.keys(ai.byKind) as Array<keyof typeof ai.byKind>).map((k) => (
+            <div
+              key={k}
+              className="rounded-lg border border-ink-15 bg-white px-3 py-2.5"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+                {aiAssetKindLabels[k]}
+              </p>
+              <p className="mt-1 font-display text-[18px] font-extrabold tracking-[-0.4px] text-ink-100">
+                {ai.byKind[k]}
+              </p>
+            </div>
+          ))}
+        </div>
+      </AdminCard>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">

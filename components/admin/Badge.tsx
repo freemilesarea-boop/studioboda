@@ -1,4 +1,5 @@
 import type {
+  BillingStatus,
   InquiryStatus,
   ProjectStatus,
   QuoteStatus,
@@ -10,6 +11,13 @@ import {
   quoteStatusLabels,
   priorityLabels,
 } from "@/lib/types/db";
+
+export const billingStatusToneClass: Record<BillingStatus, string> = {
+  waiting_deposit: "text-warning",
+  in_progress: "text-iris",
+  waiting_balance: "text-warning",
+  completed: "text-success",
+};
 
 type BaseProps = { className?: string };
 
