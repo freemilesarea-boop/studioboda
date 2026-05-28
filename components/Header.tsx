@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LogoSymbol } from "./Logo";
 import { LinkButton } from "./ui/Button";
 import { nav } from "@/lib/site-data";
+import { AuthMenu, AuthMenuMobile } from "./AuthMenu";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -56,14 +57,10 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="#dashboard"
-            className="rounded-lg border border-ink-15 px-4 py-2 text-[13px] font-medium text-ink-70 transition-colors hover:border-ink-30 hover:text-ink-100"
-          >
-            대시보드
-          </Link>
-          <LinkButton href="#quote" size="md">
+        <div className="hidden items-center gap-3 md:flex">
+          <AuthMenu />
+          <span className="hidden h-5 w-px bg-ink-15 md:inline-block" />
+          <LinkButton href="#inquiry" size="md">
             무료로 시작하기
           </LinkButton>
         </div>
@@ -97,16 +94,10 @@ export function Header() {
                 </Link>
               ))}
             </nav>
-            <div className="mt-3 grid gap-2">
-              <Link
-                href="#dashboard"
-                onClick={() => setOpen(false)}
-                className="grid h-11 place-items-center rounded-lg border border-ink-15 text-[14px] font-medium text-ink-70"
-              >
-                대시보드
-              </Link>
+            <AuthMenuMobile onNavigate={() => setOpen(false)} />
+            <div className="mt-3">
               <LinkButton
-                href="#quote"
+                href="#inquiry"
                 size="lg"
                 className="w-full"
                 onClick={() => setOpen(false)}

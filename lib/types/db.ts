@@ -1,4 +1,5 @@
 export type Role = "admin" | "manager" | "designer" | "client";
+export type AccountType = "individual" | "business";
 export type InquiryStatus =
   | "new"
   | "contacted"
@@ -25,6 +26,18 @@ export type Profile = {
   name: string | null;
   role: Role;
   avatar_url: string | null;
+  account_type: AccountType;
+  username: string | null;
+  phone: string | null;
+  birth_date: string | null;
+  address: string | null;
+  company_name: string | null;
+  representative_name: string | null;
+  business_registration_number: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  business_address: string | null;
+  industry: string | null;
   created_at: string;
   updated_at: string;
 };
