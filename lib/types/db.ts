@@ -76,7 +76,26 @@ export type Payment = {
   payapp_qrurl: string | null;
   paid_at: string | null;
   cancelled_at: string | null;
+  refunded_at: string | null;
+  cancel_reason: string | null;
+  refund_reason: string | null;
   metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BrandProfile = {
+  id: string;
+  user_id: string;
+  brand_name: string | null;
+  brand_colors: string | null;
+  reference_sites: string | null;
+  tone: string | null;
+  forbidden_expressions: string | null;
+  go_to_phrases: string | null;
+  notes: string | null;
+  logo_file_path: string | null;
+  past_assets: unknown[];
   created_at: string;
   updated_at: string;
 };
