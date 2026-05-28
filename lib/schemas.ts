@@ -36,7 +36,7 @@ export const quoteSchema = z.object({
   options: z.array(quoteOptionSchema).default([]),
   delivery_days: z.number().int().min(1).max(120).default(5),
   status: z
-    .enum(["draft", "sent", "accepted", "rejected", "expired"])
+    .enum(["draft", "sent", "customer_review", "accepted", "rejected", "expired"])
     .default("draft"),
   expires_at: z.string().datetime().nullable().optional(),
 });

@@ -68,13 +68,47 @@ export async function publicLoginAction(input: PublicLoginInput, next?: string) 
   if (error) {
     return { ok: false as const, error: "이메일/아이디 또는 비밀번호가 올바르지 않습니다" };
   }
-  return { ok: true as const, next: next || "/" };
+  return { ok: true as const, next: next || "/me" };
 }
 
 export async function logoutAction() {
   const supabase = createServerAuthSupabase();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+import { publicEnv } from "@/lib/env";
+
+// Password reset request — sends a reset email via Supabase Auth.
+export async function requestPasswordResetAction(rawEmail: string) {
+  const email = rawEmail.trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    return { ok: false as const, error: "이메일을 정확히 입력해주세요" };
+  }
+  const supabase = createServerAuthSupabase();
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? publicEnv().SITE_URL;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/reset-password`,
+  });
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+  return { ok: true as const };
+}
+
+// Update password — call from /reset-password after Supabase recovery link
+// landed the user into a logged-in session via PKCE.
+export async function updatePasswordAction(newPassword: string) {
+  if (!newPassword || newPassword.length < 8) {
+    return { ok: false as const, error: "비밀번호는 8자 이상이어야 합니다" };
+  }
+  const supabase = createServerAuthSupabase();
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+  return { ok: true as const };
 }
 
 // Internal: shared user-create + profile-insert + sign-in pipeline
@@ -164,7 +198,7 @@ async function provisionAccount(opts: {
     };
   }
 
-  return { ok: true as const, autoLogin: true as const, next: "/" };
+  return { ok: true as const, autoLogin: true as const, next: "/me" };
 }
 
 export async function signupIndividualAction(input: IndividualSignupInput) {
@@ -177,7 +211,7 @@ export async function signupIndividualAction(input: IndividualSignupInput) {
   }
   if (parsed.data.website && parsed.data.website.length > 0) {
     // honeypot triggered — silently succeed
-    return { ok: true as const, autoLogin: false as const, next: "/" };
+    return { ok: true as const, autoLogin: false as const, next: "/me" };
   }
 
   const { name, phone, birth_date, address, username, email, password } =
@@ -206,7 +240,7 @@ export async function signupBusinessAction(input: BusinessSignupInput) {
     };
   }
   if (parsed.data.website && parsed.data.website.length > 0) {
-    return { ok: true as const, autoLogin: false as const, next: "/" };
+    return { ok: true as const, autoLogin: false as const, next: "/me" };
   }
 
   const {

@@ -6,7 +6,13 @@ export type InquiryStatus =
   | "quoted"
   | "converted"
   | "archived";
-export type QuoteStatus = "draft" | "sent" | "accepted" | "rejected" | "expired";
+export type QuoteStatus =
+  | "draft"
+  | "sent"
+  | "customer_review"
+  | "accepted"
+  | "rejected"
+  | "expired";
 export type ProjectStatus =
   | "queued"
   | "briefing"
@@ -111,13 +117,21 @@ export type QuoteOption = {
 export type Quote = {
   id: string;
   inquiry_id: string | null;
+  user_id: string | null;
   title: string;
+  service_id: string | null;
   service_type: string | null;
   base_price: number;
   options: QuoteOption[];
   delivery_days: number;
+  subtotal: number;
+  vat: number;
   total_price: number;
+  notes: string | null;
   status: QuoteStatus;
+  sent_at: string | null;
+  customer_accepted_at: string | null;
+  customer_rejected_at: string | null;
   expires_at: string | null;
   created_at: string;
   updated_at: string;
@@ -125,11 +139,15 @@ export type Quote = {
 
 export type Project = {
   id: string;
+  project_no: string;
+  order_id: string | null;
   quote_id: string | null;
   inquiry_id: string | null;
+  user_id: string | null;
   client_name: string;
   company: string | null;
   title: string;
+  service_id: string | null;
   service_type: string | null;
   status: ProjectStatus;
   priority: Priority;
@@ -149,6 +167,7 @@ export type ProjectFile = {
   file_size: number | null;
   uploaded_by: string | null;
   visibility: Visibility;
+  is_final: boolean;
   created_at: string;
 };
 
@@ -189,6 +208,7 @@ export const inquiryStatusLabels: Record<InquiryStatus, string> = {
 export const quoteStatusLabels: Record<QuoteStatus, string> = {
   draft: "작성 중",
   sent: "발송됨",
+  customer_review: "고객 검토",
   accepted: "수락",
   rejected: "거절",
   expired: "만료",
