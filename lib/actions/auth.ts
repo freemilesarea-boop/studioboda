@@ -111,26 +111,53 @@ export async function updatePasswordAction(newPassword: string) {
   return { ok: true as const };
 }
 
-// Internal: shared user-create + profile-insert + sign-in pipeline
+const DUPLICATE_EMAIL_MESSAGE =
+  "이미 가입된 이메일입니다. 로그인하거나 비밀번호 찾기를 이용해주세요.";
+
+// Translate any Supabase profile-write error into a friendly Korean message.
+// Never echo raw "duplicate key value violates unique constraint …" text.
+function friendlyProfileError(rawMessage: string | undefined): string {
+  if (!rawMessage) return "프로필 저장에 실패했습니다";
+  if (rawMessage.includes("profiles_username_lower_unique")) {
+    return "이미 사용 중인 아이디입니다";
+  }
+  if (rawMessage.includes("profiles_pkey")) {
+    return DUPLICATE_EMAIL_MESSAGE;
+  }
+  if (rawMessage.toLowerCase().includes("duplicate key")) {
+    return "이미 등록된 정보입니다. 잠시 후 다시 시도해주세요.";
+  }
+  return "프로필 저장에 실패했습니다. 잠시 후 다시 시도해주세요.";
+}
+
+// Internal: idempotent user-create + profile-upsert + sign-in pipeline.
+// - profiles row is auto-created by the `handle_new_user` trigger when the
+//   auth user is inserted; our writes always upsert on id so retries (or the
+//   trigger race) never produce a PK collision.
+// - duplicate email is surfaced before createUser via the indexed profiles
+//   email lookup, and also caught from createUser's own error as a fallback.
+// - all errors funnel through friendlyProfileError so raw constraint names
+//   never reach the user.
 async function provisionAccount(opts: {
   email: string;
   password: string;
   profile: Record<string, unknown> & { account_type: "individual" | "business" };
 }) {
-  // Honeypot guard — caller checks before calling.
   const authAdmin = createAdminAuthSupabase();
-
-  // Check duplicate email up front (Supabase returns a clean error too, but a
-  // dedicated check gives a friendlier message).
   const dbAdmin = createAdminSupabase();
+  const normalizedEmail = opts.email.trim().toLowerCase();
+
+  // ---- Pre-flight: indexed profiles email lookup (fast, ~1ms) ----
   const { data: existingByEmail } = await dbAdmin
     .from("profiles")
     .select("id")
-    .ilike("email", opts.email)
+    .ilike("email", normalizedEmail)
     .maybeSingle();
   if (existingByEmail) {
-    return { ok: false as const, error: "이미 가입된 이메일입니다" };
+    return { ok: false as const, error: DUPLICATE_EMAIL_MESSAGE };
   }
+
+  // ---- Username uniqueness check (case-insensitive) ----
   if (opts.profile.username) {
     const { data: existingByUsername } = await dbAdmin
       .from("profiles")
@@ -142,36 +169,66 @@ async function provisionAccount(opts: {
     }
   }
 
-  const { data: created, error: createErr } = await authAdmin.auth.admin.createUser({
-    email: opts.email,
-    password: opts.password,
-    email_confirm: true,
-    user_metadata: { name: opts.profile.name ?? opts.profile.company_name ?? null },
-  });
-  if (createErr || !created.user) {
+  // ---- Create the auth user. handle_new_user trigger auto-inserts a stub
+  //      profile row (id + email + name). ----
+  const { data: created, error: createErr } =
+    await authAdmin.auth.admin.createUser({
+      email: opts.email,
+      password: opts.password,
+      email_confirm: true,
+      user_metadata: {
+        name: opts.profile.name ?? opts.profile.company_name ?? null,
+      },
+    });
+  if (createErr || !created?.user) {
+    const lower = (createErr?.message ?? "").toLowerCase();
+    if (lower.includes("already registered") || lower.includes("already exists")) {
+      return { ok: false as const, error: DUPLICATE_EMAIL_MESSAGE };
+    }
     return {
       ok: false as const,
-      error: createErr?.message?.includes("already registered")
-        ? "이미 가입된 이메일입니다"
-        : createErr?.message ?? "계정 생성에 실패했습니다",
+      error: createErr?.message ?? "계정 생성에 실패했습니다",
     };
   }
-
   const userId = created.user.id;
-  const { error: profileErr } = await dbAdmin.from("profiles").insert({
+
+  // ---- Upsert the profile (id-conflict). This fills in role, account_type,
+  //      and all typed fields without colliding with the trigger-inserted
+  //      stub. Idempotent on retry. ----
+  const profileRow = {
     id: userId,
     email: opts.email,
-    role: "client",
+    role: "client" as const,
     ...opts.profile,
-  });
+  };
+
+  const first = await dbAdmin
+    .from("profiles")
+    .upsert(profileRow, { onConflict: "id" });
+  let profileErr = first.error;
+
+  // Single retry guards against a rare race between the trigger and our upsert.
   if (profileErr) {
-    // Roll back the auth user if profile insert failed (best effort).
-    await authAdmin.auth.admin.deleteUser(userId);
+    const retry = await dbAdmin
+      .from("profiles")
+      .upsert(profileRow, { onConflict: "id" });
+    profileErr = retry.error;
+  }
+
+  if (profileErr) {
+    // Best-effort rollback of the auth user when no profile row landed at all,
+    // so we don't orphan a half-provisioned account.
+    const { data: existing } = await dbAdmin
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!existing) {
+      await authAdmin.auth.admin.deleteUser(userId);
+    }
     return {
       ok: false as const,
-      error: profileErr.message.includes("profiles_username_lower_unique")
-        ? "이미 사용 중인 아이디입니다"
-        : profileErr.message,
+      error: friendlyProfileError(profileErr.message),
     };
   }
 
@@ -183,7 +240,7 @@ async function provisionAccount(opts: {
     metadata: { account_type: opts.profile.account_type },
   });
 
-  // Sign the user in immediately
+  // ---- Auto sign-in ----
   const supabase = createServerAuthSupabase();
   const { error: signInErr } = await supabase.auth.signInWithPassword({
     email: opts.email,
@@ -194,7 +251,8 @@ async function provisionAccount(opts: {
       ok: true as const,
       autoLogin: false as const,
       next: "/login",
-      message: "가입은 완료되었으나 자동 로그인에 실패했습니다. 직접 로그인해주세요.",
+      message:
+        "가입은 완료되었으나 자동 로그인에 실패했습니다. 직접 로그인해주세요.",
     };
   }
 
