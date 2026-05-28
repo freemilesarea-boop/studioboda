@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format, formatDistanceToNow } from "date-fns";
-import { ko } from "date-fns/locale";
 import { createAdminSupabase } from "@/lib/supabase/admin";
-import { AdminCard, EmptyState } from "@/components/admin/Card";
+import { AdminCard } from "@/components/admin/Card";
 import { ProjectStatusBadge, PriorityBadge } from "@/components/admin/Badge";
 import type {
-  ActivityLog,
   Profile,
   Project,
   ProjectComment,
@@ -14,8 +11,11 @@ import type {
 } from "@/lib/types/db";
 import { ProjectControls } from "./ProjectControls";
 import { CommentForm } from "./CommentForm";
+import { CommentsList } from "./CommentsList";
 import { FilesPanel } from "./FilesPanel";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
+import { AIToolsPanel } from "./AIToolsPanel";
+import { AIAssetsList } from "./AIAssetsList";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -33,7 +33,6 @@ export default async function ProjectDetailPage({
     { data: project },
     { data: files },
     { data: comments },
-    { data: activity },
     { data: staff },
   ] = await Promise.all([
     admin.from("projects").select("*").eq("id", params.id).maybeSingle(),
@@ -47,13 +46,6 @@ export default async function ProjectDetailPage({
       .select("*")
       .eq("project_id", params.id)
       .order("created_at", { ascending: false }),
-    admin
-      .from("activity_logs")
-      .select("*")
-      .eq("entity_type", "project")
-      .eq("entity_id", params.id)
-      .order("created_at", { ascending: false })
-      .limit(20),
     admin
       .from("profiles")
       .select("*")
@@ -121,37 +113,25 @@ export default async function ProjectDetailPage({
         </AdminCard>
       </div>
 
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <AdminCard
+          title="AI 어시스턴트"
+          className="lg:col-span-2"
+        >
+          <AIToolsPanel projectId={p.id} />
+        </AdminCard>
+        <AdminCard title="AI 자산 히스토리">
+          <AIAssetsList projectId={p.id} />
+        </AdminCard>
+      </div>
+
       <AdminCard title="댓글 · 내부 메모">
         <CommentForm projectId={p.id} />
-        <div className="mt-4 divide-y divide-ink-15">
-          {((comments ?? []) as ProjectComment[]).length === 0 ? (
-            <p className="py-4 text-[12.5px] text-ink-50">아직 코멘트가 없습니다.</p>
-          ) : (
-            ((comments ?? []) as ProjectComment[]).map((c) => (
-              <div key={c.id} className="py-3">
-                <div className="flex items-center gap-2 text-[11px] text-ink-50">
-                  <span
-                    className={`rounded-full px-2 py-0.5 font-display text-[9px] font-bold uppercase tracking-[0.08em] ${
-                      c.is_internal
-                        ? "bg-warning/15 text-warning"
-                        : "bg-iris/10 text-iris"
-                    }`}
-                  >
-                    {c.is_internal ? "내부" : "클라이언트"}
-                  </span>
-                  <span>
-                    {formatDistanceToNow(new Date(c.created_at), {
-                      locale: ko,
-                      addSuffix: true,
-                    })}
-                  </span>
-                </div>
-                <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-[1.65] text-ink-100">
-                  {c.body}
-                </p>
-              </div>
-            ))
-          )}
+        <div className="mt-4">
+          <CommentsList
+            projectId={p.id}
+            initial={(comments ?? []) as ProjectComment[]}
+          />
         </div>
       </AdminCard>
     </div>
