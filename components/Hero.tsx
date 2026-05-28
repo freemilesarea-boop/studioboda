@@ -20,12 +20,12 @@ export function Hero() {
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: EASE }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-iris/45 bg-iris/15 px-3.5 py-1.5 backdrop-blur-sm"
+            className="inline-flex items-center gap-1.5 rounded-full border border-iris-glow/40 bg-iris/[0.18] px-3.5 py-1.5 shadow-[0_0_0_1px_rgba(140,124,255,0.06),0_8px_24px_-12px_rgba(91,71,255,0.55)] backdrop-blur-sm"
           >
-            <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-sky live-ring">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky" />
+            <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-iris-glow live-ring">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris-glow" />
             </span>
-            <span className="text-[12px] font-semibold text-sky">
+            <span className="text-[12px] font-semibold text-iris-glow">
               AI 기반 콘텐츠 제작 플랫폼
             </span>
           </motion.div>
@@ -38,7 +38,10 @@ export function Hero() {
           >
             콘텐츠 제작,
             <br />
-            <span className="text-iris">AI</span>와{" "}
+            <span className="bg-iris-text bg-clip-text text-transparent [-webkit-background-clip:text]">
+              AI
+            </span>
+            와{" "}
             <span className="text-sky">전문가</span>가
             <br />
             함께 완성합니다
@@ -122,7 +125,7 @@ function HeroStat({
     >
       <div className="num font-display text-[28px] font-extrabold leading-none tracking-[-0.6px] text-white sm:text-[32px]">
         {stat.num}
-        <span className="text-iris">{stat.suffix}</span>
+        <span className="text-iris-glow">{stat.suffix}</span>
       </div>
       <div className="mt-2 text-[12px] text-ink-50">{stat.label}</div>
     </div>
@@ -189,7 +192,7 @@ function HeroDashboard() {
 
       <div className="flex items-center justify-between border-t border-ink-90 px-5 py-3">
         <div className="flex items-center gap-2">
-          <i className="ti ti-bolt text-[13px] text-iris" aria-hidden />
+          <i className="ti ti-bolt text-[13px] text-iris-glow" aria-hidden />
           <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
             AVG · 24H DELIVERY
           </span>
@@ -208,7 +211,7 @@ function Pill({
   tone: "iris" | "sky" | "warning" | "success";
 }) {
   const map: Record<typeof tone, string> = {
-    iris: "bg-iris/20 text-sky",
+    iris: "bg-iris/22 text-iris-glow",
     sky: "bg-sky/20 text-sky",
     warning: "bg-warning/15 text-warning",
     success: "bg-success/15 text-success",
@@ -236,9 +239,9 @@ function HeroJobRow({
     label: string;
   }> = {
     rendering: {
-      bar: "bg-iris",
-      icon: "bg-iris/20 text-sky",
-      badge: "bg-iris/15 text-sky",
+      bar: "bg-iris-glow",
+      icon: "bg-iris/22 text-iris-glow",
+      badge: "bg-iris/20 text-iris-glow",
       label: "RENDERING",
     },
     review: {
@@ -267,7 +270,7 @@ function HeroJobRow({
     <div
       className={`flex items-start gap-3 rounded-[12px] border bg-ink-90 px-3 py-3 transition-colors duration-200 sm:px-4 ${
         active
-          ? "border-iris/35 bg-iris/[0.07]"
+          ? "border-iris-glow/45 bg-iris/[0.10]"
           : "border-ink-90"
       }`}
     >
@@ -298,7 +301,7 @@ function HeroJobRow({
                 style={{ width: `${job.progress}%` }}
               />
             </div>
-            <span className="num text-[10px] font-semibold text-sky">
+            <span className="num text-[10px] font-semibold text-iris-glow">
               {job.progress}%
             </span>
           </div>

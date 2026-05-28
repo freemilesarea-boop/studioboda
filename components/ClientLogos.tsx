@@ -1,21 +1,24 @@
 import { Reveal } from "./ui/Reveal";
-import { clientLogos, clientStats } from "@/lib/site-data";
+import { brandGroup, clientLogos } from "@/lib/site-data";
 
 export function ClientLogos() {
   const loop = [...clientLogos, ...clientLogos];
   return (
-    <section className="section-tight border-y border-ink-15 bg-white" aria-label="함께한 브랜드">
-      <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_2fr] lg:gap-12">
+    <section
+      className="section-tight border-y border-ink-15 bg-white"
+      aria-label="브랜드 그룹"
+      id="brands"
+    >
+      <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14 xl:gap-20">
         <Reveal>
-          <div>
-            <p className="eyebrow">Trusted by</p>
-            <h3 className="mt-2 font-display text-[20px] font-extrabold leading-[1.25] tracking-[-0.4px] text-ink-100 sm:text-[22px] lg:text-[24px]">
-              <span className="num text-iris">{clientStats.totalBrands}</span>{" "}
-              브랜드가 BODA와 함께합니다.
+          <div className="max-w-[460px]">
+            <p className="eyebrow">{brandGroup.eyebrow}</p>
+            <h3 className="mt-3 text-balance font-display text-[22px] font-extrabold leading-[1.28] tracking-[-0.5px] text-ink-100 sm:text-[24px] lg:text-[26px]">
+              {brandGroup.title}{" "}
+              <span className="text-iris">{brandGroup.titleAccent}</span>
             </h3>
-            <p className="mt-2 max-w-[300px] text-[12px] leading-[1.65] text-ink-50">
-              D2C 브랜드 · 스마트스토어 셀러 · 스타트업 · 광고대행사까지. 카테고리에
-              관계없이 결과로 검증되는 콘텐츠를 만듭니다.
+            <p className="mt-4 max-w-[420px] text-[13px] leading-[1.7] text-ink-50 sm:text-[13.5px]">
+              {brandGroup.description}
             </p>
           </div>
         </Reveal>
@@ -25,13 +28,13 @@ export function ClientLogos() {
             className="group relative overflow-hidden"
             style={{
               maskImage:
-                "linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%)",
+                "linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%)",
               WebkitMaskImage:
-                "linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%)",
+                "linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%)",
             }}
           >
             <div
-              className="marquee-track flex w-max items-center gap-7 sm:gap-10 group-hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-x-8 motion-reduce:gap-y-3"
+              className="marquee-track flex w-max items-center gap-10 sm:gap-14 lg:gap-16 group-hover:[animation-play-state:paused] motion-reduce:animate-none motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-x-10 motion-reduce:gap-y-4"
               aria-hidden
             >
               {loop.map((c, i) => (
@@ -47,14 +50,21 @@ export function ClientLogos() {
       </div>
 
       <Reveal delay={0.12}>
-        <div className="mt-9 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-ink-15 pt-6 sm:grid-cols-3 lg:grid-cols-6">
-          {clientStats.byCategory.map((c) => (
-            <div key={c.label} className="flex items-baseline justify-between gap-2">
-              <span className="text-[11px] text-ink-50">{c.label}</span>
-              <span className="num font-display text-[14px] font-extrabold tracking-[-0.3px] text-ink-100">
-                {c.value}
-              </span>
-            </div>
+        <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-ink-15 pt-6 sm:gap-x-9 lg:mt-12">
+          <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
+            Capabilities
+          </span>
+          {brandGroup.capabilities.map((label) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-2 font-display text-[12px] font-bold uppercase tracking-[0.1em] text-ink-70"
+            >
+              <span
+                className="inline-block h-[3px] w-[3px] rounded-full bg-iris"
+                aria-hidden
+              />
+              {label}
+            </span>
           ))}
         </div>
       </Reveal>
@@ -65,13 +75,13 @@ export function ClientLogos() {
 function LogoWordmark({ name, sector }: { name: string; sector: string }) {
   return (
     <div
-      className="flex shrink-0 items-baseline gap-1.5"
+      className="flex shrink-0 items-baseline gap-2"
       title={`${name} · ${sector}`}
     >
-      <span className="font-display text-[18px] font-extrabold uppercase tracking-[-0.4px] text-ink-70 transition-colors duration-200 hover:text-ink-100">
+      <span className="font-display text-[17px] font-extrabold uppercase tracking-[-0.3px] text-ink-70 transition-colors duration-200 hover:text-ink-100 sm:text-[19px]">
         {name}
       </span>
-      <span className="hidden font-mono text-[9px] uppercase tracking-[0.12em] text-ink-30 sm:inline">
+      <span className="hidden font-mono text-[9px] uppercase tracking-[0.14em] text-ink-30 sm:inline">
         {sector}
       </span>
     </div>

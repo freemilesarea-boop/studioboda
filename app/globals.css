@@ -8,7 +8,7 @@
 :root {
   --bg: #ffffff;
   --fg: #0a0a12;
-  --accent: #5847ff;
+  --accent: #5b47ff;
 }
 
 html {
@@ -40,7 +40,7 @@ h3 {
 }
 
 ::selection {
-  background: rgba(88, 71, 255, 0.18);
+  background: rgba(91, 71, 255, 0.2);
   color: #0a0a12;
 }
 
@@ -178,7 +178,7 @@ button {
 
 /* Marquee subtle motion for tools strip */
 .marquee-track {
-  animation: marquee 38s linear infinite;
+  animation: marquee 46s linear infinite;
 }
 @keyframes marquee {
   from {

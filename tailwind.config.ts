@@ -26,8 +26,10 @@ const config: Config = {
     extend: {
       colors: {
         iris: {
-          DEFAULT: "#5847FF",
+          DEFAULT: "#5B47FF",
           light: "#EEEDFF",
+          glow: "#8C7CFF",
+          deep: "#3D2DE5",
         },
         sky: "#7C9CFF",
         plum: "#8A6CFF",
@@ -84,11 +86,13 @@ const config: Config = {
       },
       backgroundImage: {
         "iris-grad":
-          "linear-gradient(135deg, #5847FF 0%, #7C9CFF 60%, #8A6CFF 100%)",
+          "linear-gradient(135deg, #5B47FF 0%, #8C7CFF 55%, #8A6CFF 100%)",
+        "iris-text":
+          "linear-gradient(120deg, #8C7CFF 0%, #B5A8FF 50%, #7C9CFF 100%)",
         "iris-soft":
-          "radial-gradient(60% 60% at 50% 0%, rgba(88,71,255,0.20) 0%, rgba(124,156,255,0.05) 55%, rgba(255,255,255,0) 80%)",
+          "radial-gradient(60% 60% at 50% 0%, rgba(91,71,255,0.22) 0%, rgba(124,156,255,0.05) 55%, rgba(255,255,255,0) 80%)",
         "ink-soft":
-          "radial-gradient(80% 60% at 50% 0%, rgba(88,71,255,0.18) 0%, rgba(10,10,18,0) 70%)",
+          "radial-gradient(80% 60% at 50% 0%, rgba(91,71,255,0.20) 0%, rgba(10,10,18,0) 70%)",
       },
       keyframes: {
         "progress-pulse": {

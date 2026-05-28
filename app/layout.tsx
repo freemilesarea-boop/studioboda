@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     icon: [
       {
         url:
-          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='14.5' fill='none' stroke='%235847FF' stroke-width='3'/%3E%3Crect x='15.5' y='1.5' width='3' height='5' rx='1.5' fill='%235847FF'/%3E%3Ccircle cx='17' cy='17' r='8' fill='%235847FF'/%3E%3Ccircle cx='17' cy='17' r='3.2' fill='%23ffffff'/%3E%3C/svg%3E",
+          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='14.5' fill='none' stroke='%235B47FF' stroke-width='3'/%3E%3Crect x='15.5' y='1.5' width='3' height='5' rx='1.5' fill='%235B47FF'/%3E%3Ccircle cx='17' cy='17' r='8' fill='%235B47FF'/%3E%3Ccircle cx='17' cy='17' r='3.2' fill='%23ffffff'/%3E%3C/svg%3E",
         type: "image/svg+xml",
       },
     ],
