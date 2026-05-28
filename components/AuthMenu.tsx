@@ -81,14 +81,17 @@ export function AuthMenu({ variant = "light" }: { variant?: "light" | "dark" }) 
 
   return (
     <div className="hidden items-center gap-2 md:flex">
-      <span
-        className={`max-w-[160px] truncate font-display text-[12.5px] font-semibold ${
-          isDark ? "text-white" : "text-ink-100"
+      <Link
+        href="/me"
+        className={`max-w-[160px] truncate rounded-lg px-2.5 py-1.5 font-display text-[12.5px] font-semibold ${
+          isDark
+            ? "text-white hover:bg-white/[0.06]"
+            : "text-ink-100 hover:bg-ink-5"
         }`}
         title={session.email}
       >
         {label}
-      </span>
+      </Link>
       <button
         type="button"
         onClick={onLogout}
@@ -164,9 +167,13 @@ export function AuthMenuMobile({
 
   return (
     <div className="mt-3 grid gap-2">
-      <p className="rounded-lg border border-ink-15 px-3 py-2 text-[13px] text-ink-70">
-        {session.name || session.email}
-      </p>
+      <Link
+        href="/me"
+        onClick={onNavigate}
+        className="grid h-11 place-items-center rounded-lg border border-ink-15 text-[14px] font-bold text-ink-100"
+      >
+        마이페이지 ({session.name || session.email}) →
+      </Link>
       <button
         type="button"
         onClick={onLogout}

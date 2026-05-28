@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
 import { CaseStudyModal } from "./CaseStudyModal";
+import { StartCTA } from "./StartCTA";
 import { portfolio, type PortfolioItem } from "@/lib/site-data";
 
 export function Portfolio() {
@@ -16,12 +17,13 @@ export function Portfolio() {
         title="실제로 운영되는 결과물"
         subtitle="브랜드 데이터로 증명된 케이스 중심으로 정리했습니다. 모든 산출물은 시니어 디렉터의 큐레이션을 거쳐 정제되었습니다."
         action={
-          <a
-            href="#contact"
-            className="text-[13px] font-semibold text-iris transition-opacity hover:opacity-80"
+          <StartCTA
+            size="sm"
+            variant="ghost-dark"
+            className="!bg-transparent !text-iris"
           >
             전체 케이스 요청 →
-          </a>
+          </StartCTA>
         }
       />
 

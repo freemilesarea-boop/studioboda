@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoSymbol } from "./Logo";
-import { LinkButton } from "./ui/Button";
 import { nav } from "@/lib/site-data";
 import { AuthMenu, AuthMenuMobile } from "./AuthMenu";
+import { StartCTA } from "./StartCTA";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -60,9 +60,7 @@ export function Header() {
         <div className="hidden items-center gap-3 md:flex">
           <AuthMenu />
           <span className="hidden h-5 w-px bg-ink-15 md:inline-block" />
-          <LinkButton href="#inquiry" size="md">
-            무료로 시작하기
-          </LinkButton>
+          <StartCTA size="md">무료로 시작하기</StartCTA>
         </div>
 
         <button
@@ -96,14 +94,13 @@ export function Header() {
             </nav>
             <AuthMenuMobile onNavigate={() => setOpen(false)} />
             <div className="mt-3">
-              <LinkButton
-                href="#inquiry"
+              <StartCTA
                 size="lg"
                 className="w-full"
-                onClick={() => setOpen(false)}
+                onNavigate={() => setOpen(false)}
               >
                 무료로 시작하기
-              </LinkButton>
+              </StartCTA>
             </div>
           </div>
         </div>

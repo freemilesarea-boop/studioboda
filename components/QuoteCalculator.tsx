@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
 import { quoteOptions } from "@/lib/site-data";
+import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
 
 type ServiceKey = (typeof quoteOptions.service)[number]["key"];
 type DeliveryKey = (typeof quoteOptions.delivery)[number]["key"];
@@ -14,6 +16,23 @@ export function QuoteCalculator() {
   const [service, setService] = useState<ServiceKey>("detail");
   const [delivery, setDelivery] = useState<DeliveryKey>("normal");
   const [addons, setAddons] = useState<AddonKey[]>([]);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    const supabase = createBrowserAuthSupabase();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (active) setSignedIn(!!user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (active) setSignedIn(!!s?.user);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const total = useMemo(() => {
     const s = quoteOptions.service.find((x) => x.key === service);
@@ -47,6 +66,20 @@ export function QuoteCalculator() {
     ]
       .filter(Boolean)
       .join("\n");
+
+    if (signedIn === false) {
+      // Stash selection so the InquiryForm can pick it up after signup.
+      try {
+        sessionStorage.setItem(
+          "boda:quote-prefill",
+          JSON.stringify({ service_type: s?.label, message }),
+        );
+      } catch {
+        /* sessionStorage blocked — proceed without */
+      }
+      router.push(`/signup?plan=${encodeURIComponent(service)}`);
+      return;
+    }
 
     window.dispatchEvent(
       new CustomEvent("boda:quote-prefill", {

@@ -32,13 +32,14 @@ export function isStaffRole(role: Role | undefined | null) {
 export async function requireStaff(): Promise<Profile> {
   const profile = await getProfile();
   if (!profile) redirect("/admin/login");
-  if (!isStaffRole(profile.role)) redirect("/unauthorized");
+  // Logged-in but non-staff users get sent to their member area, not a 403 page.
+  if (!isStaffRole(profile.role)) redirect("/me");
   return profile;
 }
 
 export async function requireAdmin(): Promise<Profile> {
   const profile = await getProfile();
   if (!profile) redirect("/admin/login");
-  if (profile.role !== "admin") redirect("/unauthorized");
+  if (profile.role !== "admin") redirect("/me");
   return profile;
 }

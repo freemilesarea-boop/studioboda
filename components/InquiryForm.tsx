@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { createInquiryAction } from "@/lib/actions/inquiries";
+import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
 
 const SERVICES = [
   "상세페이지",
@@ -50,7 +52,70 @@ export function InquiryForm({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [authedProfile, setAuthedProfile] = useState<
+    | {
+        name?: string | null;
+        email?: string | null;
+        phone?: string | null;
+        company_name?: string | null;
+      }
+    | null
+  >(null);
 
+  // Auth + prefill from logged-in profile (one-shot, server-resolved).
+  useEffect(() => {
+    let active = true;
+    const supabase = createBrowserAuthSupabase();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!active || !user) return;
+      const meta = (user.user_metadata ?? {}) as { name?: string };
+      // Fetch the profile fields to prefill thoroughly.
+      try {
+        const res = await fetch("/api/me", { cache: "no-store" });
+        if (res.ok) {
+          const data = (await res.json()) as {
+            name?: string | null;
+            email?: string | null;
+            phone?: string | null;
+            contact_phone?: string | null;
+            company_name?: string | null;
+            account_type?: "individual" | "business";
+          };
+          if (!active) return;
+          setAuthedProfile({
+            name: data.name ?? meta.name ?? null,
+            email: data.email ?? user.email ?? null,
+            phone: data.phone ?? data.contact_phone ?? null,
+            company_name: data.company_name ?? null,
+          });
+          if (data.name && !name) setName(data.name);
+          if (data.email && !email) setEmail(data.email);
+          if ((data.phone ?? data.contact_phone) && !phone) {
+            setPhone(data.phone ?? data.contact_phone ?? "");
+          }
+          if (data.company_name && !company) setCompany(data.company_name);
+        } else {
+          setAuthedProfile({
+            name: meta.name ?? null,
+            email: user.email ?? null,
+          });
+          if (meta.name && !name) setName(meta.name);
+          if (user.email && !email) setEmail(user.email);
+        }
+      } catch {
+        setAuthedProfile({
+          name: meta.name ?? null,
+          email: user.email ?? null,
+        });
+      }
+    });
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pick up prefill from QuoteCalculator (same-page event + post-signup sessionStorage).
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ service_type?: string; message?: string }>).detail;
@@ -59,6 +124,22 @@ export function InquiryForm({
       setDone(false);
     };
     window.addEventListener("boda:quote-prefill", handler);
+
+    try {
+      const stash = sessionStorage.getItem("boda:quote-prefill");
+      if (stash) {
+        const parsed = JSON.parse(stash) as {
+          service_type?: string;
+          message?: string;
+        };
+        if (parsed.service_type) setService(parsed.service_type);
+        if (parsed.message) setMessage(parsed.message);
+        sessionStorage.removeItem("boda:quote-prefill");
+      }
+    } catch {
+      /* ignore */
+    }
+
     return () => window.removeEventListener("boda:quote-prefill", handler);
   }, []);
 
@@ -109,12 +190,54 @@ export function InquiryForm({
         <p className={`mt-1.5 text-[12.5px] ${isDark ? "text-ink-30" : "text-ink-70"}`}>
           평균 24시간 이내에 회신 드립니다. hello@studioboda.kr
         </p>
+        {authedProfile ? (
+          <Link
+            href="/me"
+            className={`mt-4 inline-flex h-9 items-center justify-center rounded-lg px-4 text-[12.5px] font-bold ${
+              isDark
+                ? "bg-white text-ink-100 hover:opacity-90"
+                : "bg-ink-100 text-white hover:bg-ink-90"
+            }`}
+          >
+            내 문의 보기 →
+          </Link>
+        ) : null}
       </div>
     );
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
+      {authedProfile ? (
+        <div
+          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-[11.5px] ${
+            isDark
+              ? "border-iris-glow/30 bg-iris/[0.08] text-iris-glow"
+              : "border-iris/30 bg-iris-light text-iris"
+          }`}
+        >
+          <i className="ti ti-user-check text-[14px]" aria-hidden />
+          <span>
+            <b>{authedProfile.name || authedProfile.email}</b> 님으로 접수됩니다.
+          </span>
+        </div>
+      ) : (
+        <div
+          className={`flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-[11.5px] ${
+            isDark
+              ? "border-white/10 bg-white/[0.03] text-ink-30"
+              : "border-ink-15 bg-ink-5 text-ink-70"
+          }`}
+        >
+          <span>회원이라면 더 빠르게 접수할 수 있어요.</span>
+          <Link
+            href="/login"
+            className={`font-bold ${isDark ? "text-white" : "text-iris"}`}
+          >
+            로그인 →
+          </Link>
+        </div>
+      )}
       {/* Honeypot — hidden from real users */}
       <input
         type="text"

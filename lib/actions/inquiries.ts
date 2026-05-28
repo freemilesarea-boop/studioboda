@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { createServerAuthSupabase } from "@/lib/supabase/server";
 import { logActivity } from "@/lib/activity";
 import { requireStaff } from "@/lib/auth";
 import { inquirySchema, type InquiryInput } from "@/lib/schemas";
@@ -20,6 +21,12 @@ export async function createInquiryAction(input: InquiryInput) {
     return { ok: true as const };
   }
 
+  // Attach the inquiry to the logged-in user if there is one.
+  const authClient = createServerAuthSupabase();
+  const {
+    data: { user },
+  } = await authClient.auth.getUser();
+
   const admin = createAdminSupabase();
   const { data, error } = await admin
     .from("inquiries")
@@ -31,6 +38,7 @@ export async function createInquiryAction(input: InquiryInput) {
       service_type: parsed.data.service_type ?? null,
       budget_range: parsed.data.budget_range ?? null,
       message: parsed.data.message ?? null,
+      user_id: user?.id ?? null,
     })
     .select("id")
     .single();
