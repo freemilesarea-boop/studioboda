@@ -63,6 +63,7 @@ export const billingStatusLabels: Record<BillingStatus, string> = {
 
 export type Payment = {
   id: string;
+  organization_id: string | null;
   quote_id: string | null;
   project_id: string | null;
   user_id: string | null;
@@ -86,6 +87,7 @@ export type Payment = {
 
 export type BrandProfile = {
   id: string;
+  organization_id: string | null;
   user_id: string;
   brand_name: string | null;
   brand_colors: string | null;
@@ -102,6 +104,7 @@ export type BrandProfile = {
 
 export type Service = {
   id: string;
+  organization_id: string | null;
   key: string;
   name: string;
   name_en: string | null;
@@ -169,6 +172,7 @@ export type Profile = {
 
 export type Inquiry = {
   id: string;
+  organization_id: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -190,6 +194,7 @@ export type QuoteOption = {
 
 export type Quote = {
   id: string;
+  organization_id: string | null;
   inquiry_id: string | null;
   user_id: string | null;
   title: string;
@@ -217,6 +222,7 @@ export type Quote = {
 
 export type Project = {
   id: string;
+  organization_id: string | null;
   project_no: string;
   quote_id: string | null;
   inquiry_id: string | null;
