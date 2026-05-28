@@ -1,5 +1,5 @@
 /**
- * Create or promote the initial admin account.
+ * Create or promote the initial admin account on the STUDIOBODA Supabase project.
  *
  * Usage:
  *   1. Set ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME (and Supabase keys) in .env.local
@@ -28,26 +28,20 @@ async function main() {
     throw new Error("ADMIN_PASSWORD must be at least 8 characters");
   }
 
-  const auth = createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  const db = createClient(url, serviceKey, {
-    db: { schema: "boda" },
+  const client = createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Try to find existing user by email
   let userId: string | null = null;
-  const { data: list } = await auth.auth.admin.listUsers({ perPage: 200 });
+  const { data: list } = await client.auth.admin.listUsers({ perPage: 200 });
   const found = list?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
 
   if (found) {
     userId = found.id;
-    // Reset password
-    await auth.auth.admin.updateUserById(found.id, { password });
+    await client.auth.admin.updateUserById(found.id, { password });
     console.log(`✔ user already existed (${email}) — password reset`);
   } else {
-    const { data, error } = await auth.auth.admin.createUser({
+    const { data, error } = await client.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -60,12 +54,14 @@ async function main() {
     console.log(`✔ created auth user ${email}`);
   }
 
-  // Upsert profile with role='admin'
-  const { error: pErr } = await db.from("profiles").upsert({
+  // The handle_new_user trigger inserts a profiles row on signup; for an
+  // already-existing user it may have been a no-op. Upsert covers both paths.
+  const { error: pErr } = await client.from("profiles").upsert({
     id: userId,
     email,
     name,
     role: "admin",
+    account_type: "individual",
   });
   if (pErr) {
     throw new Error(`Failed to upsert profile: ${pErr.message}`);

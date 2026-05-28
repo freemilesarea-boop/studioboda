@@ -136,28 +136,53 @@ export const flowSteps = [
   },
 ] as const;
 
-export const aiFeatures = [
+// Brand Keywords — STUDIO BODA Brand Guide v1.0 (PDF page 3)
+export const brandKeywords = [
   {
-    icon: "ti-brain",
-    title: "브랜드 보이스 학습",
-    desc: "기존 자료를 업로드하면 AI가 브랜드 톤앤매너를 분석해 일관된 문체로 제작합니다.",
+    code: "K·01",
+    icon: "ti-bolt",
+    title: "빠른 제작",
+    titleEn: "VELOCITY",
+    desc: "AI 자동화 워크플로우로 평균 72시간 → 24시간으로 단축.",
   },
   {
+    code: "K·02",
+    icon: "ti-cpu",
+    title: "AI 자동화",
+    titleEn: "AUTOMATION",
+    desc: "생성형 AI 파이프라인 — 카피·비주얼·레이아웃까지 일관 자동화.",
+  },
+  {
+    code: "K·03",
+    icon: "ti-sparkles",
+    title: "고퀄리티 디자인",
+    titleEn: "PREMIUM",
+    desc: "시니어 디렉터의 큐레이션으로 AI 결과를 브랜드 톤으로 정제.",
+  },
+  {
+    code: "K·04",
     icon: "ti-chart-bar",
-    title: "전환율 기반 카피",
-    desc: "카테고리별 전환 데이터를 학습해 후킹 카피와 CTA 패턴을 자동으로 제안합니다.",
+    title: "광고 최적화",
+    titleEn: "PERFORMANCE",
+    desc: "A/B 테스트 기반의 카피와 레이아웃으로 CTR · ROAS 직결.",
   },
   {
-    icon: "ti-search",
-    title: "SEO 자동 최적화",
-    desc: "키워드·메타·구조까지 채널별 가이드에 맞춰 검색 최적화 형태로 생성합니다.",
-  },
-  {
-    icon: "ti-arrows-right-left",
-    title: "멀티포맷 변환",
-    desc: "한 번 만든 콘텐츠를 1:1·4:5·9:16·16:9 등 채널별 포맷으로 자동 변환합니다.",
+    code: "K·05",
+    icon: "ti-aperture",
+    title: "브랜드 감각",
+    titleEn: "AESTHETIC",
+    desc: "템플릿이 아닌 디자이너 퍼스트 디자인.",
   },
 ] as const;
+
+// Legacy alias — AIFeature section still imports `aiFeatures`. Maps PDF
+// brandKeywords[0..3] into its existing shape (icon/title/desc) without code
+// changes on the consumer.
+export const aiFeatures = brandKeywords.map((k) => ({
+  icon: k.icon,
+  title: k.title,
+  desc: k.desc,
+}));
 
 export type ClientLogo = {
   name: string;

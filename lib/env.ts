@@ -5,10 +5,9 @@ const required = (name: string, value: string | undefined): string => {
   return value;
 };
 
-// Lazy getters — never evaluated at module import time so that builds can
-// proceed even when env vars are temporarily missing (Vercel "Collecting page
-// data" phase loads modules transitively). They throw only when an actual
-// Supabase client is constructed at request time.
+// Lazy getters — never evaluated at module import time so that builds proceed
+// even when env vars are temporarily missing. They throw only when a Supabase
+// client is actually constructed at request time.
 export const publicEnv = () => ({
   SUPABASE_URL: required(
     "NEXT_PUBLIC_SUPABASE_URL",
@@ -36,5 +35,13 @@ export const serverEnv = () => ({
   ),
 });
 
-export const BODA_SCHEMA = "boda" as const;
-export const STORAGE_BUCKET = "boda-project-files" as const;
+// PayApp credentials live ONLY in Vercel env vars (never in code, DB, or chat).
+// Phase 3 reads these inside the payment server actions.
+export const payappEnv = () => ({
+  SHOP_ID: required("PAYAPP_SHOP_ID", process.env.PAYAPP_SHOP_ID),
+  API_KEY: required("PAYAPP_API_KEY", process.env.PAYAPP_API_KEY),
+  LINKKEY: required("PAYAPP_LINKKEY", process.env.PAYAPP_LINKKEY),
+  LINKVAL: required("PAYAPP_LINKVAL", process.env.PAYAPP_LINKVAL),
+});
+
+export const STORAGE_BUCKET = "project-files" as const;
