@@ -2,6 +2,7 @@ import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import { createAdminSupabase } from "@/lib/supabase/admin";
+import { paymentAggregates } from "@/lib/queries/payments";
 import { AdminCard, EmptyState, StatCard } from "@/components/admin/Card";
 import {
   InquiryStatusBadge,
@@ -81,6 +82,8 @@ async function loadDashboard() {
     .filter((q: { status: string }) => q.status === "sent")
     .reduce((s: number, q: { total_price: number }) => s + (q.total_price ?? 0), 0);
 
+  const pay = await paymentAggregates();
+
   return {
     counts: {
       newInquiries: newInquiriesRes.count ?? 0,
@@ -91,6 +94,7 @@ async function loadDashboard() {
       accepted: acceptedRevenue,
       pipeline: pipelineRevenue,
     },
+    payments: pay,
     recentInquiries: (recentInquiriesRes.data ?? []) as Inquiry[],
     todayProjects: (todayProjectsRes.data ?? []) as Project[],
     activity: (activityRes.data ?? []) as ActivityLog[],
@@ -127,6 +131,38 @@ export default async function DashboardPage() {
           )}`}
           tone="success"
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="미수금 합계"
+          value={fmtKRW(data.payments.unpaidTotal)}
+          trend={`대기 ${data.payments.pendingCount}건`}
+          tone="warning"
+        />
+        <StatCard
+          label="대기 중 예약금"
+          value={fmtKRW(data.payments.pendingDeposits)}
+          trend="customer pending"
+          tone="iris"
+        />
+        <StatCard
+          label="결제 완료 합계"
+          value={fmtKRW(data.payments.paidTotal)}
+          trend={`완료 ${data.payments.paidCount}건`}
+          tone="success"
+        />
+        <Link
+          href="/admin/payments/new"
+          className="flex flex-col justify-between rounded-2xl border border-dashed border-iris/40 bg-iris-light p-5 transition-colors hover:border-iris hover:bg-iris/[0.08]"
+        >
+          <p className="font-display text-[11px] font-bold uppercase tracking-[0.08em] text-iris">
+            + 새 결제 청구
+          </p>
+          <p className="mt-2 font-display text-[15px] font-bold tracking-tightish text-ink-100">
+            예약금 · 본결제 · 추가결제 발행 →
+          </p>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
