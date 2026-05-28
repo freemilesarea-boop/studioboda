@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { requireStaff } from "@/lib/auth";
+import { createNotification } from "@/lib/notifications";
+import { sendTemplate } from "@/lib/email/send";
 import { quoteSchema, type QuoteInput } from "@/lib/schemas";
 import type { QuoteOption, QuoteStatus } from "@/lib/types/db";
 
@@ -97,6 +99,32 @@ export async function setQuoteStatusAction(id: string, status: QuoteStatus) {
     action: status === "accepted" ? "accepted" : status === "sent" ? "sent" : "status_changed",
     metadata: { status },
   });
+
+  // Customer notification + email when a quote is sent
+  if (status === "sent" && quote.user_id) {
+    void createNotification(quote.user_id, "quote_received", {
+      quote_id: id,
+      title: quote.title,
+      total_price: quote.total_price,
+    });
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("name,email,company_name")
+      .eq("id", quote.user_id)
+      .maybeSingle();
+    const recipient = profile?.email ?? null;
+    if (recipient) {
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://studioboda.vercel.app";
+      void sendTemplate(recipient, "quote_received", {
+        name: profile?.name ?? profile?.company_name ?? recipient,
+        quoteTitle: quote.title,
+        totalPrice: quote.total_price,
+        deliveryDays: quote.delivery_days,
+        quoteUrl: `${siteUrl}/me/quotes/${id}`,
+      });
+    }
+  }
 
   // accepted → auto-create project
   if (status === "accepted") {

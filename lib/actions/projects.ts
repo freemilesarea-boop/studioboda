@@ -5,7 +5,12 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { requireStaff } from "@/lib/auth";
 import { projectSchema, type ProjectInput } from "@/lib/schemas";
-import type { ProjectStatus, Priority, Visibility } from "@/lib/types/db";
+import type {
+  FileFolder,
+  Priority,
+  ProjectStatus,
+  Visibility,
+} from "@/lib/types/db";
 import { STORAGE_BUCKET } from "@/lib/env";
 
 export async function updateProjectAction(id: string, input: Partial<ProjectInput>) {
@@ -136,6 +141,12 @@ export async function uploadProjectFileAction(
   const me = await requireStaff();
   const file = formData.get("file");
   const visibility = (formData.get("visibility") as Visibility) || "internal";
+  const folderRaw = (formData.get("folder") as string) || "draft";
+  const folder: FileFolder = (
+    ["draft", "revision", "final"] as const
+  ).includes(folderRaw as FileFolder)
+    ? (folderRaw as FileFolder)
+    : "draft";
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false as const, error: "파일을 선택해주세요" };
   }
@@ -145,7 +156,7 @@ export async function uploadProjectFileAction(
 
   const admin = createAdminSupabase();
   const safeName = file.name.replace(/[^\w.\-가-힣 ]/g, "_");
-  const path = `${projectId}/${Date.now()}-${safeName}`;
+  const path = `${projectId}/${folder}/${Date.now()}-${safeName}`;
   const buf = Buffer.from(await file.arrayBuffer());
 
   const { error: upErr } = await admin.storage
@@ -164,8 +175,27 @@ export async function uploadProjectFileAction(
     file_size: file.size,
     uploaded_by: me.id,
     visibility,
+    folder,
+    is_final: folder === "final",
   });
   if (rowErr) return { ok: false as const, error: rowErr.message };
+
+  // Notify the project owner when a client-visible file is shared
+  if (visibility === "client") {
+    const { data: project } = await admin
+      .from("projects")
+      .select("user_id")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (project?.user_id) {
+      const { createNotification } = await import("@/lib/notifications");
+      void createNotification(project.user_id, "file_uploaded", {
+        project_id: projectId,
+        file_name: file.name,
+        folder,
+      });
+    }
+  }
 
   await logActivity({
     actor_id: me.id,

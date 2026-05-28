@@ -8,7 +8,12 @@ import {
   signedFileUrlAction,
   uploadProjectFileAction,
 } from "@/lib/actions/projects";
-import type { ProjectFile, Visibility } from "@/lib/types/db";
+import type {
+  FileFolder,
+  ProjectFile,
+  Visibility,
+} from "@/lib/types/db";
+import { fileFolderLabels } from "@/lib/types/db";
 import { useToast } from "@/components/admin/Toast";
 
 const fmtSize = (n: number | null) => {
@@ -27,6 +32,7 @@ export function FilesPanel({
 }) {
   const [pending, startTransition] = useTransition();
   const [visibility, setVisibility] = useState<Visibility>("internal");
+  const [folder, setFolder] = useState<FileFolder>("draft");
   const { push } = useToast();
   const router = useRouter();
 
@@ -35,6 +41,7 @@ export function FilesPanel({
     const form = e.currentTarget;
     const fd = new FormData(form);
     fd.set("visibility", visibility);
+    fd.set("folder", folder);
     startTransition(async () => {
       const r = await uploadProjectFileAction(projectId, fd);
       if (r.ok) {
@@ -88,6 +95,17 @@ export function FilesPanel({
         >
           <option value="internal">내부 전용</option>
           <option value="client">클라이언트 공유</option>
+        </select>
+        <select
+          value={folder}
+          onChange={(e) => setFolder(e.target.value as FileFolder)}
+          className="h-9 rounded-md border border-ink-15 bg-white px-2 text-[12px]"
+        >
+          {(Object.keys(fileFolderLabels) as FileFolder[]).map((f) => (
+            <option key={f} value={f}>
+              {fileFolderLabels[f]}
+            </option>
+          ))}
         </select>
         <button
           type="submit"

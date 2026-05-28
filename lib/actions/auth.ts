@@ -240,6 +240,29 @@ async function provisionAccount(opts: {
     metadata: { account_type: opts.profile.account_type },
   });
 
+  // Welcome notification + email (fire-and-forget)
+  const displayName =
+    (opts.profile.name as string | undefined) ||
+    (opts.profile.company_name as string | undefined) ||
+    opts.email.split("@")[0];
+  try {
+    const { createNotification } = await import("@/lib/notifications");
+    await createNotification(userId, "welcome", { name: displayName });
+  } catch {
+    /* notification optional */
+  }
+  try {
+    const { sendTemplate } = await import("@/lib/email/send");
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ?? "https://studioboda.vercel.app";
+    void sendTemplate(opts.email, "welcome", {
+      name: displayName,
+      siteUrl,
+    });
+  } catch {
+    /* email optional */
+  }
+
   // ---- Auto sign-in ----
   const supabase = createServerAuthSupabase();
   const { error: signInErr } = await supabase.auth.signInWithPassword({

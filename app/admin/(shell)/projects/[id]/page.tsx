@@ -15,6 +15,7 @@ import type {
 import { ProjectControls } from "./ProjectControls";
 import { CommentForm } from "./CommentForm";
 import { FilesPanel } from "./FilesPanel";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -111,25 +112,12 @@ export default async function ProjectDetailPage({
         </AdminCard>
 
         <AdminCard title="활동 타임라인">
-          {(activity ?? []).length === 0 ? (
-            <EmptyState title="아직 활동이 없습니다" />
-          ) : (
-            <ul className="space-y-2">
-              {((activity ?? []) as ActivityLog[]).map((a) => (
-                <li
-                  key={a.id}
-                  className="rounded-md border border-ink-15 px-3 py-2 text-[12px]"
-                >
-                  <p className="font-display font-bold text-ink-100">
-                    {a.action}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-ink-50">
-                    {format(new Date(a.created_at), "yyyy-MM-dd HH:mm")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ActivityTimeline
+            entityType="project"
+            entityId={p.id}
+            limit={40}
+            showRawAction
+          />
         </AdminCard>
       </div>
 

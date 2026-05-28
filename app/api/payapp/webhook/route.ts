@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { getPaymentProvider } from "@/lib/payments/provider";
+import { createNotification, notifyStaff } from "@/lib/notifications";
+import { sendTemplate } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -169,6 +171,58 @@ export async function POST(req: Request) {
       raw_state: event.rawState,
     },
   });
+
+  // Customer + staff notifications / email on paid
+  if (event.status === "paid") {
+    void createNotification(payment.user_id, "payment_paid", {
+      payment_id: payment.id,
+      type: payment.type,
+      amount: payment.amount,
+      title: payment.title,
+    });
+    void notifyStaff("payment_paid", {
+      payment_id: payment.id,
+      type: payment.type,
+      amount: payment.amount,
+      title: payment.title,
+    });
+
+    // Side: project_started event for deposit
+    if (payment.type === "deposit" && payment.project_id) {
+      void createNotification(payment.user_id, "project_started", {
+        project_id: payment.project_id,
+        title: payment.title,
+      });
+    }
+    if (payment.type === "balance" && payment.project_id) {
+      void createNotification(payment.user_id, "project_completed", {
+        project_id: payment.project_id,
+        title: payment.title,
+      });
+    }
+
+    // Email — best-effort. Look up the customer's email from profiles.
+    if (payment.user_id) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("name,email,company_name")
+        .eq("id", payment.user_id)
+        .maybeSingle();
+      const recipient = profile?.email ?? null;
+      const displayName =
+        profile?.name ?? profile?.company_name ?? recipient ?? "고객";
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://studioboda.vercel.app";
+      if (recipient) {
+        void sendTemplate(recipient, "payment_paid", {
+          name: displayName,
+          paymentTitle: payment.title,
+          amount: payment.amount,
+          meUrl: `${siteUrl}/me/projects`,
+        });
+      }
+    }
+  }
 
   // PayApp expects literal "SUCCESS" body to acknowledge.
   return new NextResponse("SUCCESS");

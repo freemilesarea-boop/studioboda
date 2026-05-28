@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
+import { notifyStaff } from "@/lib/notifications";
 import { getProfile } from "@/lib/auth";
 import { STORAGE_BUCKET } from "@/lib/env";
 
@@ -148,6 +149,12 @@ export async function postMyCommentAction(
       .eq("id", projectId)
       .in("status", ["review", "designing", "ai_draft", "delivered"]);
   }
+
+  // Notify staff (revision requests are high-signal; regular messages too)
+  void notifyStaff(
+    asRevision ? "revision_requested" : "comment_posted",
+    { project_id: projectId, by: me.id, length: tagged.length },
+  );
 
   revalidatePath(`/me/projects/${projectId}`);
   revalidatePath(`/admin/projects/${projectId}`);

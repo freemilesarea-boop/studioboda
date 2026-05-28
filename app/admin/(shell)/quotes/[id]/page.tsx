@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { AdminCard } from "@/components/admin/Card";
+import { QuotePaymentPanel } from "./QuotePaymentPanel";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { QuoteStatusBadge } from "@/components/admin/Badge";
 import type { Quote, QuoteOption } from "@/lib/types/db";
 import { QuoteEditor } from "./QuoteEditor";
@@ -26,6 +28,28 @@ export default async function QuoteDetailPage({
     .maybeSingle();
   if (!data) notFound();
   const q = data as Quote;
+
+  const { data: paymentsRows } = await admin
+    .from("payments")
+    .select("*")
+    .eq("quote_id", q.id)
+    .order("created_at", { ascending: false });
+  const payments = (paymentsRows ?? []) as {
+    id: string;
+    type: "deposit" | "balance" | "extra";
+    title: string;
+    amount: number;
+    status: string;
+    payapp_payurl: string | null;
+    payapp_mul_no: string | null;
+    paid_at: string | null;
+    created_at: string;
+  }[];
+
+  const depositRate = q.deposit_rate ?? 10;
+  const depositAmount =
+    q.deposit_amount ?? Math.round((q.total_price * depositRate) / 100);
+  const balanceAmount = q.balance_amount ?? q.total_price - depositAmount;
 
   return (
     <div className="space-y-5">
@@ -65,10 +89,26 @@ export default async function QuoteDetailPage({
         }}
       />
 
-      <AdminCard title="히스토리">
-        <p className="text-[12.5px] text-ink-50">
-          이 견적의 상태 변경 및 발송 기록은 대시보드 활동 로그에서 확인할 수 있습니다.
-        </p>
+      <QuotePaymentPanel
+        quote={{
+          id: q.id,
+          title: q.title,
+          total_price: q.total_price,
+          deposit_rate: depositRate,
+          deposit_amount: depositAmount,
+          balance_amount: balanceAmount,
+          payment_status: q.payment_status,
+        }}
+        payments={payments}
+      />
+
+      <AdminCard title="활동 타임라인">
+        <ActivityTimeline
+          entityType="quote"
+          entityId={q.id}
+          limit={30}
+          showRawAction
+        />
       </AdminCard>
     </div>
   );

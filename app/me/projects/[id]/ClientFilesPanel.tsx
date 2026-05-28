@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { format } from "date-fns";
 import { getClientFileUrlAction } from "@/lib/actions/customer";
 import type { ProjectFile } from "@/lib/types/db";
+import { fileFolderLabels } from "@/lib/types/db";
 import { useToast } from "@/components/admin/Toast";
 
 const fmtSize = (n: number | null) => {
@@ -61,6 +62,10 @@ export function ClientFilesPanel({ files }: { files: ProjectFile[] }) {
             </button>
             <p className="mt-0.5 text-[10.5px] text-ink-50">
               {fmtSize(f.file_size)} ·{" "}
+              <span className="font-display font-bold text-ink-70">
+                {fileFolderLabels[f.folder]}
+              </span>{" "}
+              ·{" "}
               {format(new Date(f.created_at), "yyyy-MM-dd HH:mm")}
               {f.is_final ? " · 최종 산출물" : ""}
             </p>
