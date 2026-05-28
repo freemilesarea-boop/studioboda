@@ -53,9 +53,17 @@ export default async function QuoteDetailPage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-[12px] text-ink-50">
-        <Link href="/admin/quotes" className="hover:text-iris">
+      <div className="flex items-center justify-between gap-3 text-[12px]">
+        <Link href="/admin/quotes" className="text-ink-50 hover:text-iris">
           ← 견적 목록
+        </Link>
+        <Link
+          href={`/admin/print/quote/${q.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-9 items-center rounded-lg border border-ink-15 bg-white px-3 font-display text-[12px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100"
+        >
+          ⤓ 견적서 PDF/인쇄
         </Link>
       </div>
 

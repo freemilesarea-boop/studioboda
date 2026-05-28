@@ -3,6 +3,18 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { paymentAggregates } from "@/lib/queries/payments";
+import { dashboardKpis } from "@/lib/queries/dashboard";
+import {
+  BarChart,
+  FunnelTile,
+  LineSparkline,
+} from "@/components/admin/MiniChart";
+import {
+  paymentStatusLabels,
+  projectStatusLabels,
+  type PaymentStatus,
+  type ProjectStatus,
+} from "@/lib/types/db";
 import { AdminCard, EmptyState, StatCard } from "@/components/admin/Card";
 import {
   InquiryStatusBadge,
@@ -102,7 +114,7 @@ async function loadDashboard() {
 }
 
 export default async function DashboardPage() {
-  const data = await loadDashboard();
+  const [data, kpis] = await Promise.all([loadDashboard(), dashboardKpis()]);
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -163,6 +175,93 @@ export default async function DashboardPage() {
             예약금 · 본결제 · 추가결제 발행 →
           </p>
         </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          label="이번 달 매출 (확정)"
+          value={fmtKRW(kpis.revenue.paidThisMonth)}
+          trend="paid_at 기준"
+          tone="success"
+        />
+        <StatCard
+          label="예약금 수금 누적"
+          value={fmtKRW(kpis.revenue.depositPaidTotal)}
+          trend="deposit · paid"
+          tone="iris"
+        />
+        <StatCard
+          label="본결제 수금 누적"
+          value={fmtKRW(kpis.revenue.balancePaidTotal)}
+          trend="balance · paid"
+        />
+        <StatCard
+          label="평균 작업 기간"
+          value={kpis.avgDurationDays > 0 ? `${kpis.avgDurationDays}일` : "—"}
+          trend="completed 기준"
+          tone="warning"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <LineSparkline
+            data={kpis.dailyRevenue}
+            label="최근 30일 매출"
+            color="#5B47FF"
+            height={120}
+            trailingValue={fmtKRW(
+              kpis.dailyRevenue.reduce((s, d) => s + d.amount, 0),
+            )}
+          />
+        </div>
+        <FunnelTile {...kpis.funnel} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <BarChart
+          label="결제 상태 분포 (건수)"
+          rows={kpis.paymentStatusDist
+            .filter((r) => r.count > 0)
+            .map((r) => ({
+              key: paymentStatusLabels[r.status as PaymentStatus],
+              value: r.count,
+              tone:
+                r.status === "paid"
+                  ? "#4ADE80"
+                  : r.status === "pending"
+                  ? "#F59E0B"
+                  : r.status === "failed"
+                  ? "#F87171"
+                  : "#C7C7D0",
+            }))}
+          formatValue={(n) => `${n}건`}
+        />
+        <BarChart
+          label="프로젝트 상태 분포 (건수)"
+          rows={kpis.projectStatusDist
+            .filter((r) => r.count > 0)
+            .map((r) => ({
+              key: projectStatusLabels[r.status as ProjectStatus],
+              value: r.count,
+              tone:
+                r.status === "completed" || r.status === "delivered"
+                  ? "#4ADE80"
+                  : r.status === "cancelled"
+                  ? "#F87171"
+                  : "#5B47FF",
+            }))}
+          formatValue={(n) => `${n}건`}
+        />
+        <BarChart
+          label="서비스별 매출 (최근 6개월, 완료)"
+          rows={kpis.revenueByService.map((r) => ({
+            key: r.service,
+            value: r.amount,
+            tone: "#5B47FF",
+          }))}
+          formatValue={(n) => fmtKRW(n)}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

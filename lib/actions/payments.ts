@@ -240,8 +240,9 @@ export async function createPaymentAction(input: CreateInput) {
   };
 }
 
-export async function cancelPaymentAction(paymentId: string) {
+export async function cancelPaymentAction(paymentId: string, reason: string) {
   const me = await requireStaff();
+  const trimmed = (reason || "").trim().slice(0, 500);
   const admin = createAdminSupabase();
   const { data: payment } = await admin
     .from("payments")
@@ -253,20 +254,21 @@ export async function cancelPaymentAction(paymentId: string) {
   if (payment.status === "paid") {
     return {
       ok: false as const,
-      error: "이미 완료된 결제는 환불 절차가 필요합니다",
+      error: "이미 완료된 결제는 환불 절차로 처리해주세요",
     };
   }
   if (payment.status === "cancelled") {
     return { ok: false as const, error: "이미 취소된 결제입니다" };
   }
 
-  // Try provider-side cancel if we have a mul_no
   if (payment.payapp_mul_no) {
     const provider = getPaymentProvider();
     if (provider.cancelPayment) {
-      const r = await provider.cancelPayment(payment.payapp_mul_no, "admin cancel");
+      const r = await provider.cancelPayment(
+        payment.payapp_mul_no,
+        trimmed || "admin cancel",
+      );
       if (!r.ok) {
-        // We still want to mark locally cancelled — log the provider error.
         await logActivity({
           actor_id: me.id,
           entity_type: "payment",
@@ -283,6 +285,7 @@ export async function cancelPaymentAction(paymentId: string) {
     .update({
       status: "cancelled",
       cancelled_at: new Date().toISOString(),
+      cancel_reason: trimmed || null,
     })
     .eq("id", paymentId);
 
@@ -291,10 +294,119 @@ export async function cancelPaymentAction(paymentId: string) {
     entity_type: "payment",
     entity_id: paymentId,
     action: "cancelled",
-    metadata: { type: payment.type, amount: payment.amount },
+    metadata: { type: payment.type, amount: payment.amount, reason: trimmed },
   });
+
+  if (payment.user_id) {
+    void createNotification(payment.user_id, "payment_failed", {
+      payment_id: paymentId,
+      title: payment.title,
+      reason: trimmed || null,
+      action: "cancelled",
+    });
+  }
 
   revalidatePath("/admin/payments");
   revalidatePath("/me/payments");
   return { ok: true as const };
+}
+
+// Refund — operational status only by default. The PayApp `paycancel` call is
+// attempted when there is a mul_no, but the user spec calls out that we should
+// not trust the PG-side refund flow yet. The DB always lands in 'refunded'.
+export async function refundPaymentAction(paymentId: string, reason: string) {
+  const me = await requireStaff();
+  const trimmed = (reason || "").trim().slice(0, 500);
+  if (!trimmed) {
+    return { ok: false as const, error: "환불 사유를 입력해주세요" };
+  }
+  const admin = createAdminSupabase();
+  const { data: payment } = await admin
+    .from("payments")
+    .select("*")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment)
+    return { ok: false as const, error: "결제를 찾을 수 없습니다" };
+  if (payment.status !== "paid") {
+    return {
+      ok: false as const,
+      error: "결제 완료 상태인 청구만 환불 가능합니다",
+    };
+  }
+
+  // Best-effort PayApp cancel call. Whether successful or not, mark refunded
+  // operationally — the user spec notes that PG refund automation is paused
+  // and operators reconcile manually.
+  let providerNote: string | null = null;
+  if (payment.payapp_mul_no) {
+    const provider = getPaymentProvider();
+    if (provider.cancelPayment) {
+      const r = await provider.cancelPayment(
+        payment.payapp_mul_no,
+        trimmed,
+      );
+      providerNote = r.ok ? "provider_cancelled" : `provider_failed:${r.error ?? ""}`;
+    }
+  }
+
+  await admin
+    .from("payments")
+    .update({
+      status: "refunded",
+      refunded_at: new Date().toISOString(),
+      refund_reason: trimmed,
+    })
+    .eq("id", paymentId);
+
+  // Reverse side-effects on the linked quote/project
+  if (payment.type === "deposit" && payment.quote_id) {
+    await admin
+      .from("quotes")
+      .update({ payment_status: "unpaid" })
+      .eq("id", payment.quote_id);
+    if (payment.project_id) {
+      await admin
+        .from("projects")
+        .update({ billing_status: "waiting_deposit" })
+        .eq("id", payment.project_id);
+    }
+  } else if (payment.type === "balance" && payment.quote_id) {
+    await admin
+      .from("quotes")
+      .update({ payment_status: "deposit_paid" })
+      .eq("id", payment.quote_id);
+    if (payment.project_id) {
+      await admin
+        .from("projects")
+        .update({ billing_status: "in_progress" })
+        .eq("id", payment.project_id);
+    }
+  }
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "payment",
+    entity_id: paymentId,
+    action: "refunded",
+    metadata: {
+      type: payment.type,
+      amount: payment.amount,
+      reason: trimmed,
+      provider: providerNote,
+    },
+  });
+
+  if (payment.user_id) {
+    void createNotification(payment.user_id, "payment_failed", {
+      payment_id: paymentId,
+      title: payment.title,
+      reason: trimmed,
+      action: "refunded",
+    });
+  }
+
+  revalidatePath("/admin/payments");
+  revalidatePath("/me/payments");
+  return { ok: true as const, providerNote };
 }
