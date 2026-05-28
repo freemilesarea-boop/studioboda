@@ -69,11 +69,15 @@ export const payappProvider: PaymentProvider = {
     if (input.buyerName) body.set("recvname", input.buyerName.slice(0, 60));
     if (input.buyerEmail) body.set("email", input.buyerEmail);
     body.set("returnurl", input.returnUrl);
-    body.set("feedbackurl", input.feedbackUrl);
+    // Note: feedbackurl is intentionally NOT set per-request. The PayApp
+    // merchant has a fixed common notification URL (Supabase Edge Function
+    // `payapp-webhook`) shared with two other sites. That function reads
+    // var1 and forwards STUDIO BODA payments to our Vercel webhook.
+    body.set("var1", "studioboda");
+    body.set("var2", input.orderRef);
     body.set("smsuse", "n");
     body.set("skip_cstpage", "y");
     body.set("checkretry", "y");
-    body.set("var1", input.orderRef);
 
     try {
       const res = await fetch(PAYAPP_ENDPOINT, {
@@ -133,7 +137,14 @@ export const payappProvider: PaymentProvider = {
       body.linkval === env.LINKVAL &&
       (!body.linkkey || body.linkkey === env.LINKKEY);
 
-    const ref = body.shop_user_id ?? body.var1 ?? null;
+    // var2 is our payment.id; var1 is the route marker ("studioboda").
+    // shop_user_id is also our payment.id (PayApp echoes it back).
+    const ref =
+      body.var2 ||
+      body.shop_user_id ||
+      // legacy fallback for older outbound requests that used var1
+      (body.var1 && body.var1 !== "studioboda" ? body.var1 : null) ||
+      null;
     return {
       ok: okSignature,
       paymentRef: ref,
