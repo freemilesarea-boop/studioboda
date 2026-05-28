@@ -35,10 +35,10 @@ const config: Config = {
         plum: "#8A6CFF",
         ink: {
           100: "#0A0A12",
-          90: "#181826",
+          90: "#1B1B26",
           70: "#494956",
           50: "#7E7E8C",
-          30: "#C6C7D0",
+          30: "#C7C7D0",
           15: "#E6E6EC",
           5: "#F6F6FA",
         },
@@ -48,20 +48,33 @@ const config: Config = {
       },
       fontFamily: {
         display: [
-          "Plus Jakarta Sans",
-          "Noto Sans KR",
-          "Apple SD Gothic Neo",
+          "Pretendard Variable",
           "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
           "system-ui",
+          "Apple SD Gothic Neo",
+          "Noto Sans KR",
           "sans-serif",
         ],
         sans: [
-          "Noto Sans KR",
-          "Plus Jakarta Sans",
-          "Apple SD Gothic Neo",
+          "Pretendard Variable",
           "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
           "system-ui",
+          "Apple SD Gothic Neo",
+          "Noto Sans KR",
           "sans-serif",
+        ],
+        mono: [
+          "JetBrains Mono",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "monospace",
         ],
       },
       fontSize: {
@@ -83,6 +96,13 @@ const config: Config = {
       letterSpacing: {
         eyebrow: "0.1em",
         tightish: "-0.3px",
+        // Brand guide v1.0 typography tokens
+        display: "-0.04em",
+        body: "-0.01em",
+        caption: "0.04em",
+      },
+      lineHeight: {
+        body: "1.55",
       },
       backgroundImage: {
         "iris-grad":
