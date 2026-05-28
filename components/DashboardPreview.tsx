@@ -1,5 +1,6 @@
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
+import { StartCTA } from "./StartCTA";
 import {
   dashboardJobs,
   dashboardSidebar,
@@ -18,12 +19,13 @@ export function DashboardPreview() {
         title="제작 상태를 한눈에"
         subtitle="주문 · 진행 · 검수 · 내보내기 · 활동 로그까지. 디렉터와 클라이언트가 같은 화면에서 호흡합니다."
         action={
-          <a
-            href="#quote"
-            className="text-[13px] font-semibold text-iris transition-opacity hover:opacity-80"
+          <StartCTA
+            size="sm"
+            variant="ghost-dark"
+            className="!bg-transparent !text-iris"
           >
             데모 신청하기 →
-          </a>
+          </StartCTA>
         }
       />
 

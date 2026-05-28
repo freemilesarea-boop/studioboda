@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
+import { StartCTA } from "./StartCTA";
 import {
   services,
   serviceTabs,
@@ -105,12 +106,14 @@ function ServiceCard({ service }: { service: Service }) {
               {service.price}
             </span>
           </div>
-          <a
-            href="#quote"
-            className="text-[12px] font-semibold text-sky transition-opacity group-hover:opacity-80"
+          <StartCTA
+            variant="ghost-light"
+            size="sm"
+            plan={service.key}
+            className="!bg-transparent !border-0 !text-sky"
           >
             신청하기 →
-          </a>
+          </StartCTA>
         </div>
 
         <div className="pointer-events-none absolute -bottom-20 -right-20 h-44 w-44 rounded-full bg-iris/20 blur-3xl" />
@@ -151,12 +154,14 @@ function ServiceCard({ service }: { service: Service }) {
             {service.price}
           </span>
         </div>
-        <a
-          href="#quote"
-          className="text-[12px] font-semibold text-iris transition-opacity group-hover:opacity-80"
+        <StartCTA
+          variant="ghost-dark"
+          size="sm"
+          plan={service.key}
+          className="!bg-transparent !text-iris"
         >
           신청하기 →
-        </a>
+        </StartCTA>
       </div>
     </article>
   );

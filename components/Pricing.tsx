@@ -1,5 +1,6 @@
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
+import { StartCTA } from "./StartCTA";
 import { pricing, enterprise, type Pricing as PricingItem } from "@/lib/site-data";
 
 export function Pricing() {
@@ -52,15 +53,12 @@ export function Pricing() {
                 </li>
               ))}
             </ul>
-            <a
-              href="mailto:hello@studioboda.kr?subject=STUDIO%20BODA%20Enterprise%20문의"
-              className="group inline-flex h-12 w-fit items-center gap-2 rounded-xl bg-ink-100 px-6 text-[13px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            >
+            <StartCTA size="lg" variant="dark" plan="enterprise">
               {enterprise.cta}
               <span className="transition-transform duration-150 group-hover:translate-x-0.5">
                 →
               </span>
-            </a>
+            </StartCTA>
           </div>
         </article>
       </Reveal>
@@ -114,15 +112,16 @@ function PricingCard({ plan }: { plan: PricingItem }) {
             </li>
           ))}
         </ul>
-        <a
-          href="#quote"
-          className="group mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-iris text-[13px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+        <StartCTA
+          size="lg"
+          className="mt-7 w-full"
+          plan={plan.name.toLowerCase()}
         >
           {plan.cta}
           <span className="transition-transform duration-150 group-hover:translate-x-0.5">
             →
           </span>
-        </a>
+        </StartCTA>
         <div className="pointer-events-none absolute -bottom-24 -right-20 h-56 w-56 rounded-full bg-iris-grad opacity-25 blur-3xl" />
       </article>
     );
@@ -165,19 +164,17 @@ function PricingCard({ plan }: { plan: PricingItem }) {
           </li>
         ))}
       </ul>
-      <a
-        href={
-          isQuote
-            ? "mailto:hello@studioboda.kr?subject=STUDIO%20BODA%20Brand%20Sprint%20문의"
-            : "#quote"
-        }
-        className="group mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-ink-15 bg-white text-[13px] font-bold text-ink-100 transition-colors hover:border-iris hover:text-iris active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      <StartCTA
+        size="lg"
+        variant="outline"
+        className="mt-7 w-full"
+        plan={plan.name.toLowerCase()}
       >
         {plan.cta}
         <span className="transition-transform duration-150 group-hover:translate-x-0.5">
           →
         </span>
-      </a>
+      </StartCTA>
     </article>
   );
 }

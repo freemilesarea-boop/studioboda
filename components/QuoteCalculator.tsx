@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
 import { quoteOptions } from "@/lib/site-data";
+import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
 
 type ServiceKey = (typeof quoteOptions.service)[number]["key"];
 type DeliveryKey = (typeof quoteOptions.delivery)[number]["key"];
@@ -14,6 +16,23 @@ export function QuoteCalculator() {
   const [service, setService] = useState<ServiceKey>("detail");
   const [delivery, setDelivery] = useState<DeliveryKey>("normal");
   const [addons, setAddons] = useState<AddonKey[]>([]);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    const supabase = createBrowserAuthSupabase();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (active) setSignedIn(!!user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (active) setSignedIn(!!s?.user);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   const total = useMemo(() => {
     const s = quoteOptions.service.find((x) => x.key === service);
@@ -30,6 +49,46 @@ export function QuoteCalculator() {
     setAddons((prev) =>
       prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
     );
+  };
+
+  const startInquiry = () => {
+    const s = quoteOptions.service.find((x) => x.key === service);
+    const d = quoteOptions.delivery.find((x) => x.key === delivery);
+    const addonLabels = addons
+      .map((k) => quoteOptions.addons.find((a) => a.key === k)?.label)
+      .filter(Boolean) as string[];
+
+    const message = [
+      `선택 서비스: ${s?.label ?? service}`,
+      `납기: ${d?.label ?? delivery}`,
+      addonLabels.length ? `추가 옵션: ${addonLabels.join(", ")}` : null,
+      `예상 견적: ${total.toLocaleString()}원 (VAT 별도)`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    if (signedIn === false) {
+      // Stash selection so the InquiryForm can pick it up after signup.
+      try {
+        sessionStorage.setItem(
+          "boda:quote-prefill",
+          JSON.stringify({ service_type: s?.label, message }),
+        );
+      } catch {
+        /* sessionStorage blocked — proceed without */
+      }
+      router.push(`/signup?plan=${encodeURIComponent(service)}`);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("boda:quote-prefill", {
+        detail: { service_type: s?.label, message },
+      }),
+    );
+
+    const el = document.getElementById("inquiry");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -99,7 +158,7 @@ export function QuoteCalculator() {
             </div>
           </Field>
 
-          <ResultBox total={total} />
+          <ResultBox total={total} onStart={startInquiry} />
         </div>
       </Reveal>
     </section>
@@ -155,7 +214,7 @@ function SelectInput({
   );
 }
 
-function ResultBox({ total }: { total: number }) {
+function ResultBox({ total, onStart }: { total: number; onStart: () => void }) {
   const reduce = useReducedMotion();
   return (
     <div className="mt-5 flex flex-col items-stretch gap-4 rounded-[14px] bg-ink-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -176,17 +235,16 @@ function ResultBox({ total }: { total: number }) {
           </span>
         </p>
       </div>
-      <a
-        href={`mailto:hello@studioboda.kr?subject=STUDIO%20BODA%20견적%20문의&body=${encodeURIComponent(
-          `예상 견적 ${total.toLocaleString()}원 기준으로 문의드립니다.`,
-        )}`}
+      <button
+        type="button"
+        onClick={onStart}
         className="group inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-iris px-6 text-[13px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-ring"
       >
         이 견적으로 시작하기
         <span className="transition-transform duration-150 group-hover:translate-x-0.5">
           →
         </span>
-      </a>
+      </button>
     </div>
   );
 }

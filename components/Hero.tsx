@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowGlyph, LinkButton } from "./ui/Button";
+import { StartCTA } from "./StartCTA";
 import { heroStats, dashboardJobs, heroQueue, type DashboardJob } from "@/lib/site-data";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -63,9 +64,9 @@ export function Hero() {
             transition={{ duration: 0.65, delay: 0.2, ease: EASE }}
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
-            <LinkButton href="#quote" size="lg">
+            <StartCTA size="lg">
               무료 견적 받기 <ArrowGlyph />
-            </LinkButton>
+            </StartCTA>
             <LinkButton href="#portfolio" size="lg" variant="ghost-light">
               포트폴리오 보기
             </LinkButton>
