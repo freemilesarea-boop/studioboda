@@ -5,6 +5,8 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { requireStaff } from "@/lib/auth";
 import { getPaymentProvider } from "@/lib/payments/provider";
+import { createNotification } from "@/lib/notifications";
+import { sendTemplate } from "@/lib/email/send";
 import type { PaymentType } from "@/lib/types/db";
 
 const SITE_URL = () =>
@@ -204,6 +206,25 @@ export async function createPaymentAction(input: CreateInput) {
       mul_no: result.providerPaymentNo,
     },
   });
+
+  // Notify customer in-app + email (fire-and-forget)
+  if (userId) {
+    void createNotification(userId, "payment_requested", {
+      payment_id: payment.id,
+      type: input.type,
+      amount,
+      title,
+      pay_url: result.payUrl,
+    });
+  }
+  if (buyerEmail) {
+    void sendTemplate(buyerEmail, "payment_requested", {
+      name: buyerName || buyerEmail,
+      paymentTitle: title,
+      amount,
+      payUrl: result.payUrl,
+    });
+  }
 
   revalidatePath("/admin/payments");
   revalidatePath("/admin");

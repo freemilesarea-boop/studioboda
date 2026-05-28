@@ -6,6 +6,7 @@ import { logoutAction } from "@/lib/actions/auth";
 import { MeNav, MeMobileNav } from "@/components/me/MeNav";
 import { ToastProvider } from "@/components/admin/Toast";
 import { roleLabels } from "@/lib/types/db";
+import { unreadCount } from "@/lib/queries/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function MeLayout({
   if (!profile) redirect("/login?next=/me");
 
   const displayName = profile.name || profile.email.split("@")[0];
+  const unread = await unreadCount(profile.id);
 
   return (
     <ToastProvider>
@@ -36,6 +38,18 @@ export default async function MeLayout({
               STUDIO BODA
             </Link>
             <div className="ml-auto flex items-center gap-2.5">
+              <Link
+                href="/me/notifications"
+                aria-label="알림"
+                className="relative grid h-9 w-9 place-items-center rounded-lg border border-ink-15 bg-white text-ink-70 hover:border-ink-30 hover:text-ink-100"
+              >
+                <i className="ti ti-bell text-[16px]" aria-hidden />
+                {unread > 0 ? (
+                  <span className="absolute -right-1 -top-1 grid min-w-[18px] h-[18px] place-items-center rounded-full bg-iris px-1 text-[10px] font-display font-bold text-white">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                ) : null}
+              </Link>
               <div className="hidden text-right sm:block">
                 <p
                   className="max-w-[180px] truncate font-display text-[12.5px] font-semibold text-ink-100"

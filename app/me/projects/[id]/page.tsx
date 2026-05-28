@@ -16,6 +16,7 @@ import {
 } from "@/lib/types/db";
 import { ClientFilesPanel } from "./ClientFilesPanel";
 import { ClientCommentForm } from "./ClientCommentForm";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 
 export const metadata: Metadata = {
   title: "프로젝트 상세",
@@ -173,6 +174,18 @@ export default async function MyProjectDetailPage({
           </dl>
         </aside>
       </div>
+
+      <section className="rounded-2xl border border-ink-15 bg-white p-5">
+        <h2 className="font-display text-[13px] font-bold text-ink-100">
+          진행 기록
+        </h2>
+        <p className="mt-1 text-[11.5px] text-ink-50">
+          이 프로젝트에서 발생한 운영팀·고객 이벤트 타임라인.
+        </p>
+        <div className="mt-4">
+          <ActivityTimeline entityType="project" entityId={project.id} limit={30} />
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-ink-15 bg-white p-5">
         <h2 className="font-display text-[13px] font-bold text-ink-100">

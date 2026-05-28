@@ -217,6 +217,14 @@ export type Project = {
   updated_at: string;
 };
 
+export type FileFolder = "draft" | "revision" | "final";
+
+export const fileFolderLabels: Record<FileFolder, string> = {
+  draft: "초안",
+  revision: "수정안",
+  final: "최종",
+};
+
 export type ProjectFile = {
   id: string;
   project_id: string;
@@ -226,7 +234,17 @@ export type ProjectFile = {
   file_size: number | null;
   uploaded_by: string | null;
   visibility: Visibility;
+  folder: FileFolder;
   is_final: boolean;
+  created_at: string;
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  read_at: string | null;
   created_at: string;
 };
 
