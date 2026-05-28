@@ -18,7 +18,7 @@ function wrapper(title: string, body: string, ctaLabel?: string, ctaHref?: strin
           <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #E6E6EC;border-radius:20px;overflow:hidden;">
             <tr>
               <td style="padding:32px 32px 0;">
-                <div style="font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#5B47FF;">STUDIO BODA</div>
+                <div style="font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6E5BFF;">STUDIO BODA</div>
                 <h1 style="margin:8px 0 0;font-size:22px;font-weight:800;letter-spacing:-.03em;color:#0A0A12;">${escapeHtml(title)}</h1>
               </td>
             </tr>
@@ -30,13 +30,13 @@ function wrapper(title: string, body: string, ctaLabel?: string, ctaHref?: strin
             ${
               ctaLabel && ctaHref
                 ? `<tr><td style="padding:24px 32px 0;">
-                    <a href="${escapeAttr(ctaHref)}" style="display:inline-block;background:#5B47FF;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;font-size:13px;letter-spacing:-.01em;">${escapeHtml(ctaLabel)} →</a>
+                    <a href="${escapeAttr(ctaHref)}" style="display:inline-block;background:#6E5BFF;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;font-size:13px;letter-spacing:-.01em;">${escapeHtml(ctaLabel)} →</a>
                   </td></tr>`
                 : ""
             }
             <tr>
               <td style="padding:28px 32px 32px;font-size:11px;color:#7E7E8C;border-top:1px solid #E6E6EC;margin-top:24px;">
-                © 2026 STUDIO BODA · 스튜디오 보다 · <a href="mailto:hello@studioboda.kr" style="color:#5B47FF;text-decoration:none;">hello@studioboda.kr</a>
+                © 2026 STUDIO BODA · 스튜디오 보다 · <a href="mailto:hello@studioboda.kr" style="color:#6E5BFF;text-decoration:none;">hello@studioboda.kr</a>
               </td>
             </tr>
           </table>

@@ -6,6 +6,8 @@ import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
 
 type Variant =
   | "primary"
+  | "cinematic"
+  | "ghost-cinematic"
   | "white"
   | "dark"
   | "outline"
@@ -22,6 +24,8 @@ const sizes: Record<Size, string> = {
 
 const variants: Record<Variant, string> = {
   primary: "bg-iris text-white hover:opacity-90",
+  cinematic: "btn-primary-cinematic text-white",
+  "ghost-cinematic": "btn-ghost-cinematic text-white",
   white: "bg-white text-iris hover:opacity-90",
   dark: "bg-ink-100 text-white hover:bg-ink-90",
   outline:

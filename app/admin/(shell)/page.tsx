@@ -259,7 +259,7 @@ export default async function DashboardPage() {
           <LineSparkline
             data={kpis.dailyRevenue}
             label="최근 30일 매출"
-            color="#5B47FF"
+            color="#6E5BFF"
             height={120}
             trailingValue={fmtKRW(
               kpis.dailyRevenue.reduce((s, d) => s + d.amount, 0),
@@ -300,7 +300,7 @@ export default async function DashboardPage() {
                   ? "#4ADE80"
                   : r.status === "cancelled"
                   ? "#F87171"
-                  : "#5B47FF",
+                  : "#6E5BFF",
             }))}
           formatValue={(n) => `${n}건`}
         />
@@ -309,7 +309,7 @@ export default async function DashboardPage() {
           rows={kpis.revenueByService.map((r) => ({
             key: r.service,
             value: r.amount,
-            tone: "#5B47FF",
+            tone: "#6E5BFF",
           }))}
           formatValue={(n) => fmtKRW(n)}
         />

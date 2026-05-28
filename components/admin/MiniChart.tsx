@@ -6,7 +6,7 @@ const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
 export function LineSparkline({
   data,
   height = 80,
-  color = "#5B47FF",
+  color = "#6E5BFF",
   label,
   trailingValue,
 }: {
@@ -111,7 +111,7 @@ export function BarChart({
                 className="absolute inset-y-0 left-0 rounded-full"
                 style={{
                   width: `${(r.value / max) * 100}%`,
-                  background: r.tone ?? "#5B47FF",
+                  background: r.tone ?? "#6E5BFF",
                 }}
               />
             </div>
@@ -165,7 +165,7 @@ export function FunnelTile({
       <div className="mt-3 space-y-2.5">
         <Bar label="문의" value={inquiries} tone="#C7C7D0" />
         <Bar label="견적" value={quotes} tone="#7C9CFF" />
-        <Bar label="결제 (예약금 paid)" value={converted} tone="#5B47FF" />
+        <Bar label="결제 (예약금 paid)" value={converted} tone="#6E5BFF" />
       </div>
       <p className="mt-3 text-[11px] text-ink-50">
         전환율 · 문의→견적 <b className="text-ink-100">{i2q}%</b> · 견적→결제{" "}

@@ -50,7 +50,7 @@ export function AIFeature() {
 
 function AIFeatureItem({ feature }: { feature: (typeof aiFeatures)[number] }) {
   return (
-    <div className="group flex cursor-pointer items-start gap-3.5 rounded-[14px] border border-ink-15 bg-white p-4.5 transition-[border,background] duration-200 hover:border-iris hover:bg-ink-5">
+    <div className="card-cinematic group flex cursor-pointer items-start gap-3.5 rounded-[14px] border border-ink-15 bg-white p-4.5">
       <div className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[9px] bg-iris-light text-[19px] text-iris">
         <i className={`ti ${feature.icon}`} aria-hidden />
       </div>

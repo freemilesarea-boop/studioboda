@@ -82,7 +82,7 @@ export function BrandForm({
             value={brandColors}
             onChange={(e) => setBrandColors(e.target.value)}
             maxLength={200}
-            placeholder="예: #5B47FF, #0A0A12, off-white"
+            placeholder="예: #6E5BFF, #0A0A12, off-white"
           />
         </label>
       </div>
