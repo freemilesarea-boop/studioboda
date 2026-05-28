@@ -166,34 +166,29 @@ export type ClientLogo = {
 };
 
 export const clientLogos: readonly ClientLogo[] = [
-  { name: "AURA", sector: "Beauty" },
-  { name: "MOEL", sector: "Fashion" },
-  { name: "PIVOT", sector: "F&B" },
-  { name: "STILL", sector: "Lifestyle" },
-  { name: "TONE", sector: "Living" },
-  { name: "DAILY BREW", sector: "F&B" },
-  { name: "FOLD", sector: "Apparel" },
-  { name: "NORTH↑", sector: "Outdoor" },
-  { name: "POINT.", sector: "Studio" },
-  { name: "HALO", sector: "Beauty" },
-  { name: "BLOOM&", sector: "Floral" },
-  { name: "ANCHOR", sector: "B2B" },
-  { name: "BAEK", sector: "Heritage" },
-  { name: "OAK·CO", sector: "Furniture" },
-  { name: "FERRY", sector: "Travel" },
-  { name: "CALM", sector: "Health" },
+  { name: "SRR.KR", sector: "Media" },
+  { name: "LOUVER CONTENT STUDIO", sector: "Studio" },
+  { name: "DEUDDA", sector: "Branding" },
+  { name: "MAGAZINE 230", sector: "Publishing" },
+  { name: "STUDIO BODA", sector: "Creative" },
+  { name: "LOUVER AI", sector: "AI Lab" },
+  { name: "SWK TODAY", sector: "Media" },
 ];
 
-export const clientStats = {
-  totalBrands: "320+",
-  byCategory: [
-    { label: "Beauty · D2C", value: 64 },
-    { label: "Fashion · Apparel", value: 48 },
-    { label: "F&B · Health", value: 72 },
-    { label: "Lifestyle · Living", value: 56 },
-    { label: "B2B · SaaS", value: 32 },
-    { label: "Agency · Partner", value: 48 },
-  ],
+export const brandGroup = {
+  eyebrow: "Brand Group",
+  title: "콘텐츠와 브랜드를 연결하는",
+  titleAccent: "AI 기반 크리에이티브 그룹",
+  description:
+    "브랜드 · 미디어 · 콘텐츠 제작을 하나의 시스템으로 운영합니다. 자체 미디어와 스튜디오, 퍼블리싱 라인이 같은 데이터와 무드로 이어집니다.",
+  capabilities: [
+    "AI Creative",
+    "Media",
+    "Branding",
+    "Music",
+    "Publishing",
+    "SaaS",
+  ] as const,
 };
 
 export type PortfolioMetric = { label: string; value: string };
@@ -355,7 +350,7 @@ export const portfolio: readonly PortfolioItem[] = [
     rating: "5.0",
     status: "Live",
     bg: "#EEEEFF",
-    fg: "#5847FF",
+    fg: "#5B47FF",
     label: "DETAIL · BEAUTY",
   },
   {
@@ -627,7 +622,7 @@ export const recentExports: readonly Export[] = [
     format: "PNG · 2160×2700",
     size: "4.1MB",
     bg: "#EEEEFF",
-    fg: "#5847FF",
+    fg: "#5B47FF",
     label: "DETAIL",
   },
   {
