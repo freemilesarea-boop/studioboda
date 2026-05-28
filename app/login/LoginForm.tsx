@@ -69,6 +69,15 @@ export function LoginForm({ next }: { next?: string }) {
       >
         {pending ? "로그인 중…" : "로그인 →"}
       </button>
+
+      <p className="pt-1 text-right text-[11.5px]">
+        <a
+          href="/forgot-password"
+          className="text-ink-30 hover:text-iris-glow"
+        >
+          비밀번호를 잊으셨나요?
+        </a>
+      </p>
     </form>
   );
 }

@@ -33,6 +33,7 @@ const inquiryTone: Record<InquiryStatus, keyof typeof tone> = {
 const quoteTone: Record<QuoteStatus, keyof typeof tone> = {
   draft: "neutral",
   sent: "sky",
+  customer_review: "warning",
   accepted: "success",
   rejected: "error",
   expired: "warning",
