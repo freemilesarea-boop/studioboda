@@ -1,5 +1,6 @@
 import { Reveal } from "./ui/Reveal";
 import { brand, contactInfo } from "@/lib/site-data";
+import { InquiryForm } from "./InquiryForm";
 
 export function CTASection() {
   return (
@@ -10,8 +11,8 @@ export function CTASection() {
       <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-iris-grad opacity-25 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-iris-grad opacity-15 blur-3xl" />
 
-      <div className="relative grid grid-cols-1 items-end gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-7">
+      <div className="relative grid grid-cols-1 items-start gap-12 lg:grid-cols-12">
+        <div className="lg:col-span-6">
           <Reveal>
             <div className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1.5">
               <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-success live-ring">
@@ -42,27 +43,28 @@ export function CTASection() {
           </Reveal>
 
           <Reveal delay={0.2}>
-            <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <a
-                href={`mailto:${brand.email}?subject=STUDIO%20BODA%20프로젝트%20문의`}
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-7 text-[14px] font-bold text-ink-100 transition-opacity hover:opacity-90 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-100"
-              >
-                프로젝트 문의하기
-                <span className="transition-transform duration-150 group-hover:translate-x-0.5">
-                  →
-                </span>
-              </a>
-              <a
-                href={`mailto:${brand.email}?subject=STUDIO%20BODA%20Enterprise%20문의`}
-                className="inline-flex h-12 items-center justify-center rounded-xl border-[1.5px] border-white/20 bg-white/[0.06] px-7 text-[14px] font-medium text-white transition-colors hover:border-white/40 hover:bg-white/[0.12]"
-              >
-                Enterprise 상담
-              </a>
-            </div>
+            <ol className="mt-7 space-y-2">
+              {contactInfo.steps.map((step, i) => (
+                <li
+                  key={step.label}
+                  className="flex items-start gap-3 rounded-xl border border-ink-90 bg-ink-100/60 px-3.5 py-2.5"
+                >
+                  <span className="num grid h-7 w-7 shrink-0 place-items-center rounded-md bg-iris/20 font-display text-[11px] font-bold text-iris-glow">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-display text-[13px] font-bold text-white">
+                      {step.label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-ink-30">{step.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </Reveal>
 
           <Reveal delay={0.26}>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-ink-30">
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-ink-30">
               <span className="inline-flex items-center gap-1.5">
                 <i className="ti ti-clock text-[14px] text-sky" aria-hidden />
                 {contactInfo.responseTime}
@@ -81,55 +83,20 @@ export function CTASection() {
           </Reveal>
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-6" id="inquiry">
           <Reveal delay={0.18}>
             <div className="rounded-[20px] border border-ink-90 bg-ink-90/40 p-5 backdrop-blur-sm sm:p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between border-b border-ink-90 pb-3.5">
                 <p className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
-                  How we start
+                  Project Inquiry
                 </p>
                 <span className="num font-mono text-[10px] text-ink-50">
                   AVG · 24H
                 </span>
               </div>
-
-              <ol className="mt-4 space-y-2">
-                {contactInfo.steps.map((step, i) => (
-                  <li
-                    key={step.label}
-                    className="flex items-start gap-3 rounded-xl border border-ink-90 bg-ink-100/60 px-3.5 py-2.5"
-                  >
-                    <span className="num grid h-7 w-7 shrink-0 place-items-center rounded-md bg-iris/20 font-display text-[11px] font-bold text-sky">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-display text-[13px] font-bold text-white">
-                        {step.label}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-ink-30">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-
-              <a
-                href={`mailto:${brand.email}`}
-                className="mt-5 flex items-center justify-between rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 transition-colors hover:border-white/[0.25] hover:bg-white/[0.08]"
-              >
-                <div className="min-w-0">
-                  <p className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30">
-                    Email
-                  </p>
-                  <p className="num mt-1 truncate font-mono text-[13px] text-white">
-                    {brand.email}
-                  </p>
-                </div>
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white">
-                  →
-                </span>
-              </a>
+              <div className="mt-4">
+                <InquiryForm variant="dark" />
+              </div>
             </div>
           </Reveal>
         </div>

@@ -32,6 +32,32 @@ export function QuoteCalculator() {
     );
   };
 
+  const startInquiry = () => {
+    const s = quoteOptions.service.find((x) => x.key === service);
+    const d = quoteOptions.delivery.find((x) => x.key === delivery);
+    const addonLabels = addons
+      .map((k) => quoteOptions.addons.find((a) => a.key === k)?.label)
+      .filter(Boolean) as string[];
+
+    const message = [
+      `선택 서비스: ${s?.label ?? service}`,
+      `납기: ${d?.label ?? delivery}`,
+      addonLabels.length ? `추가 옵션: ${addonLabels.join(", ")}` : null,
+      `예상 견적: ${total.toLocaleString()}원 (VAT 별도)`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    window.dispatchEvent(
+      new CustomEvent("boda:quote-prefill", {
+        detail: { service_type: s?.label, message },
+      }),
+    );
+
+    const el = document.getElementById("inquiry");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <section className="section bg-ink-5" id="quote">
       <SectionHeader
@@ -99,7 +125,7 @@ export function QuoteCalculator() {
             </div>
           </Field>
 
-          <ResultBox total={total} />
+          <ResultBox total={total} onStart={startInquiry} />
         </div>
       </Reveal>
     </section>
@@ -155,7 +181,7 @@ function SelectInput({
   );
 }
 
-function ResultBox({ total }: { total: number }) {
+function ResultBox({ total, onStart }: { total: number; onStart: () => void }) {
   const reduce = useReducedMotion();
   return (
     <div className="mt-5 flex flex-col items-stretch gap-4 rounded-[14px] bg-ink-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -176,17 +202,16 @@ function ResultBox({ total }: { total: number }) {
           </span>
         </p>
       </div>
-      <a
-        href={`mailto:hello@studioboda.kr?subject=STUDIO%20BODA%20견적%20문의&body=${encodeURIComponent(
-          `예상 견적 ${total.toLocaleString()}원 기준으로 문의드립니다.`,
-        )}`}
+      <button
+        type="button"
+        onClick={onStart}
         className="group inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-[9px] bg-iris px-6 text-[13px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985] focus-ring"
       >
         이 견적으로 시작하기
         <span className="transition-transform duration-150 group-hover:translate-x-0.5">
           →
         </span>
-      </a>
+      </button>
     </div>
   );
 }
