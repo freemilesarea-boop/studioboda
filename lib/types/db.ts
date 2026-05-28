@@ -26,6 +26,61 @@ export type ProjectStatus =
 export type Priority = "low" | "normal" | "high" | "urgent";
 export type Visibility = "internal" | "client";
 
+export type PaymentType = "deposit" | "balance" | "extra";
+export type PaymentStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "cancelled"
+  | "refunded";
+export type QuotePaymentStatus = "unpaid" | "deposit_paid" | "fully_paid";
+export type BillingStatus =
+  | "waiting_deposit"
+  | "in_progress"
+  | "waiting_balance"
+  | "completed";
+
+export const paymentTypeLabels: Record<PaymentType, string> = {
+  deposit: "예약금",
+  balance: "본결제",
+  extra: "추가결제",
+};
+
+export const paymentStatusLabels: Record<PaymentStatus, string> = {
+  pending: "결제 대기",
+  paid: "결제 완료",
+  failed: "결제 실패",
+  cancelled: "취소",
+  refunded: "환불",
+};
+
+export const billingStatusLabels: Record<BillingStatus, string> = {
+  waiting_deposit: "예약금 대기",
+  in_progress: "진행 중",
+  waiting_balance: "본결제 대기",
+  completed: "결제 완료",
+};
+
+export type Payment = {
+  id: string;
+  quote_id: string | null;
+  project_id: string | null;
+  user_id: string | null;
+  type: PaymentType;
+  title: string;
+  description: string | null;
+  amount: number;
+  status: PaymentStatus;
+  payapp_mul_no: string | null;
+  payapp_payurl: string | null;
+  payapp_qrurl: string | null;
+  paid_at: string | null;
+  cancelled_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Service = {
   id: string;
   key: string;
@@ -127,6 +182,10 @@ export type Quote = {
   subtotal: number;
   vat: number;
   total_price: number;
+  deposit_rate: number;
+  deposit_amount: number | null;
+  balance_amount: number | null;
+  payment_status: QuotePaymentStatus;
   notes: string | null;
   status: QuoteStatus;
   sent_at: string | null;
@@ -140,7 +199,6 @@ export type Quote = {
 export type Project = {
   id: string;
   project_no: string;
-  order_id: string | null;
   quote_id: string | null;
   inquiry_id: string | null;
   user_id: string | null;
@@ -154,6 +212,7 @@ export type Project = {
   progress: number;
   due_date: string | null;
   assigned_to: string | null;
+  billing_status: BillingStatus;
   created_at: string;
   updated_at: string;
 };

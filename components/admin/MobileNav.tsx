@@ -7,8 +7,8 @@ const NAV = [
   { href: "/admin", label: "대시보드", icon: "ti-layout-dashboard" },
   { href: "/admin/inquiries", label: "문의", icon: "ti-mail" },
   { href: "/admin/quotes", label: "견적", icon: "ti-file-invoice" },
+  { href: "/admin/payments", label: "결제", icon: "ti-credit-card" },
   { href: "/admin/projects", label: "프로젝트", icon: "ti-folders" },
-  { href: "/admin/settings", label: "설정", icon: "ti-settings" },
 ];
 
 export function MobileNav() {
