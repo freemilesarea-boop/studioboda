@@ -375,7 +375,7 @@ export const portfolio: readonly PortfolioItem[] = [
     rating: "5.0",
     status: "Live",
     bg: "#EEEEFF",
-    fg: "#5B47FF",
+    fg: "#6E5BFF",
     label: "DETAIL · BEAUTY",
   },
   {
@@ -647,7 +647,7 @@ export const recentExports: readonly Export[] = [
     format: "PNG · 2160×2700",
     size: "4.1MB",
     bg: "#EEEEFF",
-    fg: "#5B47FF",
+    fg: "#6E5BFF",
     label: "DETAIL",
   },
   {

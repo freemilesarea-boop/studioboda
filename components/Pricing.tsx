@@ -128,7 +128,7 @@ function PricingCard({ plan }: { plan: PricingItem }) {
   }
 
   return (
-    <article className="flex h-full flex-col rounded-[20px] border border-ink-15 bg-white p-7 transition-[border-color] duration-200 hover:border-ink-30">
+    <article className="card-cinematic flex h-full flex-col rounded-[20px] border border-ink-15 bg-white p-7">
       <div className="flex items-center justify-between">
         <span className="rounded-full bg-ink-5 px-2.5 py-0.5 font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-70">
           {plan.name === "Starter" ? "BASIC" : "PROJECT"}

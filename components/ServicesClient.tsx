@@ -110,7 +110,7 @@ function ServiceCard({ service }: { service: Service }) {
 
   if (featured) {
     return (
-      <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-ink-90 bg-ink-100 p-6 transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-ink-70">
+      <article className="card-cinematic group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-noir-1 p-6">
         <div className="flex items-start justify-between">
           <Link
             href={`/services/${service.key}`}
@@ -165,7 +165,7 @@ function ServiceCard({ service }: { service: Service }) {
   }
 
   return (
-    <article className="group relative flex h-full flex-col rounded-2xl border border-ink-15 bg-ink-5 p-6 transition-[background,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-iris hover:bg-white">
+    <article className="card-cinematic group relative flex h-full flex-col rounded-2xl border border-ink-15 bg-white p-6">
       <Link
         href={`/services/${service.key}`}
         className="grid h-10 w-10 place-items-center rounded-[10px] bg-iris-light text-[20px] text-iris"

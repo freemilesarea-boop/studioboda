@@ -12,17 +12,23 @@ export function Trust() {
       />
 
       <div className="mt-9 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {trustStats.map((s, i) => (
-          <Reveal key={s.label} delay={i * 0.04}>
-            <div className="group rounded-2xl border border-ink-15 bg-white p-5 transition-colors duration-200 hover:border-ink-30">
-              <p className="num font-display text-[28px] font-extrabold leading-none tracking-[-0.6px] text-ink-100 sm:text-[34px]">
-                {s.num}
-                <span className="text-iris">{s.suffix}</span>
-              </p>
-              <p className="mt-2 text-[12px] text-ink-50">{s.label}</p>
-            </div>
-          </Reveal>
-        ))}
+        {trustStats.map((s, i) => {
+          const accent = i % 2 === 1 ? "text-electric" : "text-iris";
+          return (
+            <Reveal key={s.label} delay={i * 0.04}>
+              <div className="card-cinematic group rounded-2xl border border-ink-15 bg-white p-5">
+                <p className="num font-display text-[34px] font-extrabold leading-none tracking-[-1px] text-ink-100 sm:text-[42px]">
+                  {s.num}
+                  <span className={accent}>{s.suffix}</span>
+                </p>
+                <div className="mt-3 h-px w-8 bg-ink-15 transition-colors duration-300 group-hover:bg-electric/50" />
+                <p className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">
+                  {s.label}
+                </p>
+              </div>
+            </Reveal>
+          );
+        })}
       </div>
 
       <div className="mt-12 columns-1 gap-3 sm:columns-2 lg:columns-3">

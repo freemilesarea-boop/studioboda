@@ -9,7 +9,11 @@
 :root {
   --bg: #ffffff;
   --fg: #0a0a12;
-  --accent: #5b47ff;
+  --accent: #6e5bff;
+  --electric: #4da3ff;
+  --noir-0: #07070b;
+  --noir-1: #0d0d14;
+  --noir-2: #13131d;
 }
 
 html {
@@ -50,7 +54,7 @@ h3 {
 }
 
 ::selection {
-  background: rgba(91, 71, 255, 0.2);
+  background: rgba(110, 91, 255, 0.22);
   color: #0a0a12;
 }
 
@@ -62,6 +66,138 @@ button {
 }
 
 @layer components {
+  /* Cinematic primary button surface — deep iris base with electric edge light + top sheen.
+     Use alongside `.btn-base` height/padding from the Button component. */
+  .btn-primary-cinematic {
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 38%),
+      linear-gradient(135deg, #6e5bff 0%, #5b47e8 55%, #4f3fd6 100%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+      inset 0 0 0 1px rgba(125, 110, 255, 0.45),
+      0 1px 0 0 rgba(77, 163, 255, 0.45),
+      0 10px 24px -10px rgba(110, 91, 255, 0.55),
+      0 18px 40px -18px rgba(66, 52, 184, 0.55);
+    transition:
+      transform 180ms ease,
+      box-shadow 220ms ease,
+      filter 180ms ease;
+  }
+  .btn-primary-cinematic:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
+      inset 0 0 0 1px rgba(150, 138, 255, 0.55),
+      0 1px 0 0 rgba(77, 163, 255, 0.6),
+      0 14px 28px -10px rgba(110, 91, 255, 0.65),
+      0 22px 48px -18px rgba(66, 52, 184, 0.65);
+  }
+  .btn-primary-cinematic:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+
+  /* Subtle outlined button on dark background — used for secondary hero CTA. */
+  .btn-ghost-cinematic {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition:
+      background-color 180ms ease,
+      box-shadow 220ms ease,
+      transform 180ms ease;
+  }
+  .btn-ghost-cinematic:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    box-shadow:
+      inset 0 0 0 1px rgba(127, 189, 255, 0.35),
+      0 8px 20px -10px rgba(77, 163, 255, 0.45);
+    transform: translateY(-1px);
+  }
+
+  /* Card hover system — border glow + lift + ambient shadow + blue reflection */
+  .card-cinematic {
+    transition:
+      transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 280ms ease,
+      border-color 220ms ease;
+    will-change: transform;
+  }
+  .card-cinematic:hover {
+    transform: translateY(-2px);
+    border-color: rgba(127, 189, 255, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(127, 189, 255, 0.18),
+      0 22px 60px -28px rgba(77, 163, 255, 0.45),
+      0 28px 80px -32px rgba(110, 91, 255, 0.35);
+  }
+
+  /* Hero ambient lighting layers */
+  .hero-stage {
+    position: relative;
+    isolation: isolate;
+    background: #07070b;
+  }
+  .hero-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(120% 80% at 18% 0%, rgba(110, 91, 255, 0.32) 0%, rgba(110, 91, 255, 0) 55%),
+      radial-gradient(120% 80% at 100% 28%, rgba(77, 163, 255, 0.22) 0%, rgba(77, 163, 255, 0) 60%),
+      radial-gradient(80% 60% at 50% 110%, rgba(66, 52, 184, 0.4) 0%, rgba(66, 52, 184, 0) 70%);
+    pointer-events: none;
+    z-index: -2;
+  }
+  .hero-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-size: 180px 180px;
+    mix-blend-mode: overlay;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .hero-beam {
+    position: absolute;
+    left: 22%;
+    top: -8%;
+    width: 28%;
+    height: 120%;
+    background: linear-gradient(
+      180deg,
+      rgba(77, 163, 255, 0) 0%,
+      rgba(127, 189, 255, 0.35) 18%,
+      rgba(110, 91, 255, 0.45) 55%,
+      rgba(110, 91, 255, 0) 100%
+    );
+    filter: blur(40px);
+    transform: rotate(8deg);
+    pointer-events: none;
+    z-index: -1;
+    animation: beam-drift 8s ease-in-out infinite;
+  }
+  .hero-bloom {
+    position: absolute;
+    right: -8%;
+    top: 14%;
+    width: 38%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    background: radial-gradient(
+      50% 50% at 50% 50%,
+      rgba(110, 91, 255, 0.5) 0%,
+      rgba(110, 91, 255, 0) 70%
+    );
+    filter: blur(30px);
+    pointer-events: none;
+    z-index: -1;
+    animation: bloom-breathe 9s ease-in-out infinite;
+  }
+
   .eyebrow {
     @apply font-display text-[11px] font-bold uppercase tracking-eyebrow text-iris;
   }

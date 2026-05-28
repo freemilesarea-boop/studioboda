@@ -75,13 +75,13 @@ export function ClientLogos() {
 function LogoWordmark({ name, sector }: { name: string; sector: string }) {
   return (
     <div
-      className="flex shrink-0 items-baseline gap-2"
+      className="flex shrink-0 items-baseline gap-2 opacity-[0.45] transition-opacity duration-300 hover:opacity-90"
       title={`${name} · ${sector}`}
     >
-      <span className="font-display text-[17px] font-extrabold uppercase tracking-[-0.3px] text-ink-70 transition-colors duration-200 hover:text-ink-100 sm:text-[19px]">
+      <span className="font-display text-[17px] font-extrabold uppercase tracking-[0.04em] text-ink-100 sm:text-[19px]">
         {name}
       </span>
-      <span className="hidden font-mono text-[9px] uppercase tracking-[0.14em] text-ink-30 sm:inline">
+      <span className="hidden font-mono text-[9px] uppercase tracking-[0.18em] text-ink-50 sm:inline">
         {sector}
       </span>
     </div>

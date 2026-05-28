@@ -55,7 +55,7 @@ function PortfolioCard({
         type="button"
         onClick={onOpen}
         aria-label={`${item.title} · 케이스 자세히 보기`}
-        className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-ink-15 bg-white text-left transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-iris focus-visible:outline-none focus-visible:border-iris focus-visible:ring-2 focus-visible:ring-iris/30"
+        className="card-cinematic flex h-full w-full flex-col overflow-hidden rounded-2xl border border-ink-15 bg-white text-left focus-visible:outline-none focus-visible:border-iris focus-visible:ring-2 focus-visible:ring-iris/30"
       >
       <PortfolioThumb item={item} index={index} />
 
