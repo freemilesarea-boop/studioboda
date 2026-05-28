@@ -20,6 +20,51 @@ export type ProjectStatus =
 export type Priority = "low" | "normal" | "high" | "urgent";
 export type Visibility = "internal" | "client";
 
+export type Service = {
+  id: string;
+  key: string;
+  name: string;
+  name_en: string | null;
+  description: string | null;
+  category: string;
+  base_price: number;
+  default_delivery_days: number;
+  active: boolean;
+  featured: boolean;
+  badge: string | null;
+  icon: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ServiceOption = {
+  id: string;
+  service_id: string | null;
+  key: string;
+  label: string;
+  price: number;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+};
+
+export const PRIMARY_SERVICE_KEYS = [
+  "detail",
+  "sns",
+  "ad",
+  "thumb",
+  "brand",
+] as const;
+
+export const SERVICE_CATEGORY_LABELS: Record<string, string> = {
+  content: "콘텐츠",
+  ad: "광고",
+  brand: "브랜드",
+  package: "패키지",
+  subscription: "정기 구독",
+};
+
 export type Profile = {
   id: string;
   email: string;
