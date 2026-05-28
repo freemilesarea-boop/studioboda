@@ -1,4 +1,6 @@
 import type { AIAssetKind } from "@/lib/types/db";
+import { maskPII } from "../pii";
+import { getServiceFlavor } from "./services";
 import type { BrandContext, ProjectContext, Rendered } from "./types";
 
 const SYSTEM = `당신은 한국 D2C 브랜드 카피라이터입니다.
@@ -42,11 +44,17 @@ export function renderCopyPrompt(opts: {
   const n = COUNT_BY_KIND[opts.kind];
   const label = LABEL_BY_KIND[opts.kind];
   const bh = brandHint(opts.brand);
+  const flavor = getServiceFlavor(
+    opts.project.serviceKey,
+    opts.project.serviceType,
+  );
+  const situation = maskPII(opts.project.inquiryMessage);
 
   const prompt = `대상: ${opts.project.serviceType ?? opts.project.title}
 프로젝트: ${opts.project.title}
 ${bh ? `브랜드 가이드: ${bh}` : ""}
-${opts.project.inquiryMessage ? `상황: ${opts.project.inquiryMessage.slice(0, 600)}` : ""}
+${situation ? `상황: ${situation.slice(0, 600)}` : ""}
+서비스 톤 힌트: ${flavor.copyGuide}
 ${opts.hint ? `추가 요구: ${opts.hint.slice(0, 400)}` : ""}
 
 ${label} 후보 ${n}개를 한국어로 작성. 각 항목은 한 줄, 줄바꿈으로 구분.`;

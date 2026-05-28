@@ -107,8 +107,85 @@ async function loadContext(projectId: string): Promise<{
   };
 }
 
+async function loadQuoteContext(quoteId: string): Promise<{
+  ok: boolean;
+  project?: ProjectContext;
+  brand?: BrandContext;
+  organizationId?: string | null;
+  ownerUserId?: string | null;
+  error?: string;
+}> {
+  const admin = createAdminSupabase();
+  const { data: quote } = await admin
+    .from("quotes")
+    .select(
+      "id,title,service_type,service_id,user_id,inquiry_id,organization_id,notes,delivery_days,total_price,base_price,options",
+    )
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote) return { ok: false, error: "견적을 찾을 수 없습니다" };
+
+  const [{ data: inquiry }, { data: brand }, { data: service }] = await Promise.all([
+    quote.inquiry_id
+      ? admin
+          .from("inquiries")
+          .select("name,company,message,budget_range")
+          .eq("id", quote.inquiry_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    quote.user_id
+      ? admin
+          .from("brand_profiles")
+          .select("*")
+          .eq("user_id", quote.user_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    quote.service_id
+      ? admin
+          .from("services")
+          .select("key,name,name_en")
+          .eq("id", quote.service_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const projectCtx: ProjectContext = {
+    title: quote.title,
+    serviceType: quote.service_type,
+    serviceKey: service?.key ?? null,
+    description: quote.notes ?? null,
+    inquiryMessage: inquiry?.message ?? null,
+    customerName: inquiry?.name ?? null,
+    companyName: inquiry?.company ?? null,
+    budget: inquiry?.budget_range ?? null,
+    deliveryDays: quote.delivery_days ?? null,
+    recentComments: [],
+  };
+
+  const brandCtx: BrandContext | undefined = brand
+    ? {
+        brandName: brand.brand_name,
+        brandColors: brand.brand_colors,
+        referenceSites: brand.reference_sites,
+        tone: brand.tone,
+        forbiddenExpressions: brand.forbidden_expressions,
+        goToPhrases: brand.go_to_phrases,
+        notes: brand.notes,
+      }
+    : undefined;
+
+  return {
+    ok: true,
+    project: projectCtx,
+    brand: brandCtx,
+    organizationId: quote.organization_id,
+    ownerUserId: quote.user_id,
+  };
+}
+
 async function saveAsset(input: {
-  projectId: string;
+  projectId?: string | null;
+  quoteId?: string | null;
   organizationId?: string | null;
   userId: string;
   kind: AIAssetKind;
@@ -122,7 +199,8 @@ async function saveAsset(input: {
   const { data, error } = await admin
     .from("ai_assets")
     .insert({
-      project_id: input.projectId,
+      project_id: input.projectId ?? null,
+      quote_id: input.quoteId ?? null,
       organization_id: input.organizationId ?? null,
       user_id: input.userId,
       kind: input.kind,
@@ -288,6 +366,55 @@ export async function generateDesignPromptAction(
   });
 
   revalidatePath(`/admin/projects/${projectId}`);
+  return {
+    ok: true as const,
+    text: result.text,
+    provider: result.provider,
+    model: result.model,
+    assetId,
+  };
+}
+
+export async function generateQuoteBriefAction(quoteId: string) {
+  const me = await requireStaff();
+  const ctx = await loadQuoteContext(quoteId);
+  if (!ctx.ok || !ctx.project) {
+    return { ok: false as const, error: ctx.error ?? "context load failed" };
+  }
+  const rendered = renderBriefPrompt({
+    project: ctx.project,
+    brand: ctx.brand,
+  });
+  const provider = getAIProvider();
+  const result = await provider.generateText({
+    system: rendered.system,
+    prompt: rendered.prompt,
+    maxTokens: 1800,
+    temperature: 0.6,
+  });
+  if (!result.ok) return { ok: false as const, error: result.error };
+
+  const assetId = await saveAsset({
+    quoteId,
+    organizationId: ctx.organizationId,
+    userId: me.id,
+    kind: "brief",
+    prompt: rendered.prompt,
+    output: result.text,
+    provider: result.provider,
+    model: result.model,
+  });
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "quote",
+    entity_id: quoteId,
+    action: "ai_brief_generated",
+    metadata: { provider: result.provider, model: result.model, asset_id: assetId },
+  });
+
+  revalidatePath(`/admin/quotes/${quoteId}`);
+  revalidatePath(`/admin/quotes/${quoteId}/brief`);
   return {
     ok: true as const,
     text: result.text,

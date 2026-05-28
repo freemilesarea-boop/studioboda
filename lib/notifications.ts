@@ -3,12 +3,16 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 export type NotificationType =
   | "welcome"
   | "quote_received"
+  | "quote_expiring_soon"
+  | "quote_expired"
   | "payment_requested"
   | "payment_paid"
   | "payment_failed"
+  | "payment_reminder"
   | "project_started"
   | "project_delivered"
   | "project_completed"
+  | "project_due_soon"
   | "file_uploaded"
   | "revision_requested"
   | "comment_posted";
