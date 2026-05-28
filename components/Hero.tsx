@@ -11,7 +11,7 @@ export function Hero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="relative overflow-hidden bg-ink-100 px-5 pb-0 pt-20 sm:px-8 sm:pt-24 lg:px-12 lg:pt-28">
+    <section className="relative overflow-hidden bg-ink-100 px-5 pb-0 pt-24 sm:px-8 sm:pt-28 lg:px-12 lg:pt-32">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[680px] bg-ink-soft" />
 
       <div className="relative grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-10">

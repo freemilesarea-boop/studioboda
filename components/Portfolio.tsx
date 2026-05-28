@@ -1,8 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
+import { CaseStudyModal } from "./CaseStudyModal";
 import { portfolio, type PortfolioItem } from "@/lib/site-data";
 
 export function Portfolio() {
+  const [open, setOpen] = useState<PortfolioItem | null>(null);
+
   return (
     <section className="section bg-white" id="portfolio">
       <SectionHeader
@@ -22,10 +28,12 @@ export function Portfolio() {
       <div className="mt-9 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {portfolio.map((p, i) => (
           <Reveal key={p.code} delay={i * 0.04}>
-            <PortfolioCard item={p} index={i} />
+            <PortfolioCard item={p} index={i} onOpen={() => setOpen(p)} />
           </Reveal>
         ))}
       </div>
+
+      <CaseStudyModal item={open} onClose={() => setOpen(null)} />
     </section>
   );
 }
@@ -33,12 +41,20 @@ export function Portfolio() {
 function PortfolioCard({
   item,
   index,
+  onOpen,
 }: {
   item: PortfolioItem;
   index: number;
+  onOpen: () => void;
 }) {
   return (
-    <article className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-ink-15 bg-white transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-iris">
+    <article className="group h-full">
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`${item.title} · 케이스 자세히 보기`}
+        className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-ink-15 bg-white text-left transition-[transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-iris focus-visible:outline-none focus-visible:border-iris focus-visible:ring-2 focus-visible:ring-iris/30"
+      >
       <PortfolioThumb item={item} index={index} />
 
       <div className="flex flex-1 flex-col px-5 py-4">
@@ -94,9 +110,15 @@ function PortfolioCard({
 
         <div className="mt-auto flex items-center justify-between border-t border-ink-15 pt-3 text-[11px] text-ink-50">
           <span>Shipped · {item.shipped}</span>
-          <span className="num font-mono">★ {item.rating}</span>
+          <span className="inline-flex items-center gap-2">
+            <span className="num font-mono">★ {item.rating}</span>
+            <span className="font-display text-[10px] font-bold uppercase tracking-eyebrow text-ink-30 transition-colors duration-200 group-hover:text-iris">
+              자세히 →
+            </span>
+          </span>
         </div>
       </div>
+      </button>
     </article>
   );
 }

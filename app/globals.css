@@ -86,7 +86,10 @@ button {
     @apply font-sans text-[12px] leading-[1.5] text-ink-50;
   }
   .section {
-    @apply relative w-full px-5 py-16 sm:px-8 sm:py-20 lg:px-12 lg:py-18;
+    @apply relative w-full px-5 py-16 sm:px-8 sm:py-20 lg:px-12 lg:py-24;
+  }
+  .section-tight {
+    @apply relative w-full px-5 py-10 sm:px-8 sm:py-12 lg:px-12 lg:py-14;
   }
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white;

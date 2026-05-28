@@ -1,6 +1,6 @@
 import { SectionHeader } from "./SectionHeader";
 import { Reveal } from "./ui/Reveal";
-import { trustStats, reviews } from "@/lib/site-data";
+import { trustStats, reviews, type Review } from "@/lib/site-data";
 
 export function Trust() {
   return (
@@ -25,34 +25,78 @@ export function Trust() {
         ))}
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="mt-12 columns-1 gap-3 sm:columns-2 lg:columns-3">
         {reviews.map((r, i) => (
-          <Reveal key={r.initials + r.role} delay={i * 0.05}>
-            <article className="flex h-full gap-3.5 rounded-[14px] border border-ink-15 bg-white px-5 py-5">
-              <div className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-iris-light text-[12px] font-bold text-iris">
-                {r.initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-[13px] font-bold text-ink-100">
-                    {r.initials}
-                  </span>
-                  <span className="text-[11px] text-ink-50">{r.role}</span>
-                  <span className="rounded-full bg-iris-light px-2 py-0.5 text-[10px] font-bold text-iris">
-                    {r.badge}
-                  </span>
-                </div>
-                <p className="mt-2 text-[12px] leading-[1.65] text-ink-70">
-                  {r.body}
-                </p>
-                <p className="mt-2 text-[12px] font-bold text-warning">
-                  ★★★★★ {r.rating}
-                </p>
-              </div>
-            </article>
+          <Reveal key={r.initials + r.industry} delay={i * 0.04}>
+            <ReviewCard review={r} highlight={i === 0 || i === 3} />
           </Reveal>
         ))}
       </div>
     </section>
+  );
+}
+
+function ReviewCard({
+  review,
+  highlight,
+}: {
+  review: Review;
+  highlight?: boolean;
+}) {
+  return (
+    <article
+      className={`mb-3 inline-block w-full break-inside-avoid rounded-[16px] border bg-white px-5 py-5 transition-colors duration-200 ${
+        highlight ? "border-ink-30" : "border-ink-15"
+      }`}
+    >
+      <div className="flex items-start gap-3.5">
+        <div className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-iris-light font-display text-[12px] font-bold text-iris">
+          {review.initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="font-display text-[13px] font-bold text-ink-100">
+              {review.initials}
+            </span>
+            {review.verified && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[10px] font-bold text-success"
+                title="실제 클라이언트 동의 하에 공개된 리뷰"
+              >
+                <i className="ti ti-circle-check text-[12px]" aria-hidden />
+                Verified
+              </span>
+            )}
+            {review.repeat && review.repeat > 1 && (
+              <span className="rounded-full bg-iris-light px-1.5 py-0.5 text-[9px] font-bold text-iris">
+                Repeat · {review.repeat}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-[11px] text-ink-50">{review.role}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-ink-50">
+            <span className="font-display font-bold uppercase tracking-[0.08em] text-ink-70">
+              {review.industry}
+            </span>
+            <span className="text-ink-30">·</span>
+            <span className="num">{review.scale}</span>
+          </div>
+        </div>
+        <span className="rounded-full bg-ink-5 px-2 py-0.5 text-[10px] font-bold text-ink-70">
+          {review.badge}
+        </span>
+      </div>
+
+      <p className="mt-3 text-[12.5px] leading-[1.7] text-ink-70">
+        “{review.body}”
+      </p>
+
+      <div className="mt-3 flex items-center justify-between border-t border-ink-15 pt-3">
+        <p className="num text-[11px] font-bold text-warning">
+          ★★★★★ {review.rating}
+        </p>
+        <p className="text-[10px] text-ink-50">{review.timestamp}</p>
+      </div>
+    </article>
   );
 }

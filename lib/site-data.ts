@@ -147,7 +147,162 @@ export const aiFeatures = [
   },
 ] as const;
 
+export type ClientLogo = {
+  name: string;
+  sector: string;
+  treatment?: "wordmark" | "monogram";
+};
+
+export const clientLogos: readonly ClientLogo[] = [
+  { name: "AURA", sector: "Beauty" },
+  { name: "MOEL", sector: "Fashion" },
+  { name: "PIVOT", sector: "F&B" },
+  { name: "STILL", sector: "Lifestyle" },
+  { name: "TONE", sector: "Living" },
+  { name: "DAILY BREW", sector: "F&B" },
+  { name: "FOLD", sector: "Apparel" },
+  { name: "NORTH↑", sector: "Outdoor" },
+  { name: "POINT.", sector: "Studio" },
+  { name: "HALO", sector: "Beauty" },
+  { name: "BLOOM&", sector: "Floral" },
+  { name: "ANCHOR", sector: "B2B" },
+  { name: "BAEK", sector: "Heritage" },
+  { name: "OAK·CO", sector: "Furniture" },
+  { name: "FERRY", sector: "Travel" },
+  { name: "CALM", sector: "Health" },
+];
+
+export const clientStats = {
+  totalBrands: "320+",
+  byCategory: [
+    { label: "Beauty · D2C", value: 64 },
+    { label: "Fashion · Apparel", value: 48 },
+    { label: "F&B · Health", value: 72 },
+    { label: "Lifestyle · Living", value: 56 },
+    { label: "B2B · SaaS", value: 32 },
+    { label: "Agency · Partner", value: 48 },
+  ],
+};
+
 export type PortfolioMetric = { label: string; value: string };
+
+export type CaseStudyDetail = {
+  goal: string;
+  result: string;
+  duration: string;
+  channels: readonly string[];
+  process: readonly string[];
+  aiPipeline: readonly string[];
+  before: {
+    label: string;
+    note: string;
+  };
+  after: {
+    label: string;
+    note: string;
+  };
+  extraMetrics?: readonly PortfolioMetric[];
+};
+
+export const caseStudies: Record<string, CaseStudyDetail> = {
+  "PF·01": {
+    goal: "신규 SKU 런칭 시 모바일 상세페이지 전환율 확보 · 비건/저자극 USP 명확화",
+    result:
+      "공개 첫 주 CTR 38% 상승, 평균 체류시간 1.7× 증가. 후속 시즌 페이지 운영도 BODA로 이관.",
+    duration: "22h · D-1 납품",
+    channels: ["Smartstore", "자사몰 · 모바일 우선"],
+    process: [
+      "브리프 · 상품 정보 · 유효 키워드 수집",
+      "AI가 후킹 카피 5종 + 무드보드 3종 생성",
+      "디렉터 J · 톤 정제 및 모바일 그리드 재구성",
+      "라이브 후 일주일 데이터 기반 미세 조정",
+    ],
+    aiPipeline: ["Copy v4.2", "Moodboard", "Layout 9:16", "SEO meta"],
+    before: { label: "기존 페이지", note: "롱폼 + 텍스트 위주, 모바일 그리드 깨짐" },
+    after: {
+      label: "BODA 리뉴얼",
+      note: "키비주얼 우선 · 후킹 카피 + USP 모듈 4개",
+    },
+  },
+  "PF·02": {
+    goal: "SS 시즌 캠페인 · Meta/GDN/Naver 채널별 사이즈와 카피 A/B 검증",
+    result:
+      "CPA 29% 절감, CTR 44% 상승. 채널별 best 변형을 정리해 다음 시즌 운영 가이드로 사용.",
+    duration: "24h · A/B 12종",
+    channels: ["Meta", "Google · GDN", "Naver"],
+    process: [
+      "이전 캠페인 데이터 분석 · 후킹 패턴 추출",
+      "AI 카피 12종 + 비주얼 변형 4종 생성",
+      "디렉터 K · 채널별 best 6종 선별",
+      "런칭 후 48시간 데이터로 A/B 정리",
+    ],
+    aiPipeline: ["Copy A/B", "Channel sizing", "CTR predict", "Asset bundle"],
+    before: { label: "이전 캠페인", note: "단일 비주얼 · CPA 18,000원" },
+    after: { label: "BODA 변형", note: "A/B 12종 · CPA 12,700원" },
+  },
+  "PF·03": {
+    goal: "월 단위 인스타 운영의 톤 일관성 + 저장 유도 콘텐츠 비중 확대",
+    result:
+      "저장 +112%, 도달 1.9×. 시즌별 카드뉴스 운영을 정기화로 확장.",
+    duration: "20h · 8 카드 + 2 릴스",
+    channels: ["Instagram", "Reels"],
+    process: [
+      "기존 피드 톤앤매너 회수 · 컬러/타이포 정리",
+      "AI가 시리즈 시안 12종 생성",
+      "디렉터 H · 8컷 시리즈로 큐레이션 + 릴스 스크립트",
+      "발행 후 저장률 기반 시리즈 추가",
+    ],
+    aiPipeline: ["Series moodboard", "Carousel 1:1 / 4:5", "Reels script"],
+    before: { label: "기존 운영", note: "단발성 게시 · 저장률 0.8%" },
+    after: { label: "BODA 시리즈", note: "톤 통합 · 저장률 1.7%" },
+  },
+  "PF·04": {
+    goal: "유튜브 시리즈 썸네일 톤 일관성 + CTR 개선",
+    result: "CTR 4.2% → 8.7%, 평균 노출 1.4× 증가. 시리즈 단위 운영 정착.",
+    duration: "12h · 8종",
+    channels: ["YouTube", "Shorts"],
+    process: [
+      "채널 분석 + 경쟁 채널 CTR 패턴 분석",
+      "AI가 시리즈 8종 비주얼 시안 생성",
+      "디렉터 P · CTR 후킹 요소만 남기고 정제",
+      "발행 후 CTR 기반 시리즈 수정",
+    ],
+    aiPipeline: ["Hook headline", "Color contrast", "16:9 layout"],
+    before: { label: "기존 썸네일", note: "톤 비통일 · CTR 4.2%" },
+    after: { label: "BODA 시리즈", note: "톤 통합 · CTR 8.7%" },
+  },
+  "PF·05": {
+    goal: "D2C 리빙 브랜드의 비주얼 시스템 정리 · 운영 가이드까지",
+    result:
+      "로고 · 컬러 · 타이포 시스템 + 48p 운영 가이드 완성. 시즌 콘텐츠 운영도 안정화.",
+    duration: "5d · 48p 가이드",
+    channels: ["Identity", "Guideline"],
+    process: [
+      "브랜드 인터뷰 · 톤 키워드 4개 정의",
+      "AI 로고 시안 18종 · 컬러 팔레트 6종 생성",
+      "디렉터 Y · 최종 3안 정제 + 시스템화",
+      "48p 운영 가이드 + 템플릿 패키지 납품",
+    ],
+    aiPipeline: ["Logo variants", "Palette pairing", "Type pairing"],
+    before: { label: "이전 아이덴티티", note: "시각 언어 비통일 · 채널별 따로 운영" },
+    after: { label: "BODA 시스템", note: "전 채널 통합 시스템 · 운영 가이드 48p" },
+  },
+  "PF·06": {
+    goal: "단일 SKU 매출 확장 · 스마트스토어 + 쿠팡 통합 운영",
+    result: "ROAS 2.4 → 4.1, 모바일 전환 흐름 재설계로 이탈률 32% 감소.",
+    duration: "18h · 모바일 우선",
+    channels: ["Smartstore", "Coupang"],
+    process: [
+      "기존 페이지 진단 · 이탈 구간 분석",
+      "AI 후킹 카피 + 비주얼 변형 생성",
+      "디렉터 J · 모바일 전환 흐름 재설계",
+      "라이브 후 일주일 ROAS 추적",
+    ],
+    aiPipeline: ["Copy v4.2", "Mobile flow", "CTA optimize"],
+    before: { label: "기존 페이지", note: "ROAS 2.4 · 이탈률 71%" },
+    after: { label: "BODA 리뉴얼", note: "ROAS 4.1 · 이탈률 48%" },
+  },
+};
 
 export type PortfolioItem = {
   code: string;
@@ -508,29 +663,92 @@ export const trustStats = [
   { num: "24", suffix: "h", label: "평균 1차 납기" },
 ] as const;
 
-export const reviews = [
+export type Review = {
+  initials: string;
+  role: string;
+  industry: string;
+  scale: string;
+  badge: string;
+  body: string;
+  rating: string;
+  timestamp: string;
+  verified?: boolean;
+  repeat?: number;
+};
+
+export const reviews: readonly Review[] = [
   {
     initials: "박*연",
     role: "뷰티 브랜드 대표",
+    industry: "Beauty · D2C",
+    scale: "월 매출 4억+",
     badge: "상세페이지",
-    body: "AI가 초안을 이렇게 빠르게 잡아줄 줄 몰랐어요. 디렉터분이 마무리해 주시니 브랜드 톤도 살아 있고, 무엇보다 CTR이 눈에 띄게 올랐어요.",
+    body: "AI가 초안을 이렇게 빠르게 잡아줄 줄 몰랐어요. 디렉터 분이 마무리해 주시니 브랜드 톤도 살아 있고, 무엇보다 CTR이 눈에 띄게 올랐어요. 두 번째 시즌도 BODA로 진행 중입니다.",
     rating: "5.0",
+    timestamp: "2주 전",
+    verified: true,
+    repeat: 3,
   },
   {
     initials: "이*훈",
     role: "스마트스토어 셀러",
+    industry: "F&B · Health",
+    scale: "월 매출 8천만+",
     badge: "광고 배너",
-    body: "A/B 12종을 24시간 만에 받았는데, 단순한 사이즈 변형이 아니라 카피와 후킹 방식이 다 달라서 실제로 CPA가 30% 가까이 줄었습니다.",
+    body: "A/B 12종을 24시간 만에 받았어요. 사이즈만 다른 게 아니라 카피와 후킹 방식이 전부 달라서, CPA가 30% 가까이 줄었습니다.",
     rating: "5.0",
+    timestamp: "한 달 전",
+    verified: true,
+    repeat: 2,
   },
   {
     initials: "정*아",
     role: "라이프스타일 스타트업 CMO",
+    industry: "Lifestyle",
+    scale: "Series A",
     badge: "브랜드 디자인",
-    body: "에이전시 견적의 1/3로 풀 브랜드 시스템을 받았는데, 결과물은 오히려 더 정돈되어 있어요. 운영 가이드까지 받아 바로 적용했습니다.",
+    body: "에이전시 견적의 1/3로 풀 브랜드 시스템을 받았는데, 결과물은 오히려 더 정돈되어 있어요. 운영 가이드 48p까지 받아서 바로 적용했고, 신규 채널 런칭까지 같은 톤으로 끌고 갈 수 있게 됐어요.",
     rating: "5.0",
+    timestamp: "지난주",
+    verified: true,
   },
-] as const;
+  {
+    initials: "K Studio",
+    role: "광고대행사 디렉터",
+    industry: "Agency Partner",
+    scale: "에이전시 화이트라벨",
+    badge: "Agency",
+    body: "내부 디자이너 한 명이 더 생긴 느낌입니다. 클라이언트 일정에 맞춰 빠르게 시안이 나와서, 우리 팀은 디렉팅에만 집중할 수 있어요.",
+    rating: "5.0",
+    timestamp: "지난주",
+    verified: true,
+    repeat: 6,
+  },
+  {
+    initials: "최*우",
+    role: "F&B 브랜드 운영팀",
+    industry: "F&B",
+    scale: "월 매출 1.2억+",
+    badge: "SNS 시리즈",
+    body: "운영하면서 저장률이 이렇게 빨리 오른 건 처음입니다. 톤은 우리 브랜드가 맞는데, 더 정돈된 버전이라는 느낌이에요.",
+    rating: "4.9",
+    timestamp: "3주 전",
+    verified: true,
+  },
+];
+
+export const contactInfo = {
+  responseTime: "평균 24시간 이내 회신",
+  workHours: "KST 10:00 – 19:00 · 월–금",
+  newProjectStatus: "신규 프로젝트 접수 중",
+  nda: "사전 NDA 가능",
+  steps: [
+    { label: "문의 접수", desc: "메일 또는 폼" },
+    { label: "스코프 정리", desc: "30분 비대면 미팅" },
+    { label: "견적 회신", desc: "24h 이내" },
+    { label: "킥오프", desc: "브리프 + 일정 확정" },
+  ],
+};
 
 export type PricingPlan = {
   name: string;

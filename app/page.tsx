@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { ClientLogos } from "@/components/ClientLogos";
 import { Services } from "@/components/Services";
 import { HowItWorks } from "@/components/HowItWorks";
 import { AIFeature } from "@/components/AIFeature";
@@ -41,6 +42,7 @@ export default function Page() {
       <Header />
       <main id="top">
         <Hero />
+        <ClientLogos />
         <Services />
         <HowItWorks />
         <AIFeature />
