@@ -26,7 +26,7 @@ export function LoginForm({ next }: { next?: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3">
       <label className="block">
         <span className="mb-1.5 block font-display text-[11px] font-bold uppercase tracking-[0.08em] text-ink-30">
           이메일
@@ -37,7 +37,7 @@ export function LoginForm({ next }: { next?: string }) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-11 w-full rounded-lg border border-ink-90 bg-ink-90/70 px-3.5 text-[14px] text-white outline-none transition-colors placeholder:text-ink-50 focus:border-iris-glow/60"
+          className="h-11 w-full rounded-lg border border-white/15 bg-white/[0.04] px-3.5 text-[13.5px] text-white outline-none transition-colors placeholder:text-ink-50 focus:border-iris-glow/60"
           placeholder="admin@studioboda.kr"
         />
       </label>
@@ -51,13 +51,13 @@ export function LoginForm({ next }: { next?: string }) {
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="h-11 w-full rounded-lg border border-ink-90 bg-ink-90/70 px-3.5 text-[14px] text-white outline-none transition-colors placeholder:text-ink-50 focus:border-iris-glow/60"
+          className="h-11 w-full rounded-lg border border-white/15 bg-white/[0.04] px-3.5 text-[13.5px] text-white outline-none transition-colors placeholder:text-ink-50 focus:border-iris-glow/60"
           placeholder="••••••••"
         />
       </label>
 
       {error ? (
-        <p className="rounded-md border border-error/30 bg-error/[0.08] px-3 py-2 text-[12px] text-error">
+        <p className="rounded-md border border-error/40 bg-error/10 px-3 py-2 text-[12px] text-error">
           {error}
         </p>
       ) : null}
@@ -65,9 +65,9 @@ export function LoginForm({ next }: { next?: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-lg bg-iris font-display text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="mt-1 inline-flex h-11 w-full items-center justify-center rounded-lg bg-white font-display text-[13px] font-bold text-ink-100 transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        {pending ? "로그인 중…" : "로그인"}
+        {pending ? "로그인 중…" : "로그인 →"}
       </button>
     </form>
   );
