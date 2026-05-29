@@ -1,10 +1,8 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { Services } from "@/components/Services";
 import { HowItWorks } from "@/components/HowItWorks";
 import { Portfolio } from "@/components/Portfolio";
 import { Pricing } from "@/components/Pricing";
-import { FAQ } from "@/components/FAQ";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { MobileCTA } from "@/components/MobileCTA";
@@ -41,11 +39,9 @@ export default async function Page() {
       <Header />
       <main id="top">
         <Hero />
-        <Services />
         <HowItWorks />
         <Portfolio />
         <Pricing />
-        <FAQ />
         <CTASection />
       </main>
       <Footer />

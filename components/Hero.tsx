@@ -88,7 +88,7 @@ export function Hero() {
             <StartCTA size="lg" variant="cinematic">
               프로젝트 문의하기 <ArrowGlyph />
             </StartCTA>
-            <LinkButton href="#services" size="lg" variant="outline">
+            <LinkButton href="/services" size="lg" variant="outline">
               서비스 보기
             </LinkButton>
             <span className="ml-1 hidden text-[13px] text-ink-50 sm:inline">
