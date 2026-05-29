@@ -15,7 +15,12 @@ export type NotificationType =
   | "project_due_soon"
   | "file_uploaded"
   | "revision_requested"
-  | "comment_posted";
+  | "comment_posted"
+  | "subscription_registration_requested"
+  | "subscription_activated"
+  | "subscription_charged"
+  | "subscription_charge_failed"
+  | "subscription_canceled";
 
 export async function createNotification(
   userId: string | null | undefined,

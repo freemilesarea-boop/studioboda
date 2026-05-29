@@ -4,6 +4,8 @@ import { logActivity } from "@/lib/activity";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { createNotification, notifyStaff } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
+import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
+import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +26,14 @@ export async function POST(req: Request) {
   // PayApp posts application/x-www-form-urlencoded
   const text = await req.text();
   const body = parseForm(text);
+
+  // Subscription / 자동결제 events are routed by var2 prefix (subreg:/subinv:).
+  // They have a separate state machine from one-shot payments, so dispatch
+  // before the one-shot handler picks them up.
+  const recurring = parseRecurringEvent(body);
+  if (recurring.kind !== "none") {
+    return handleRecurringWebhook(body, recurring);
+  }
 
   const provider = getPaymentProvider();
   const event = provider.verifyAndParseWebhook(body, req.headers);
