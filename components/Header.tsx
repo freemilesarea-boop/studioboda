@@ -27,10 +27,10 @@ export function Header() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-[background,backdrop-filter,border-color] duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-[background,backdrop-filter,border-color] duration-300 ${
         scrolled
-          ? "border-b border-ink-15 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/70"
-          : "border-b border-transparent bg-transparent"
+          ? "border-ink-15 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/70"
+          : "border-ink-15/70 bg-white/95 backdrop-blur-sm"
       }`}
     >
       <div
@@ -60,7 +60,7 @@ export function Header() {
         <div className="hidden items-center gap-3 md:flex">
           <AuthMenu />
           <span className="hidden h-5 w-px bg-ink-15 md:inline-block" />
-          <StartCTA size="md">무료로 시작하기</StartCTA>
+          <StartCTA size="md">프로젝트 문의하기</StartCTA>
         </div>
 
         <button
@@ -99,7 +99,7 @@ export function Header() {
                 className="w-full"
                 onNavigate={() => setOpen(false)}
               >
-                무료로 시작하기
+                프로젝트 문의하기
               </StartCTA>
             </div>
           </div>

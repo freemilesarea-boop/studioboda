@@ -6,7 +6,6 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { AIFeature } from "@/components/AIFeature";
 import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { Portfolio } from "@/components/Portfolio";
-import { DashboardPreview } from "@/components/DashboardPreview";
 import { Trust } from "@/components/Trust";
 import { Pricing } from "@/components/Pricing";
 import { FAQ } from "@/components/FAQ";
@@ -42,15 +41,14 @@ export default function Page() {
       <Header />
       <main id="top">
         <Hero />
-        <ClientLogos />
         <Services />
         <HowItWorks />
-        <AIFeature />
-        <QuoteCalculator />
         <Portfolio />
-        <DashboardPreview />
-        <Trust />
+        <AIFeature />
         <Pricing />
+        <QuoteCalculator />
+        <Trust />
+        <ClientLogos />
         <FAQ />
         <CTASection />
       </main>

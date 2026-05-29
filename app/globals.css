@@ -116,21 +116,20 @@ button {
     transform: translateY(-1px);
   }
 
-  /* Card hover system — border glow + lift + ambient shadow + blue reflection */
+  /* Card hover — gentle lift + soft ambient shadow + iris border tint */
   .card-cinematic {
     transition:
-      transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 280ms ease,
-      border-color 220ms ease;
+      border-color 240ms ease;
     will-change: transform;
   }
   .card-cinematic:hover {
-    transform: translateY(-2px);
-    border-color: rgba(127, 189, 255, 0.45);
+    transform: translateY(-1px);
+    border-color: rgba(110, 91, 255, 0.35);
     box-shadow:
-      0 0 0 1px rgba(127, 189, 255, 0.18),
-      0 22px 60px -28px rgba(77, 163, 255, 0.45),
-      0 28px 80px -32px rgba(110, 91, 255, 0.35);
+      0 1px 0 0 rgba(110, 91, 255, 0.06),
+      0 14px 32px -18px rgba(20, 20, 40, 0.12);
   }
 
   /* Hero ambient lighting layers */
