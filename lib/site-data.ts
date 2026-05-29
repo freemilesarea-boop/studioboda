@@ -800,7 +800,7 @@ export const pricing: readonly PricingPlan[] = [
     name: "Starter",
     sub: "콘텐츠 운영을 시작하는 셀러",
     price: "190,000",
-    unit: "원/월",
+    unit: "원~ / 월",
     items: [
       "월 2건 제작 포함",
       "SNS · 썸네일 · 단일 배너",
@@ -814,7 +814,7 @@ export const pricing: readonly PricingPlan[] = [
     name: "Pro",
     sub: "성장 중인 브랜드·스타트업",
     price: "390,000",
-    unit: "원/월",
+    unit: "원~ / 월",
     items: [
       "월 5건 제작 포함",
       "상세페이지 · 광고 · SNS 통합",

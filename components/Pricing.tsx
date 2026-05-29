@@ -90,9 +90,9 @@ function PricingCard({ plan }: { plan: PricingItem }) {
         </h3>
         <p className="mt-1 text-[12px] leading-[1.5] text-ink-30">{plan.sub}</p>
         <p className="mt-5 num font-display text-[36px] font-extrabold leading-[1.1] tracking-[-0.8px] text-white">
-          ₩{plan.price}
+          {plan.price}
           {plan.unit && (
-            <span className="num ml-0.5 text-[13px] font-normal text-ink-30">
+            <span className="num ml-1 text-[13px] font-normal text-ink-30">
               {plan.unit}
             </span>
           )}
@@ -142,9 +142,9 @@ function PricingCard({ plan }: { plan: PricingItem }) {
       </h3>
       <p className="mt-1 text-[12px] leading-[1.5] text-ink-50">{plan.sub}</p>
       <p className="num mt-5 font-display text-[36px] font-extrabold leading-[1.1] tracking-[-0.8px] text-ink-100">
-        {isQuote ? plan.price : `₩${plan.price}`}
+        {plan.price}
         {plan.unit && (
-          <span className="num ml-0.5 text-[13px] font-normal text-ink-50">
+          <span className="num ml-1 text-[13px] font-normal text-ink-50">
             {plan.unit}
           </span>
         )}
