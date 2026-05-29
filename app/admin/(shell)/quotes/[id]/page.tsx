@@ -8,6 +8,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { QuoteStatusBadge } from "@/components/admin/Badge";
 import type { Quote, QuoteOption } from "@/lib/types/db";
 import { QuoteEditor } from "./QuoteEditor";
+import { resolveQuoteBuyer } from "@/lib/queries/buyer";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -50,6 +51,8 @@ export default async function QuoteDetailPage({
   const depositAmount =
     q.deposit_amount ?? Math.round((q.total_price * depositRate) / 100);
   const balanceAmount = q.balance_amount ?? q.total_price - depositAmount;
+
+  const buyer = await resolveQuoteBuyer(q.id);
 
   return (
     <div className="space-y-5">
@@ -117,6 +120,7 @@ export default async function QuoteDetailPage({
           payment_status: q.payment_status,
         }}
         payments={payments}
+        buyer={buyer}
       />
 
       <AdminCard title="활동 타임라인">
