@@ -9,7 +9,7 @@ import { ArrowGlyph } from "@/components/ui/Button";
 import { getPortfolioBySlug } from "@/lib/queries/portfolio";
 import type { PortfolioImage, PortfolioProof } from "@/lib/types/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -98,6 +98,8 @@ export default async function PortfolioDetailPage({
                   <img
                     src={item.thumbnail_url}
                     alt={item.title}
+                    fetchPriority="high"
+                    decoding="async"
                     className="block h-auto w-full"
                   />
                 </div>
@@ -161,6 +163,8 @@ export default async function PortfolioDetailPage({
                       <img
                         src={img.url}
                         alt={img.alt ?? item.title}
+                        loading="lazy"
+                        decoding="async"
                         className="block h-auto w-full"
                       />
                     </li>
@@ -191,6 +195,8 @@ export default async function PortfolioDetailPage({
                           <img
                             src={p.url}
                             alt={p.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover"
                           />
                         ) : (

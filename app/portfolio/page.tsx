@@ -5,7 +5,8 @@ import { Footer } from "@/components/Footer";
 import { listPublishedPortfolio } from "@/lib/queries/portfolio";
 import type { PortfolioItem } from "@/lib/types/db";
 
-export const dynamic = "force-dynamic";
+// ISR — public listing. Updates surface within 60s of admin edits.
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Portfolio · STUDIO BODA",
@@ -182,6 +183,8 @@ function PortfolioCard({ item }: { item: PortfolioItem }) {
           <img
             src={item.thumbnail_url}
             alt={item.title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           />
         ) : (

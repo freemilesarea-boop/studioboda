@@ -1,10 +1,9 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowGlyph, LinkButton } from "./ui/Button";
 import { StartCTA } from "./StartCTA";
 
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+// Pure CSS hero — no framer-motion. Animations are declared as
+// .hero-fade utilities below so the entire section renders as a server
+// component without shipping a client bundle.
 
 type DeliverablePreview = {
   category: string;
@@ -49,8 +48,6 @@ const HERO_HIGHLIGHTS = [
 ];
 
 export function Hero() {
-  const reduce = useReducedMotion();
-
   return (
     <section className="relative overflow-hidden bg-white px-5 pb-16 pt-24 sm:px-8 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-32 lg:pb-24">
       {/* Very soft iris tint — 5-8% only, no dark mesh */}
@@ -65,43 +62,32 @@ export function Hero() {
 
       <div className="relative grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-7 lg:pt-2">
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 10 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="inline-flex items-center gap-2 rounded-full border border-iris/20 bg-iris/[0.06] px-3 py-1.5"
-          >
+          <div className="hero-fade inline-flex items-center gap-2 rounded-full border border-iris/20 bg-iris/[0.06] px-3 py-1.5">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris" />
             <span className="text-[12px] font-semibold text-iris">
               AI 기반 콘텐츠 제작 스튜디오
             </span>
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.06, ease: EASE }}
-            className="mt-6 max-w-[640px] font-display text-[32px] font-extrabold leading-[1.18] tracking-[-1px] text-ink-100 sm:text-[40px] lg:text-[48px] xl:text-[52px]"
+          <h1
+            className="hero-fade mt-6 max-w-[640px] font-display text-[32px] font-extrabold leading-[1.18] tracking-[-1px] text-ink-100 sm:text-[40px] lg:text-[48px] xl:text-[52px]"
+            style={{ animationDelay: "60ms" }}
           >
             상세페이지부터 광고 콘텐츠까지,
             <br />
             <span className="text-iris">AI와 디렉터</span>가 빠르게 제작합니다.
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.12, ease: EASE }}
-            className="mt-5 max-w-[560px] text-[15px] leading-[1.7] text-ink-70 sm:text-[16px] sm:leading-[1.75] lg:text-[17px]"
+          <p
+            className="hero-fade mt-5 max-w-[560px] text-[15px] leading-[1.7] text-ink-70 sm:text-[16px] sm:leading-[1.75] lg:text-[17px]"
+            style={{ animationDelay: "120ms" }}
           >
             상품 정보와 레퍼런스만 보내주세요. STUDIO BODA가 상세페이지 · SNS 콘텐츠 · 광고 배너 · 썸네일을 브랜드 톤에 맞춰 제작합니다.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
-            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+          <div
+            className="hero-fade mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+            style={{ animationDelay: "180ms" }}
           >
             <StartCTA size="lg" variant="cinematic">
               프로젝트 문의하기 <ArrowGlyph />
@@ -112,16 +98,14 @@ export function Hero() {
             <span className="ml-1 hidden text-[13px] text-ink-50 sm:inline">
               평균 24시간 내 1차 초안 전달
             </span>
-          </motion.div>
+          </div>
           <p className="mt-3 text-[13px] text-ink-50 sm:hidden">
             평균 24시간 내 1차 초안 전달
           </p>
 
-          <motion.dl
-            initial={reduce ? false : { opacity: 0 }}
-            animate={reduce ? undefined : { opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.28 }}
-            className="mt-9 grid grid-cols-3 gap-x-4 border-t border-ink-15 pt-6 sm:max-w-[480px]"
+          <dl
+            className="hero-fade mt-9 grid grid-cols-3 gap-x-4 border-t border-ink-15 pt-6 sm:max-w-[480px]"
+            style={{ animationDelay: "280ms" }}
           >
             {HERO_HIGHLIGHTS.map((h) => (
               <div key={h.label}>
@@ -133,15 +117,13 @@ export function Hero() {
                 </dd>
               </div>
             ))}
-          </motion.dl>
+          </dl>
         </div>
 
         <div className="lg:col-span-5">
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 14 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.22, ease: EASE }}
-            className="flex flex-col gap-3"
+          <div
+            className="hero-fade flex flex-col gap-3"
+            style={{ animationDelay: "220ms" }}
           >
             <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-ink-50">
               지금 만들고 있는 것
@@ -149,7 +131,7 @@ export function Hero() {
             {DELIVERABLES.map((d, i) => (
               <DeliverableCard key={d.title} item={d} accent={i === 0} />
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

@@ -13,6 +13,10 @@ import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { MobileCTA } from "@/components/MobileCTA";
 
+// ISR — the landing pulls featured portfolio items from DB. Re-render at most
+// once a minute, otherwise serve the cached HTML straight from the CDN.
+export const revalidate = 60;
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
