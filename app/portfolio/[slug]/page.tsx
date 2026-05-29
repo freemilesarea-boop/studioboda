@@ -241,7 +241,7 @@ export default async function PortfolioDetailPage({
                 평균 24시간 내 1차 초안을 보내드립니다.
               </p>
               <div className="mt-5 flex justify-center">
-                <StartCTA size="lg" variant="cinematic">
+                <StartCTA size="lg" variant="cinematic" authedHref="/#inquiry">
                   프로젝트 문의하기 <ArrowGlyph />
                 </StartCTA>
               </div>
