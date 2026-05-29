@@ -192,13 +192,15 @@ async function provisionAccount(opts: {
   }
   const userId = created.user.id;
 
-  // ---- Upsert the profile (id-conflict). This fills in role, account_type,
-  //      and all typed fields without colliding with the trigger-inserted
-  //      stub. Idempotent on retry. ----
+  // ---- Upsert the profile (id-conflict). This fills in account_type and all
+  //      typed fields without colliding with the trigger-inserted stub.
+  //      `role` is intentionally omitted so the column default ('client') and
+  //      the apply_admin_invite trigger remain the source of truth — including
+  //      this key in the upsert would clobber an admin role granted by the
+  //      AFTER INSERT trigger. Idempotent on retry. ----
   const profileRow = {
     id: userId,
     email: opts.email,
-    role: "client" as const,
     ...opts.profile,
   };
 

@@ -53,7 +53,9 @@ export default async function ServicesPage() {
             제작합니다. 5대 핵심 서비스를 기본으로, 패키지와 정기 구독 옵션도 함께 제공합니다.
           </p>
           <div className="mt-7">
-            <StartCTA size="lg">무료 견적 받기 →</StartCTA>
+            <StartCTA size="lg" authedHref="/#inquiry">
+              무료 견적 받기 →
+            </StartCTA>
           </div>
         </section>
 
