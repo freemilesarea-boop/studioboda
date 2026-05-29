@@ -1,12 +1,8 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { ClientLogos } from "@/components/ClientLogos";
 import { Services } from "@/components/Services";
 import { HowItWorks } from "@/components/HowItWorks";
-import { AIFeature } from "@/components/AIFeature";
-import { QuoteCalculator } from "@/components/QuoteCalculator";
 import { Portfolio } from "@/components/Portfolio";
-import { Trust } from "@/components/Trust";
 import { Pricing } from "@/components/Pricing";
 import { FAQ } from "@/components/FAQ";
 import { CTASection } from "@/components/CTASection";
@@ -48,11 +44,7 @@ export default async function Page() {
         <Services />
         <HowItWorks />
         <Portfolio />
-        <AIFeature />
         <Pricing />
-        <QuoteCalculator />
-        <Trust />
-        <ClientLogos />
         <FAQ />
         <CTASection />
       </main>
