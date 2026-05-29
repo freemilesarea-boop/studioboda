@@ -318,6 +318,55 @@ export type AIAsset = {
   updated_at: string;
 };
 
+export type PortfolioStatus = "draft" | "published" | "archived";
+
+export type PortfolioImage = {
+  url: string;
+  alt?: string;
+  type?: "before" | "after" | "result" | "proof" | "gallery";
+};
+
+export type PortfolioProof = {
+  url: string;
+  name: string;
+  type: "image" | "pdf";
+  internal?: boolean;
+};
+
+export type PortfolioMetrics = Record<string, string>;
+
+export type PortfolioItem = {
+  id: string;
+  organization_id: string | null;
+  title: string;
+  slug: string;
+  client_name: string | null;
+  brand_name: string | null;
+  service_type: string | null;
+  category: string | null;
+  description: string | null;
+  problem: string | null;
+  solution: string | null;
+  result_summary: string | null;
+  metrics: PortfolioMetrics;
+  thumbnail_url: string | null;
+  images: PortfolioImage[];
+  proof_files: PortfolioProof[];
+  status: PortfolioStatus;
+  is_featured: boolean;
+  sort_order: number;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const portfolioStatusLabels: Record<PortfolioStatus, string> = {
+  draft: "초안",
+  published: "공개",
+  archived: "보관",
+};
+
 export type ProjectComment = {
   id: string;
   project_id: string;
