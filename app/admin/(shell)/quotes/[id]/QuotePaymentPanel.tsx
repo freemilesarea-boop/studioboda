@@ -21,6 +21,14 @@ type QuoteSlim = {
   payment_status: QuotePaymentStatus;
 };
 
+export type PaymentBuyer = {
+  linked: boolean;
+  source: "quote" | "project" | "inquiry" | "profiles_email" | "none";
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
 type PaymentRow = {
   id: string;
   type: "deposit" | "balance" | "extra";
@@ -52,9 +60,11 @@ const STATUS_TONE: Record<string, string> = {
 export function QuotePaymentPanel({
   quote,
   payments,
+  buyer,
 }: {
   quote: QuoteSlim;
   payments: PaymentRow[];
+  buyer: PaymentBuyer;
 }) {
   const [pending, startTransition] = useTransition();
   const [extraOpen, setExtraOpen] = useState(false);
@@ -115,8 +125,62 @@ export function QuotePaymentPanel({
     });
   }
 
+  function disabledMsg(): string | null {
+    if (!buyer.linked) {
+      return "이 견적은 고객 계정과 연결되어 있지 않습니다. 먼저 문의/견적을 고객 계정에 연결해주세요.";
+    }
+    if (!buyer.phone) {
+      return "고객 전화번호가 없습니다. 회원 프로필 또는 문의에 전화번호를 채워주세요.";
+    }
+    return null;
+  }
+  const blocked = disabledMsg();
+
   return (
     <AdminCard title="결제 청구">
+      <div
+        className={`mb-4 rounded-xl border p-3 ${
+          buyer.linked
+            ? "border-ink-15 bg-ink-5"
+            : "border-error/30 bg-error/[0.06]"
+        }`}
+      >
+        <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.08em]">
+          <span className="font-display font-bold text-ink-50">결제 대상 고객</span>
+          {buyer.linked ? (
+            <span className="rounded-full bg-success/15 px-2 py-0.5 font-bold text-success">
+              계정 연결됨
+            </span>
+          ) : (
+            <span className="rounded-full bg-error/15 px-2 py-0.5 font-bold text-error">
+              고객 미연결
+            </span>
+          )}
+          <span className="font-mono normal-case tracking-normal text-ink-50">
+            source · {buyer.source}
+          </span>
+        </div>
+        <div className="mt-2 grid grid-cols-1 gap-1 text-[13px] sm:grid-cols-3">
+          <div>
+            <span className="text-ink-50">고객</span>{" "}
+            <span className="font-display font-bold text-ink-100">
+              {buyer.name ?? "—"}
+            </span>
+          </div>
+          <div>
+            <span className="text-ink-50">이메일</span>{" "}
+            <span className="text-ink-100">{buyer.email ?? "—"}</span>
+          </div>
+          <div>
+            <span className="text-ink-50">전화</span>{" "}
+            <span className="font-mono text-ink-100">{buyer.phone ?? "—"}</span>
+          </div>
+        </div>
+        {blocked ? (
+          <p className="mt-2 text-[12px] font-semibold text-error">{blocked}</p>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Tile
           label={`예약금 (${quote.deposit_rate}%)`}
@@ -158,7 +222,8 @@ export function QuotePaymentPanel({
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={pending || hasOpen("deposit")}
+          disabled={pending || hasOpen("deposit") || !!blocked}
+          title={blocked ?? undefined}
           onClick={() => issue("deposit")}
           className="inline-flex h-10 items-center rounded-lg bg-iris px-4 font-display text-[12.5px] font-bold text-white hover:opacity-90 disabled:opacity-50"
         >
@@ -166,7 +231,8 @@ export function QuotePaymentPanel({
         </button>
         <button
           type="button"
-          disabled={pending || hasOpen("balance")}
+          disabled={pending || hasOpen("balance") || !!blocked}
+          title={blocked ?? undefined}
           onClick={() => issue("balance")}
           className="inline-flex h-10 items-center rounded-lg bg-sky px-4 font-display text-[12.5px] font-bold text-white hover:opacity-90 disabled:opacity-50"
         >
@@ -174,7 +240,8 @@ export function QuotePaymentPanel({
         </button>
         <button
           type="button"
-          disabled={pending}
+          disabled={pending || !!blocked}
+          title={blocked ?? undefined}
           onClick={() => setExtraOpen((v) => !v)}
           className="inline-flex h-10 items-center rounded-lg border border-ink-15 px-4 font-display text-[12.5px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100 disabled:opacity-50"
         >

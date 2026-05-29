@@ -84,30 +84,87 @@ export async function createPaymentAction(input: CreateInput) {
     }
   }
 
-  // Resolve buyer info
-  const userId = (quote.user_id as string | null) ?? null;
+  // Resolve buyer info — every payment must belong to a real customer profile.
+  // Priority: quote.user_id → linked project.user_id → inquiry.user_id →
+  // profiles lookup by inquiry/quote email. If none resolves, we block.
+  let userId = (quote.user_id as string | null) ?? null;
   let buyerName = "";
   let buyerEmail = "";
   let buyerPhone = "";
-  if (userId) {
+
+  // 1) Linked project — covers the case where a quote was issued before the
+  //    customer signed up but a project was already created for them.
+  type LinkedProject = {
+    id: string;
+    billing_status: string | null;
+    user_id: string | null;
+  };
+  const { data: linkedProjectRow } = await admin
+    .from("projects")
+    .select("id,billing_status,user_id")
+    .eq("quote_id", quote.id)
+    .maybeSingle();
+  const linkedProject = (linkedProjectRow as LinkedProject | null) ?? null;
+  if (!userId && linkedProject?.user_id) userId = linkedProject.user_id;
+
+  // 2) Inquiry on the quote
+  let inquiryEmail: string | null = null;
+  if (quote.inquiry_id) {
+    const { data: inq } = await admin
+      .from("inquiries")
+      .select("name,email,phone,user_id")
+      .eq("id", quote.inquiry_id)
+      .maybeSingle();
+    if (!userId && inq?.user_id) userId = inq.user_id;
+    if (inq) {
+      buyerName = inq.name ?? "";
+      buyerEmail = inq.email ?? "";
+      buyerPhone = inq.phone ?? "";
+      inquiryEmail = inq.email ?? null;
+    }
+  }
+
+  // 3) Fall back to a profiles lookup by inquiry email
+  if (!userId && inquiryEmail) {
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("id")
+      .ilike("email", inquiryEmail)
+      .maybeSingle();
+    if (prof?.id) userId = prof.id;
+  }
+
+  if (!userId) {
+    return {
+      ok: false as const,
+      error:
+        "이 견적은 고객 계정과 연결되어 있지 않습니다. 먼저 문의/견적을 고객 계정에 연결해주세요.",
+    };
+  }
+
+  // We have a real customer — pull authoritative buyer info from their profile
+  {
     const { data: profile } = await admin
       .from("profiles")
       .select("name,email,phone,contact_phone,company_name")
       .eq("id", userId)
       .maybeSingle();
-    buyerName = profile?.name || profile?.company_name || "";
-    buyerEmail = profile?.email || "";
-    buyerPhone = profile?.phone || profile?.contact_phone || "";
-  } else if (quote.inquiry_id) {
-    const { data: inq } = await admin
-      .from("inquiries")
-      .select("name,email,phone")
-      .eq("id", quote.inquiry_id)
-      .maybeSingle();
-    buyerName = inq?.name ?? "";
-    buyerEmail = inq?.email ?? "";
-    buyerPhone = inq?.phone ?? "";
+    if (profile) {
+      buyerName = profile.name || profile.company_name || buyerName;
+      buyerEmail = profile.email || buyerEmail;
+      buyerPhone = profile.phone || profile.contact_phone || buyerPhone;
+    }
   }
+
+  // Backfill quote.user_id so the same lookup never has to run again
+  if (!quote.user_id) {
+    await admin
+      .from("quotes")
+      .update({ user_id: userId })
+      .eq("id", quote.id)
+      .is("user_id", null);
+  }
+
   if (!buyerPhone) {
     return {
       ok: false as const,
@@ -115,13 +172,6 @@ export async function createPaymentAction(input: CreateInput) {
         "고객 전화번호가 없습니다. 회원 프로필 또는 문의에 전화번호를 먼저 채워주세요.",
     };
   }
-
-  // Linked project (if quote already converted into one)
-  const { data: linkedProject } = await admin
-    .from("projects")
-    .select("id,billing_status")
-    .eq("quote_id", quote.id)
-    .maybeSingle();
 
   // Insert payment row first so we have a stable ref for PayApp
   const { data: payment, error: insErr } = await admin

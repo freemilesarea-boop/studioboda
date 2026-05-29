@@ -90,6 +90,28 @@ export default async function AdminPaymentsPage({
   const [rowsRes, agg] = await Promise.all([q, paymentAggregates()]);
   const rows = (rowsRes.data ?? []) as Payment[];
 
+  // Hydrate buyer info for the list so admins see who owes what + whether
+  // the payment is properly linked to a customer profile.
+  const userIds = Array.from(
+    new Set(rows.map((r) => r.user_id).filter((v): v is string => !!v)),
+  );
+  let buyersById: Record<string, { name: string | null; email: string | null }> = {};
+  if (userIds.length) {
+    const { data: profs } = await admin
+      .from("profiles")
+      .select("id,name,email,company_name")
+      .in("id", userIds);
+    buyersById = Object.fromEntries(
+      (profs ?? []).map((p) => [
+        p.id as string,
+        {
+          name: ((p.name as string | null) ?? (p.company_name as string | null)) || null,
+          email: (p.email as string | null) ?? null,
+        },
+      ]),
+    );
+  }
+
   // Monthly subtotal grouped by YYYY-MM of paid_at (fallback created_at)
   const monthlyMap: Record<string, { paid: number; pending: number; count: number }> = {};
   for (const r of rows) {
@@ -295,6 +317,7 @@ export default async function AdminPaymentsPage({
                 <tr>
                   <th className="px-5 py-2.5">유형</th>
                   <th className="px-3 py-2.5">제목</th>
+                  <th className="px-3 py-2.5">고객</th>
                   <th className="px-3 py-2.5 text-right">금액</th>
                   <th className="px-3 py-2.5">상태</th>
                   <th className="px-3 py-2.5">결제 링크</th>
@@ -321,6 +344,22 @@ export default async function AdminPaymentsPage({
                           {p.description}
                         </p>
                       ) : null}
+                    </td>
+                    <td className="px-3 py-3 text-[11.5px]">
+                      {p.user_id ? (
+                        <>
+                          <p className="font-display font-bold text-ink-100">
+                            {buyersById[p.user_id]?.name ?? "—"}
+                          </p>
+                          <p className="mt-0.5 truncate text-[10.5px] text-ink-50">
+                            {buyersById[p.user_id]?.email ?? "—"}
+                          </p>
+                        </>
+                      ) : (
+                        <span className="inline-flex rounded-full bg-error/15 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-[0.08em] text-error">
+                          고객 미연결
+                        </span>
+                      )}
                     </td>
                     <td className="num px-3 py-3 text-right font-bold text-ink-100">
                       {fmt(p.amount)}원
