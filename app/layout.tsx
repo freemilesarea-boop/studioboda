@@ -80,6 +80,33 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        {/* Warm DNS + TLS for the three font hosts so they fetch in parallel
+            with the document instead of after CSS parses. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
+        {/* eslint-disable @next/next/no-page-custom-font */}
+        {/* Pretendard — used everywhere, top-priority */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+        />
+        {/* JetBrains Mono — used only in mono utility classes; swap on load */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        />
+        {/* Tabler Icons — pinned to a version so CDN caches indefinitely */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.1/dist/tabler-icons.min.css"
+        />
+        {/* eslint-enable @next/next/no-page-custom-font */}
+      </head>
       <body className="min-h-screen bg-white text-ink-100 antialiased">
         {children}
       </body>

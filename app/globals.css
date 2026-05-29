@@ -1,6 +1,6 @@
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
-@import url("https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css");
+/* External webfonts/icon font are loaded via <link rel="preconnect" + stylesheet>
+   in app/layout.tsx so the browser can fetch them in parallel with the rest of
+   the document instead of waiting for this stylesheet to download first. */
 
 @tailwind base;
 @tailwind components;
@@ -316,6 +316,27 @@ button {
   30% {
     transform: translateY(-2px);
     opacity: 1;
+  }
+}
+
+/* Hero fade-up — CSS-only replacement for the framer-motion variants the
+   Hero used to ship. Set `style={{ animationDelay: 'Nms' }}` per element. */
+.hero-fade {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: hero-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes hero-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-fade {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 

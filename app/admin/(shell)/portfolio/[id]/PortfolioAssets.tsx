@@ -348,7 +348,7 @@ function ProofUploader({
               <div className="grid h-12 w-16 shrink-0 place-items-center overflow-hidden rounded-md border border-ink-15 bg-ink-5">
                 {f.type === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={f.url} alt={f.name} className="h-full w-full object-cover" />
+                  <img loading="lazy" decoding="async" src={f.url} alt={f.name} className="h-full w-full object-cover" />
                 ) : (
                   <i className="ti ti-file-type-pdf text-[18px] text-ink-50" aria-hidden />
                 )}
