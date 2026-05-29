@@ -7,12 +7,16 @@ export function Footer() {
     <footer className="bg-ink-100 px-5 pb-7 pt-13 sm:px-8 lg:px-12">
       <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
         <div className="col-span-2 sm:col-span-4 lg:col-span-1">
-          <div className="mb-3.5 flex items-center gap-2">
+          <Link
+            href="/#top"
+            aria-label="STUDIO BODA — 최상단으로"
+            className="mb-3.5 inline-flex items-center gap-2 rounded-md outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-white/40"
+          >
             <LogoSymbol size={28} />
             <span className="font-display text-[17px] font-extrabold text-white">
               BODA
             </span>
-          </div>
+          </Link>
           <p className="max-w-[280px] text-[12px] leading-[1.75] text-ink-50">
             AI와 전문가가 함께 만드는 콘텐츠 제작 스튜디오. {brand.location}에서
             전 세계 브랜드와 일합니다.
