@@ -1,344 +1,212 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowGlyph, LinkButton } from "./ui/Button";
 import { StartCTA } from "./StartCTA";
-import { heroStats, dashboardJobs, heroQueue, type DashboardJob } from "@/lib/site-data";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const HERO_WORDMARKS = [
-  "SRR.KR",
-  "LOUVER",
-  "MAGAZINE 230",
-  "DEUDDA",
-  "SWK TODAY",
+type DeliverablePreview = {
+  category: string;
+  title: string;
+  spec: string;
+  eta: string;
+  icon: string;
+  thumbs: number;
+};
+
+const DELIVERABLES: DeliverablePreview[] = [
+  {
+    category: "상세페이지",
+    title: "신제품 런칭 상세페이지",
+    spec: "데스크탑 + 모바일 · 12블럭",
+    eta: "1차 초안 · 24h",
+    icon: "ti-layout-rows",
+    thumbs: 4,
+  },
+  {
+    category: "광고 배너",
+    title: "퍼포먼스 광고 배너 3종",
+    spec: "Meta · Naver · Kakao 사이즈",
+    eta: "1차 초안 · 36h",
+    icon: "ti-photo",
+    thumbs: 3,
+  },
+  {
+    category: "SNS 콘텐츠",
+    title: "인스타그램 카드뉴스 8컷",
+    spec: "1080 × 1080 · 시리즈 톤",
+    eta: "1차 초안 · 48h",
+    icon: "ti-square-rounded-letter-c",
+    thumbs: 8,
+  },
+];
+
+const HERO_HIGHLIGHTS = [
+  { num: "24h", label: "1차 초안 전달" },
+  { num: "5종", label: "제작 서비스" },
+  { num: "1:1", label: "디렉터 검수" },
 ];
 
 export function Hero() {
   const reduce = useReducedMotion();
 
   return (
-    <section className="hero-stage relative overflow-hidden px-5 pb-0 pt-24 sm:px-8 sm:pt-28 lg:px-12 lg:pt-32">
-      <div className="hero-beam" aria-hidden />
-      <div className="hero-bloom" aria-hidden />
+    <section className="relative overflow-hidden bg-white px-5 pb-16 pt-24 sm:px-8 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-32 lg:pb-24">
+      {/* Very soft iris tint — 5-8% only, no dark mesh */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[520px] -z-10"
+        aria-hidden
+        style={{
+          background:
+            "radial-gradient(70% 60% at 15% 0%, rgba(110,91,255,0.07) 0%, rgba(110,91,255,0) 65%), radial-gradient(60% 50% at 100% 10%, rgba(77,163,255,0.05) 0%, rgba(77,163,255,0) 70%)",
+        }}
+      />
 
-      <div className="relative grid grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-10">
-        <div className="lg:col-span-6 lg:pt-4">
+      <div className="relative grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:col-span-7 lg:pt-2">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 12 }}
+            initial={reduce ? false : { opacity: 0, y: 10 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: EASE }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-sm"
+            transition={{ duration: 0.5, ease: EASE }}
+            className="inline-flex items-center gap-2 rounded-full border border-iris/20 bg-iris/[0.06] px-3 py-1.5"
           >
-            <span className="relative inline-flex h-1.5 w-1.5 items-center justify-center text-electric live-ring">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-electric" />
-            </span>
-            <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] text-electric-soft">
-              AI Creative Operating System
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-iris" />
+            <span className="text-[12px] font-semibold text-iris">
+              AI 기반 콘텐츠 제작 스튜디오
             </span>
           </motion.div>
 
           <motion.h1
-            initial={reduce ? false : { opacity: 0, y: 14 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.08, ease: EASE }}
-            className="mt-7 max-w-[640px] font-display text-[40px] font-extrabold leading-[1.06] tracking-[-1.6px] text-white sm:text-[48px] lg:text-[58px] xl:text-[64px]"
+            transition={{ duration: 0.6, delay: 0.06, ease: EASE }}
+            className="mt-6 max-w-[640px] font-display text-[32px] font-extrabold leading-[1.18] tracking-[-1px] text-ink-100 sm:text-[40px] lg:text-[48px] xl:text-[52px]"
           >
-            AI는 초안을 만들고,
+            상세페이지부터 광고 콘텐츠까지,
             <br />
-            <span className="bg-iris-text bg-clip-text text-transparent [-webkit-background-clip:text]">
-              디렉터
-            </span>
-            가{" "}
-            <span className="text-white">브랜드</span>를
-            <br />
-            완성합니다.
+            <span className="text-iris">AI와 디렉터</span>가 빠르게 제작합니다.
           </motion.h1>
 
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 14 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.14, ease: EASE }}
-            className="mt-6 max-w-[520px] text-[15px] leading-[1.75] text-ink-30 sm:text-[16px]"
+            transition={{ duration: 0.6, delay: 0.12, ease: EASE }}
+            className="mt-5 max-w-[560px] text-[15px] leading-[1.7] text-ink-70 sm:text-[16px] sm:leading-[1.75] lg:text-[17px]"
           >
-            상세페이지 · 광고 · SNS · 썸네일 · 브랜드 디자인까지. AI 제작 파이프라인 위에 디렉터 큐레이션을 얹어, 24시간 안에 운영 가능한 자산을 만듭니다.
+            상품 정보와 레퍼런스만 보내주세요. STUDIO BODA가 상세페이지 · SNS 콘텐츠 · 광고 배너 · 썸네일을 브랜드 톤에 맞춰 제작합니다.
           </motion.p>
 
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 14 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.2, ease: EASE }}
-            className="mt-9 flex flex-col gap-3 sm:flex-row"
+            transition={{ duration: 0.6, delay: 0.18, ease: EASE }}
+            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
           >
             <StartCTA size="lg" variant="cinematic">
-              무료 견적 받기 <ArrowGlyph />
+              프로젝트 문의하기 <ArrowGlyph />
             </StartCTA>
-            <LinkButton href="#portfolio" size="lg" variant="ghost-cinematic">
-              포트폴리오 보기
+            <LinkButton href="#services" size="lg" variant="outline">
+              서비스 보기
             </LinkButton>
+            <span className="ml-1 hidden text-[13px] text-ink-50 sm:inline">
+              평균 24시간 내 1차 초안 전달
+            </span>
           </motion.div>
+          <p className="mt-3 text-[13px] text-ink-50 sm:hidden">
+            평균 24시간 내 1차 초안 전달
+          </p>
 
-          <motion.div
+          <motion.dl
             initial={reduce ? false : { opacity: 0 }}
             animate={reduce ? undefined : { opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.32 }}
-            className="mt-10"
+            transition={{ duration: 0.6, delay: 0.28 }}
+            className="mt-9 grid grid-cols-3 gap-x-4 border-t border-ink-15 pt-6 sm:max-w-[480px]"
           >
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-ink-50">
-              Trusted by · Brand Group
-            </p>
-            <ul className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-7">
-              {HERO_WORDMARKS.map((name) => (
-                <li key={name}>
-                  <span className="font-display text-[12.5px] font-extrabold uppercase tracking-[0.16em] text-white/45 transition-colors duration-200 hover:text-white/85 sm:text-[13.5px]">
-                    {name}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+            {HERO_HIGHLIGHTS.map((h) => (
+              <div key={h.label}>
+                <dt className="num font-display text-[20px] font-extrabold tracking-[-0.5px] text-ink-100 sm:text-[22px]">
+                  {h.num}
+                </dt>
+                <dd className="mt-1 text-[12px] leading-[1.4] text-ink-50">
+                  {h.label}
+                </dd>
+              </div>
+            ))}
+          </motion.dl>
         </div>
 
-        <div className="lg:col-span-6">
+        <div className="lg:col-span-5">
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 18 }}
+            initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={reduce ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
+            transition={{ duration: 0.65, delay: 0.22, ease: EASE }}
+            className="flex flex-col gap-3"
           >
-            <HeroWorkspace />
+            <p className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-ink-50">
+              지금 만들고 있는 것
+            </p>
+            {DELIVERABLES.map((d, i) => (
+              <DeliverableCard key={d.title} item={d} accent={i === 0} />
+            ))}
           </motion.div>
         </div>
-      </div>
-
-      <div className="relative mt-16 grid grid-cols-2 border-t border-white/[0.08] sm:mt-20 lg:mt-16 lg:grid-cols-4">
-        {heroStats.map((s, i) => (
-          <HeroStat key={s.label} stat={s} divider={i < heroStats.length - 1} index={i} />
-        ))}
       </div>
     </section>
   );
 }
 
-function HeroStat({
-  stat,
-  divider,
-  index,
+function DeliverableCard({
+  item,
+  accent,
 }: {
-  stat: (typeof heroStats)[number];
-  divider: boolean;
-  index: number;
+  item: DeliverablePreview;
+  accent?: boolean;
 }) {
-  // Rotate accents: electric blue on odd indexes for rhythm.
-  const accent = index % 2 === 1 ? "text-electric" : "text-iris-glow";
   return (
-    <div
-      className={`flex flex-col py-7 ${
-        divider ? "lg:border-r lg:border-white/[0.08]" : ""
-      } [&:not(:first-child)]:lg:pl-9`}
-    >
-      <div className="num font-display text-[34px] font-extrabold leading-none tracking-[-1px] text-white sm:text-[40px] lg:text-[44px]">
-        {stat.num}
-        <span className={accent}>{stat.suffix}</span>
-      </div>
-      <div className="mt-2.5 font-mono text-[10.5px] uppercase tracking-[0.16em] text-ink-50">
-        {stat.label}
-      </div>
-    </div>
-  );
-}
-
-function HeroWorkspace() {
-  const [now, setNow] = useState<string>("");
-  const [activeJob, setActiveJob] = useState(0);
-
-  useEffect(() => {
-    const fmt = () => {
-      const d = new Date();
-      const hh = d.getHours().toString().padStart(2, "0");
-      const mm = d.getMinutes().toString().padStart(2, "0");
-      const ss = d.getSeconds().toString().padStart(2, "0");
-      setNow(`${hh}:${mm}:${ss}`);
-    };
-    fmt();
-    const id = setInterval(fmt, 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setActiveJob((i) => (i + 1) % 3);
-    }, 2400);
-    return () => clearInterval(id);
-  }, []);
-
-  const jobs = dashboardJobs.slice(0, 3);
-
-  return (
-    <div className="relative rounded-[22px] border border-white/[0.08] bg-noir-1/95 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.8),0_0_0_1px_rgba(127,189,255,0.08)] backdrop-blur-sm">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent" />
-
-      <div className="flex flex-wrap items-center gap-3 border-b border-white/[0.06] px-6 py-4">
-        <div className="flex items-center gap-2.5">
-          <span className="relative inline-flex h-2 w-2 items-center justify-center text-success live-ring">
-            <span className="inline-block h-2 w-2 rounded-full bg-success" />
-          </span>
-          <span className="font-display text-[13px] font-semibold text-white">
-            BODA · Studio OS
-          </span>
-        </div>
-        <span className="hidden font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-50 sm:inline">
-          Production Pipeline
-        </span>
-        <span className="ml-auto num font-mono text-[11px] tracking-wide text-ink-30">
-          {now || "00:00:00"} KST
-        </span>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-white/[0.06] px-6 py-3.5">
-        <Pill tone="iris">진행 {heroQueue.rendering}</Pill>
-        <Pill tone="electric">검수 {heroQueue.review}</Pill>
-        <Pill tone="warning">내보내는 중 {heroQueue.exporting}</Pill>
-        <Pill tone="success">오늘 완료 {heroQueue.doneToday}</Pill>
-      </div>
-
-      <div className="space-y-3 p-5 sm:p-6">
-        {jobs.map((job, i) => (
-          <HeroJobRow key={job.id} job={job} active={i === activeJob} />
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between border-t border-white/[0.06] px-6 py-3.5">
-        <div className="flex items-center gap-2">
-          <i className="ti ti-bolt text-[13px] text-electric" aria-hidden />
-          <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ink-30">
-            AVG · 24h delivery
-          </span>
-        </div>
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-electric-soft">
-          live sync
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Pill({
-  children,
-  tone,
-}: {
-  children: React.ReactNode;
-  tone: "iris" | "electric" | "warning" | "success";
-}) {
-  const map: Record<typeof tone, string> = {
-    iris: "bg-iris/15 text-iris-glow ring-1 ring-inset ring-iris/30",
-    electric:
-      "bg-electric/12 text-electric-soft ring-1 ring-inset ring-electric/30",
-    warning: "bg-warning/12 text-warning ring-1 ring-inset ring-warning/30",
-    success: "bg-success/12 text-success ring-1 ring-inset ring-success/30",
-  };
-  return (
-    <span
-      className={`rounded-full px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] ${map[tone]}`}
-    >
-      {children}
-    </span>
-  );
-}
-
-function HeroJobRow({
-  job,
-  active,
-}: {
-  job: DashboardJob;
-  active: boolean;
-}) {
-  const stateMap: Record<DashboardJob["state"], {
-    bar: string;
-    icon: string;
-    badge: string;
-    label: string;
-  }> = {
-    rendering: {
-      bar: "bg-electric",
-      icon: "bg-iris/15 text-iris-glow ring-1 ring-inset ring-iris/30",
-      badge:
-        "bg-electric/12 text-electric-soft ring-1 ring-inset ring-electric/30",
-      label: "RENDERING",
-    },
-    review: {
-      bar: "bg-iris-glow",
-      icon: "bg-iris/12 text-iris-glow ring-1 ring-inset ring-iris/25",
-      badge: "bg-iris/12 text-iris-glow ring-1 ring-inset ring-iris/30",
-      label: "REVIEW",
-    },
-    export: {
-      bar: "bg-warning",
-      icon: "bg-warning/12 text-warning ring-1 ring-inset ring-warning/30",
-      badge: "bg-warning/12 text-warning ring-1 ring-inset ring-warning/30",
-      label: "EXPORT",
-    },
-    done: {
-      bar: "bg-success",
-      icon: "bg-success/12 text-success ring-1 ring-inset ring-success/30",
-      badge: "bg-success/12 text-success ring-1 ring-inset ring-success/30",
-      label: "DELIVERED",
-    },
-  };
-
-  const m = stateMap[job.state];
-
-  return (
-    <div
-      className={`relative flex items-start gap-3 rounded-[14px] border bg-noir-2/80 px-4 py-3.5 transition-all duration-300 sm:px-5 ${
-        active
-          ? "border-electric/35 shadow-[0_0_0_1px_rgba(77,163,255,0.2),0_16px_40px_-22px_rgba(77,163,255,0.5)]"
-          : "border-white/[0.06]"
-      }`}
-    >
+    <article className="flex items-center gap-4 rounded-2xl border border-ink-15 bg-white p-4 shadow-[0_2px_6px_-3px_rgba(20,20,40,0.06)] transition-colors duration-200 hover:border-ink-30 sm:p-5">
       <div
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-[11px] ${m.icon}`}
+        className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl ${
+          accent ? "bg-iris text-white" : "bg-ink-5 text-ink-70"
+        }`}
+        aria-hidden
       >
-        <i className={`ti ${job.icon} text-[16px]`} aria-hidden />
+        <i className={`ti ${item.icon} text-[22px]`} />
       </div>
-
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="truncate font-display text-[13px] font-semibold tracking-[-0.2px] text-white">
-            {job.title}
-          </p>
-          <span className="num font-mono text-[10px] text-ink-50">
-            {job.id}
-          </span>
-        </div>
-        <p className="mt-1 truncate text-[11.5px] text-ink-50">
-          {job.client} · {job.sub}
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-ink-50">
+          {item.category}
         </p>
-
-        {job.state === "rendering" ? (
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/[0.05]">
-              <div
-                className={`h-full rounded-full ${m.bar} transition-[width] duration-700`}
-                style={{ width: `${job.progress}%` }}
-              />
-            </div>
-            <span className="num font-mono text-[10px] font-semibold text-electric-soft">
-              {job.progress}%
-            </span>
-          </div>
-        ) : null}
+        <p className="mt-0.5 truncate font-display text-[14px] font-bold text-ink-100 sm:text-[15px]">
+          {item.title}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-ink-50">
+          {item.spec}
+        </p>
       </div>
+      <div className="hidden shrink-0 flex-col items-end gap-1.5 text-right sm:flex">
+        <ThumbStrip count={item.thumbs} />
+        <span className="text-[11px] font-semibold text-iris">{item.eta}</span>
+      </div>
+    </article>
+  );
+}
 
-      <div className="flex flex-col items-end gap-1.5">
+function ThumbStrip({ count }: { count: number }) {
+  const cap = Math.min(count, 4);
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: cap }).map((_, i) => (
         <span
-          className={`rounded-full px-2 py-0.5 font-mono text-[9.5px] font-bold uppercase tracking-[0.12em] ${m.badge}`}
-        >
-          {m.label}
+          key={i}
+          className="h-6 w-6 rounded-md border border-ink-15 bg-ink-5"
+        />
+      ))}
+      {count > cap ? (
+        <span className="ml-0.5 text-[10px] font-mono text-ink-50">
+          +{count - cap}
         </span>
-        <span className="font-mono text-[10px] text-ink-50">{job.eta}</span>
-      </div>
+      ) : null}
     </div>
   );
 }

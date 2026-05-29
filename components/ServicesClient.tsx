@@ -110,11 +110,11 @@ function ServiceCard({ service }: { service: Service }) {
 
   if (featured) {
     return (
-      <article className="card-cinematic group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-noir-1 p-6">
+      <article className="card-cinematic group relative flex h-full flex-col overflow-hidden rounded-2xl border border-iris/25 bg-white p-6 ring-1 ring-iris/[0.04]">
         <div className="flex items-start justify-between">
           <Link
             href={`/services/${service.key}`}
-            className="grid h-10 w-10 place-items-center rounded-[10px] bg-iris/20 text-[20px] text-iris-glow"
+            className="grid h-11 w-11 place-items-center rounded-[12px] bg-iris text-[22px] text-white"
           >
             <i className={`ti ${service.icon ?? "ti-sparkles"}`} aria-hidden />
           </Link>
@@ -127,39 +127,37 @@ function ServiceCard({ service }: { service: Service }) {
 
         <Link
           href={`/services/${service.key}`}
-          className="mt-8 flex-1 outline-none"
+          className="mt-7 flex-1 outline-none"
         >
-          <h3 className="font-display text-[16px] font-bold text-white">
+          <h3 className="font-display text-[17px] font-bold text-ink-100">
             {service.name}
             {service.name_en ? (
-              <span className="ml-2 font-mono text-[10px] font-normal uppercase tracking-caption text-ink-30">
+              <span className="ml-2 font-mono text-[10px] font-normal uppercase tracking-caption text-ink-50">
                 {service.name_en}
               </span>
             ) : null}
           </h3>
-          <p className="mt-1.5 line-clamp-3 text-[12px] leading-body text-ink-30">
+          <p className="mt-2 line-clamp-3 text-[13px] leading-[1.65] text-ink-70">
             {service.description}
           </p>
         </Link>
 
-        <div className="mt-6 flex items-center justify-between border-t border-white/[0.08] pt-4">
+        <div className="mt-6 flex items-center justify-between border-t border-ink-15 pt-4">
           <div>
-            <span className="block text-[11px] text-ink-30">{priceLabel}</span>
-            <span className="num font-display text-[16px] font-bold text-white">
+            <span className="block text-[11px] text-ink-50">{priceLabel}</span>
+            <span className="num font-display text-[16px] font-bold text-ink-100">
               {fmt(service.base_price)}원~
             </span>
           </div>
           <StartCTA
-            variant="ghost-light"
+            variant="ghost-dark"
             size="sm"
             plan={service.key}
-            className="!bg-transparent !border-0 !text-iris-glow"
+            className="!bg-transparent !text-iris"
           >
             신청하기 →
           </StartCTA>
         </div>
-
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-44 w-44 rounded-full bg-iris/20 blur-3xl" />
       </article>
     );
   }
