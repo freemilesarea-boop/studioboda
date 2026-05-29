@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/inquiries", label: "Inquiries", icon: "ti-mail" },
   { href: "/admin/quotes", label: "Quotes", icon: "ti-file-invoice" },
   { href: "/admin/payments", label: "Payments", icon: "ti-credit-card" },
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: "ti-repeat" },
   { href: "/admin/projects", label: "Projects", icon: "ti-folders" },
   { href: "/admin/portfolio", label: "Portfolio", icon: "ti-photo" },
   { href: "/admin/members", label: "Members", icon: "ti-users" },

@@ -436,3 +436,76 @@ export const roleLabels: Record<Role, string> = {
   designer: "디자이너",
   client: "클라이언트",
 };
+
+export type SubscriptionStatus =
+  | "pending_card"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "paused";
+
+export type Subscription = {
+  id: string;
+  user_id: string | null;
+  plan_key: string;
+  plan_name: string;
+  monthly_amount: number;
+  description: string | null;
+  status: SubscriptionStatus;
+  payapp_billing_key: string | null;
+  payapp_registration_url: string | null;
+  payapp_registration_mul_no: string | null;
+  started_at: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  next_charge_at: string | null;
+  retry_count: number;
+  last_failure_at: string | null;
+  last_failure_reason: string | null;
+  canceled_at: string | null;
+  canceled_reason: string | null;
+  canceled_by_actor: "customer" | "staff" | "system" | null;
+  staff_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SubscriptionInvoiceStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "canceled";
+
+export type SubscriptionInvoice = {
+  id: string;
+  subscription_id: string;
+  amount: number;
+  status: SubscriptionInvoiceStatus;
+  period_start: string | null;
+  period_end: string | null;
+  attempt_number: number;
+  charged_at: string | null;
+  failed_at: string | null;
+  failure_reason: string | null;
+  payapp_mul_no: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
+  pending_card: "카드 등록 대기",
+  active: "정상 결제 중",
+  past_due: "결제 실패 (재시도 중)",
+  canceled: "해지됨",
+  paused: "일시 정지",
+};
+
+export const subscriptionInvoiceStatusLabels: Record<
+  SubscriptionInvoiceStatus,
+  string
+> = {
+  pending: "결제 대기",
+  paid: "결제 완료",
+  failed: "결제 실패",
+  canceled: "취소됨",
+};
