@@ -14,7 +14,7 @@ export const brand = {
 export const nav = [
   { href: "#services", label: "서비스" },
   { href: "#process", label: "프로세스" },
-  { href: "#portfolio", label: "포트폴리오" },
+  { href: "/portfolio", label: "포트폴리오" },
   { href: "#pricing", label: "가격" },
   { href: "#faq", label: "FAQ" },
 ] as const;
@@ -898,7 +898,7 @@ export const footerLinks = [
   {
     title: "리소스",
     items: [
-      { label: "포트폴리오", href: "/#portfolio" },
+      { label: "포트폴리오", href: "/portfolio" },
       { label: "제작 프로세스", href: "/#process" },
       { label: "가격 정책", href: "/#pricing" },
       { label: "FAQ", href: "/#faq" },
