@@ -11,7 +11,6 @@ type DeliverablePreview = {
   spec: string;
   eta: string;
   icon: string;
-  thumbs: number;
 };
 
 const DELIVERABLES: DeliverablePreview[] = [
@@ -19,25 +18,22 @@ const DELIVERABLES: DeliverablePreview[] = [
     category: "상세페이지",
     title: "신제품 런칭 상세페이지",
     spec: "데스크탑 + 모바일 · 12블럭",
-    eta: "1차 초안 · 24h",
+    eta: "24h",
     icon: "ti-layout-rows",
-    thumbs: 4,
   },
   {
     category: "광고 배너",
     title: "퍼포먼스 광고 배너 3종",
     spec: "Meta · Naver · Kakao 사이즈",
-    eta: "1차 초안 · 36h",
+    eta: "36h",
     icon: "ti-photo",
-    thumbs: 3,
   },
   {
     category: "SNS 콘텐츠",
     title: "인스타그램 카드뉴스 8컷",
     spec: "1080 × 1080 · 시리즈 톤",
-    eta: "1차 초안 · 48h",
+    eta: "48h",
     icon: "ti-square-rounded-letter-c",
-    thumbs: 8,
   },
 ];
 
@@ -166,29 +162,9 @@ function DeliverableCard({
           {item.spec}
         </p>
       </div>
-      <div className="hidden shrink-0 flex-col items-end gap-1.5 text-right sm:flex">
-        <ThumbStrip count={item.thumbs} />
-        <span className="text-[11px] font-semibold text-iris">{item.eta}</span>
+      <div className="hidden shrink-0 text-right sm:block">
+        <span className="text-[12px] font-semibold text-iris">{item.eta}</span>
       </div>
     </article>
-  );
-}
-
-function ThumbStrip({ count }: { count: number }) {
-  const cap = Math.min(count, 4);
-  return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: cap }).map((_, i) => (
-        <span
-          key={i}
-          className="h-6 w-6 rounded-md border border-ink-15 bg-ink-5"
-        />
-      ))}
-      {count > cap ? (
-        <span className="ml-0.5 text-[10px] font-mono text-ink-50">
-          +{count - cap}
-        </span>
-      ) : null}
-    </div>
   );
 }
