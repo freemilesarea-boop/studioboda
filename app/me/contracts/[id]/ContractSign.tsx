@@ -81,11 +81,19 @@ export function ContractSign({
           onChange={(e) => setAgreed(e.target.checked)}
           className="mt-0.5 h-4 w-4 accent-iris"
         />
-        <span>위 계약서의 내용을 모두 확인하였으며 이에 동의합니다.</span>
+        <span>계약 내용을 모두 확인했고 전자서명에 동의합니다.</span>
       </label>
 
       <div className="mt-4">
         <SignaturePad onChange={setSignature} disabled={pending} />
+      </div>
+
+      <div className="mt-3 flex items-start gap-1.5 rounded-lg border border-warning/30 bg-warning/[0.06] px-3 py-2 text-[11.5px] text-ink-70">
+        <i className="ti ti-alert-triangle mt-0.5 text-warning" aria-hidden />
+        <span>
+          한 번 서명하면 계약 내용과 서명은 수정·취소할 수 없습니다. 내용을 다시 한 번
+          확인해주세요.
+        </span>
       </div>
 
       <button

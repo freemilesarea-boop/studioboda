@@ -6,9 +6,15 @@ import { SignaturePad } from "@/components/SignaturePad";
 import {
   adminSignContractAction,
   cancelContractAction,
+  changeContractTemplateAction,
   saveContractDraftAction,
   sendContractAction,
 } from "@/lib/actions/contracts";
+import {
+  CONTRACT_TEMPLATE_KINDS,
+  contractTemplateLabels,
+  type ContractTemplateKind,
+} from "@/lib/contracts/templates";
 import { useToast } from "@/components/admin/Toast";
 import type { Contract } from "@/lib/types/db";
 
@@ -45,6 +51,35 @@ export function ContractAdminControls({ contract }: { contract: Contract }) {
         고객 서명: {contract.client_signature ? "완료" : "대기"} · 회사 서명:{" "}
         {contract.admin_signature ? "완료" : "대기"}
       </p>
+
+      <div className="mt-4">
+        <label className="text-[12px] font-bold text-ink-70">계약서 유형</label>
+        <select
+          value={contract.template_kind}
+          disabled={pending || locked}
+          onChange={(e) =>
+            run(
+              () =>
+                changeContractTemplateAction(
+                  contract.id,
+                  e.target.value as ContractTemplateKind,
+                ),
+              "계약서 유형을 변경하고 본문을 재생성했습니다",
+            )
+          }
+          className="mt-1 w-full rounded-lg border border-ink-15 px-3 py-2 text-[13px] disabled:opacity-60"
+        >
+          {CONTRACT_TEMPLATE_KINDS.map((k) => (
+            <option key={k} value={k}>
+              {contractTemplateLabels[k]}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-[11px] text-ink-50">
+          유형을 바꾸면 표준 본문이 새 버전으로 재생성됩니다. 발송 전 아래에서 본문을
+          직접 수정할 수 있습니다.
+        </p>
+      </div>
 
       {mode === "edit" ? (
         <div className="mt-4 space-y-3">

@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import { getProfile } from "@/lib/auth";
 import { getMyContract } from "@/lib/queries/contracts";
 import { ContractDocument } from "@/components/ContractDocument";
+import { contractTemplateLabels } from "@/lib/contracts/templates";
+import { contractStatusLabels } from "@/lib/types/db";
 import { ContractSign } from "./ContractSign";
+
+const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
 
 export const metadata: Metadata = {
   title: "계약서 상세",
@@ -50,6 +54,24 @@ export default async function MyContractDetailPage({
         </Link>
       </div>
 
+      <section className="rounded-2xl border border-ink-15 bg-white p-5">
+        <h2 className="font-display text-[14px] font-bold text-ink-100">
+          계약 핵심 요약
+        </h2>
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <Summary label="계약번호" value={contract.contract_number} mono />
+          <Summary
+            label="계약 유형"
+            value={contractTemplateLabels[contract.template_kind]}
+          />
+          <Summary label="계약 금액" value={`${fmt(contract.amount)}원`} accent />
+          <Summary label="상태" value={contractStatusLabels[contract.status]} />
+        </dl>
+        <p className="mt-3 text-[11.5px] text-ink-50">
+          VAT 별도 · 전체 조항은 아래 계약 전문에서 확인하세요.
+        </p>
+      </section>
+
       <div className="overflow-hidden rounded-2xl border border-ink-15">
         <ContractDocument
           contract={contract}
@@ -66,6 +88,33 @@ export default async function MyContractDetailPage({
         alreadySigned={alreadySigned}
         canSign={canSign}
       />
+    </div>
+  );
+}
+
+function Summary({
+  label,
+  value,
+  accent,
+  mono,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <dt className="text-[10px] font-bold uppercase tracking-caption text-ink-50">
+        {label}
+      </dt>
+      <dd
+        className={`mt-1 font-display text-[14px] font-bold ${
+          accent ? "text-iris" : "text-ink-100"
+        } ${mono ? "font-mono text-[12px]" : ""}`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

@@ -602,6 +602,7 @@ export type Contract = {
   title: string;
   body: string | null;
   amount: number;
+  template_kind: "website" | "detail_page" | "maintenance";
   status: ContractStatus;
   pdf_url: string | null;
   client_signature: string | null;

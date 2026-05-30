@@ -6,33 +6,55 @@ import { requireStaff, getProfile } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification, notifyStaff } from "@/lib/notifications";
 import { logCrmActivity, setLeadStatusForInquiry } from "@/lib/actions/crm";
+import {
+  CONTRACT_TEMPLATE_KINDS,
+  contractTitleFor,
+  defaultRevisionCount,
+  recommendTemplate,
+  renderContractBody,
+  type ContractFacts,
+  type ContractTemplateKind,
+} from "@/lib/contracts/templates";
 import type { Contract } from "@/lib/types/db";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
 
-const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
-
-// Default contract body composed from quote/customer facts. Stored as a
-// snapshot on the contract so later quote edits never mutate a signed contract.
-function defaultContractBody(input: {
-  customerName: string;
+type QuoteRow = {
+  id: string;
   title: string;
-  amount: number;
-  deliveryDays: number | null;
-}): string {
-  return [
-    `본 계약은 STUDIO BODA(이하 "회사")와 ${input.customerName}(이하 "고객") 간에`,
-    `다음 프로젝트의 제작 용역에 관하여 체결합니다.`,
-    ``,
-    `1. 프로젝트: ${input.title}`,
-    `2. 계약 금액: ${fmt(input.amount)}원 (VAT 별도)`,
-    input.deliveryDays ? `3. 납기: 착수일로부터 ${input.deliveryDays}영업일` : `3. 납기: 별도 협의`,
-    `4. 대금 지급: 예약금 입금일을 착수일로 하며, 잔금은 최종 검수 후 지급합니다.`,
-    `5. 수정 횟수: 패키지별 기본 디렉팅 수정이 포함되며, 초과분은 별도 비용이 발생합니다.`,
-    `6. 저작권: 최종 산출물의 저작재산권은 잔금 완납 시 고객에게 양도됩니다.`,
-    `7. 비밀유지: 양 당사자는 업무상 알게 된 정보를 제3자에게 누설하지 않습니다.`,
-    `8. 기타: 본 계약에 정하지 않은 사항은 회사 이용약관 및 관계 법령을 따릅니다.`,
-  ].join("\n");
+  service_type: string | null;
+  total_price: number | null;
+  deposit_rate: number | null;
+  deposit_amount: number | null;
+  balance_amount: number | null;
+  delivery_days: number | null;
+  user_id: string | null;
+  inquiry_id: string | null;
+};
+
+// Derive the fill-in facts a template needs from a quote + resolved customer.
+function factsFromQuote(
+  quote: QuoteRow,
+  customerName: string,
+  kind: ContractTemplateKind,
+): ContractFacts {
+  const amount = quote.total_price ?? 0;
+  const depositRate = quote.deposit_rate ?? 10;
+  const depositAmount =
+    quote.deposit_amount ?? Math.round((amount * depositRate) / 100);
+  const balanceAmount = quote.balance_amount ?? amount - depositAmount;
+  return {
+    customerName,
+    projectTitle: quote.title,
+    serviceType: quote.service_type,
+    amount,
+    depositRate,
+    depositAmount,
+    balanceAmount,
+    deliveryDays: quote.delivery_days,
+    revisionCount: defaultRevisionCount(kind),
+    monthlyAmount: amount,
+  };
 }
 
 // ---- Admin: generate a contract from an (accepted) quote ----
@@ -70,13 +92,14 @@ export async function createContractFromQuoteAction(
   }
 
   const amount = (quote.total_price as number) ?? 0;
-  const title = `[계약] ${quote.title}`;
-  const body = defaultContractBody({
-    customerName,
+  // Recommend a template from the quote's service/category/title.
+  const kind = recommendTemplate({
+    serviceType: quote.service_type as string | null,
     title: quote.title as string,
-    amount,
-    deliveryDays: (quote.delivery_days as number) ?? null,
   });
+  const facts = factsFromQuote(quote as QuoteRow, customerName, kind);
+  const title = contractTitleFor(kind, quote.title as string);
+  const body = renderContractBody(kind, facts);
 
   const { data: inserted, error } = await admin
     .from("contracts")
@@ -86,6 +109,7 @@ export async function createContractFromQuoteAction(
       title,
       body,
       amount,
+      template_kind: kind,
       status: "draft",
       created_by: me.id,
       current_version: 1,
@@ -102,7 +126,7 @@ export async function createContractFromQuoteAction(
     title,
     body,
     amount,
-    snapshot: { quote_id: quoteId, source: "quote" },
+    snapshot: { quote_id: quoteId, source: "quote", template_kind: kind },
     created_by: me.id,
   });
 
@@ -347,5 +371,99 @@ export async function signContractAction(
 
   revalidatePath("/me/contracts");
   revalidatePath(`/me/contracts/${id}`);
+  return { ok: true };
+}
+
+// ---- Admin: change the contract template type → regenerates body (new version) ----
+export async function changeContractTemplateAction(
+  id: string,
+  kind: ContractTemplateKind,
+): Promise<Result> {
+  const me = await requireStaff();
+  if (!CONTRACT_TEMPLATE_KINDS.includes(kind)) {
+    return { ok: false, error: "올바르지 않은 계약서 유형입니다" };
+  }
+  const admin = createAdminSupabase();
+  const { data: c } = await admin.from("contracts").select("*").eq("id", id).maybeSingle();
+  if (!c) return { ok: false, error: "계약서를 찾을 수 없습니다" };
+  const contract = c as Contract;
+  if (contract.status === "signed") {
+    return { ok: false, error: "이미 서명 완료된 계약은 변경할 수 없습니다" };
+  }
+
+  // Resolve customer name
+  let customerName = "고객";
+  if (contract.client_id) {
+    const { data: p } = await admin
+      .from("profiles")
+      .select("name, company_name")
+      .eq("id", contract.client_id)
+      .maybeSingle();
+    customerName = p?.company_name || p?.name || customerName;
+  }
+
+  // Strip the existing "[유형] " prefix to recover the project title.
+  let projectTitle = contract.title.replace(/^\[[^\]]*\]\s*/, "");
+  let facts: ContractFacts | null = null;
+  if (contract.quote_id) {
+    const { data: q } = await admin
+      .from("quotes")
+      .select(
+        "id,title,service_type,total_price,deposit_rate,deposit_amount,balance_amount,delivery_days,user_id,inquiry_id",
+      )
+      .eq("id", contract.quote_id)
+      .maybeSingle();
+    if (q) {
+      facts = factsFromQuote(q as QuoteRow, customerName, kind);
+      projectTitle = q.title as string;
+    }
+  }
+  if (!facts) {
+    // No linked quote — derive minimal facts from the stored amount.
+    const amount = contract.amount;
+    const depositRate = 10;
+    const depositAmount = Math.round((amount * depositRate) / 100);
+    facts = {
+      customerName,
+      projectTitle,
+      serviceType: null,
+      amount,
+      depositRate,
+      depositAmount,
+      balanceAmount: amount - depositAmount,
+      deliveryDays: null,
+      revisionCount: defaultRevisionCount(kind),
+      monthlyAmount: amount,
+    };
+  }
+
+  const title = contractTitleFor(kind, projectTitle);
+  const body = renderContractBody(kind, facts);
+  const nextVersion = contract.current_version + 1;
+
+  const { error } = await admin
+    .from("contracts")
+    .update({ template_kind: kind, title, body, current_version: nextVersion })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  await admin.from("contract_versions").insert({
+    contract_id: id,
+    version: nextVersion,
+    title,
+    body,
+    amount: contract.amount,
+    snapshot: { template_kind: kind, changed_by: me.id, source: "template_change" },
+    created_by: me.id,
+  });
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "contract",
+    entity_id: id,
+    action: "contract_template_changed",
+    metadata: { template_kind: kind, version: nextVersion },
+  });
+  revalidatePath(`/admin/contracts/${id}`);
   return { ok: true };
 }

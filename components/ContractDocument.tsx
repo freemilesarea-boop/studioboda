@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { company } from "@/lib/company";
+import { contractTemplateLabels } from "@/lib/contracts/templates";
 import { contractStatusLabels, type Contract } from "@/lib/types/db";
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
@@ -91,7 +92,10 @@ export function ContractDocument({
           </section>
 
           <section className="mt-8">
-            <h2 className="font-display text-[18px] font-extrabold tracking-[-0.02em] text-ink-100">
+            <p className="font-display text-[10px] font-bold uppercase tracking-[0.12em] text-iris">
+              {contractTemplateLabels[c.template_kind]}
+            </p>
+            <h2 className="mt-1 font-display text-[18px] font-extrabold tracking-[-0.02em] text-ink-100">
               {c.title}
             </h2>
             <div className="mt-3 grid grid-cols-2 gap-4 rounded-xl border border-ink-15 bg-ink-5 p-4 text-[12.5px]">
