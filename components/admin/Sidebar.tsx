@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/inquiries", label: "Inquiries", icon: "ti-mail" },
   { href: "/admin/quotes", label: "Quotes", icon: "ti-file-invoice" },
   { href: "/admin/contracts", label: "Contracts", icon: "ti-file-text" },
+  { href: "/admin/contract-clauses", label: "계약 조항", icon: "ti-list-details" },
   { href: "/admin/payments", label: "Payments", icon: "ti-credit-card" },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: "ti-repeat" },
   { href: "/admin/projects", label: "Projects", icon: "ti-folders" },

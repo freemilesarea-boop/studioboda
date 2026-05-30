@@ -11,11 +11,12 @@ import {
   contractTitleFor,
   defaultRevisionCount,
   recommendTemplate,
-  renderContractBody,
-  type ContractFacts,
   type ContractTemplateKind,
 } from "@/lib/contracts/templates";
-import type { Contract } from "@/lib/types/db";
+import { composeContract, type ContractComposeFacts } from "@/lib/contracts/engine";
+import { getEffectiveClauseBlocks } from "@/lib/queries/contract-clauses";
+import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import type { Contract, QuoteOption } from "@/lib/types/db";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -30,20 +31,28 @@ type QuoteRow = {
   delivery_days: number | null;
   user_id: string | null;
   inquiry_id: string | null;
+  options?: unknown;
 };
 
-// Derive the fill-in facts a template needs from a quote + resolved customer.
-function factsFromQuote(
+// Derive the engine facts (incl. 견적항목/산출물) from a quote + customer.
+function composeFactsFromQuote(
   quote: QuoteRow,
   customerName: string,
   kind: ContractTemplateKind,
-): ContractFacts {
+): ContractComposeFacts {
   const amount = quote.total_price ?? 0;
-  const depositRate = quote.deposit_rate ?? 10;
+  const depositRate = quote.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
   const depositAmount =
     quote.deposit_amount ?? Math.round((amount * depositRate) / 100);
   const balanceAmount = quote.balance_amount ?? amount - depositAmount;
+  const options = Array.isArray(quote.options)
+    ? (quote.options as QuoteOption[])
+    : [];
+  const deliverables = options
+    .map((o) => o?.label)
+    .filter((l): l is string => typeof l === "string" && l.length > 0);
   return {
+    kind,
     customerName,
     projectTitle: quote.title,
     serviceType: quote.service_type,
@@ -51,10 +60,18 @@ function factsFromQuote(
     depositRate,
     depositAmount,
     balanceAmount,
+    monthlyAmount: amount,
     deliveryDays: quote.delivery_days,
     revisionCount: defaultRevisionCount(kind),
-    monthlyAmount: amount,
+    deliverables,
+    recurring: kind === "maintenance",
   };
+}
+
+// Compose the full contract body from the effective clause registry.
+async function composeBody(facts: ContractComposeFacts): Promise<string> {
+  const blocks = await getEffectiveClauseBlocks();
+  return composeContract(blocks, facts).body;
 }
 
 // ---- Admin: generate a contract from an (accepted) quote ----
@@ -97,9 +114,9 @@ export async function createContractFromQuoteAction(
     serviceType: quote.service_type as string | null,
     title: quote.title as string,
   });
-  const facts = factsFromQuote(quote as QuoteRow, customerName, kind);
+  const facts = composeFactsFromQuote(quote as QuoteRow, customerName, kind);
   const title = contractTitleFor(kind, quote.title as string);
-  const body = renderContractBody(kind, facts);
+  const body = await composeBody(facts);
 
   const { data: inserted, error } = await admin
     .from("contracts")
@@ -404,26 +421,27 @@ export async function changeContractTemplateAction(
 
   // Strip the existing "[유형] " prefix to recover the project title.
   let projectTitle = contract.title.replace(/^\[[^\]]*\]\s*/, "");
-  let facts: ContractFacts | null = null;
+  let facts: ContractComposeFacts | null = null;
   if (contract.quote_id) {
     const { data: q } = await admin
       .from("quotes")
       .select(
-        "id,title,service_type,total_price,deposit_rate,deposit_amount,balance_amount,delivery_days,user_id,inquiry_id",
+        "id,title,service_type,total_price,deposit_rate,deposit_amount,balance_amount,delivery_days,user_id,inquiry_id,options",
       )
       .eq("id", contract.quote_id)
       .maybeSingle();
     if (q) {
-      facts = factsFromQuote(q as QuoteRow, customerName, kind);
+      facts = composeFactsFromQuote(q as QuoteRow, customerName, kind);
       projectTitle = q.title as string;
     }
   }
   if (!facts) {
     // No linked quote — derive minimal facts from the stored amount.
     const amount = contract.amount;
-    const depositRate = 10;
+    const depositRate = DEFAULT_DEPOSIT_RATE;
     const depositAmount = Math.round((amount * depositRate) / 100);
     facts = {
+      kind,
       customerName,
       projectTitle,
       serviceType: null,
@@ -431,14 +449,16 @@ export async function changeContractTemplateAction(
       depositRate,
       depositAmount,
       balanceAmount: amount - depositAmount,
+      monthlyAmount: amount,
       deliveryDays: null,
       revisionCount: defaultRevisionCount(kind),
-      monthlyAmount: amount,
+      deliverables: [],
+      recurring: kind === "maintenance",
     };
   }
 
   const title = contractTitleFor(kind, projectTitle);
-  const body = renderContractBody(kind, facts);
+  const body = await composeBody(facts);
   const nextVersion = contract.current_version + 1;
 
   const { error } = await admin

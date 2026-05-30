@@ -10,6 +10,7 @@ import type { Quote, QuoteOption } from "@/lib/types/db";
 import { QuoteEditor } from "./QuoteEditor";
 import { QuoteContractButton } from "./QuoteContractButton";
 import { resolveQuoteBuyer } from "@/lib/queries/buyer";
+import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -48,7 +49,7 @@ export default async function QuoteDetailPage({
     created_at: string;
   }[];
 
-  const depositRate = q.deposit_rate ?? 10;
+  const depositRate = q.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
   const depositAmount =
     q.deposit_amount ?? Math.round((q.total_price * depositRate) / 100);
   const balanceAmount = q.balance_amount ?? q.total_price - depositAmount;
