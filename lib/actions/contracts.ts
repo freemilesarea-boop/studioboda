@@ -5,166 +5,37 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { requireStaff, getProfile } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification, notifyStaff } from "@/lib/notifications";
-import { logCrmActivity, setLeadStatusForInquiry } from "@/lib/actions/crm";
+import { setLeadStatusForInquiry } from "@/lib/actions/crm";
 import {
   CONTRACT_TEMPLATE_KINDS,
   contractTitleFor,
   defaultRevisionCount,
-  recommendTemplate,
   type ContractTemplateKind,
 } from "@/lib/contracts/templates";
-import { composeContract, type ContractComposeFacts } from "@/lib/contracts/engine";
-import { getEffectiveClauseBlocks } from "@/lib/queries/contract-clauses";
 import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
-import type { Contract, QuoteOption } from "@/lib/types/db";
+import type { ContractComposeFacts } from "@/lib/contracts/engine";
+import {
+  composeBody,
+  composeFactsFromQuote,
+  emailContractToClient,
+  ensureContractForQuote,
+  type QuoteRow,
+} from "@/lib/contracts/provisioning";
+import type { Contract } from "@/lib/types/db";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
-
-type QuoteRow = {
-  id: string;
-  title: string;
-  service_type: string | null;
-  total_price: number | null;
-  deposit_rate: number | null;
-  deposit_amount: number | null;
-  balance_amount: number | null;
-  delivery_days: number | null;
-  user_id: string | null;
-  inquiry_id: string | null;
-  options?: unknown;
-};
-
-// Derive the engine facts (incl. 견적항목/산출물) from a quote + customer.
-function composeFactsFromQuote(
-  quote: QuoteRow,
-  customerName: string,
-  kind: ContractTemplateKind,
-): ContractComposeFacts {
-  const amount = quote.total_price ?? 0;
-  const depositRate = quote.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
-  const depositAmount =
-    quote.deposit_amount ?? Math.round((amount * depositRate) / 100);
-  const balanceAmount = quote.balance_amount ?? amount - depositAmount;
-  const options = Array.isArray(quote.options)
-    ? (quote.options as QuoteOption[])
-    : [];
-  const deliverables = options
-    .map((o) => o?.label)
-    .filter((l): l is string => typeof l === "string" && l.length > 0);
-  return {
-    kind,
-    customerName,
-    projectTitle: quote.title,
-    serviceType: quote.service_type,
-    amount,
-    depositRate,
-    depositAmount,
-    balanceAmount,
-    monthlyAmount: amount,
-    deliveryDays: quote.delivery_days,
-    revisionCount: defaultRevisionCount(kind),
-    deliverables,
-    recurring: kind === "maintenance",
-  };
-}
-
-// Compose the full contract body from the effective clause registry.
-async function composeBody(facts: ContractComposeFacts): Promise<string> {
-  const blocks = await getEffectiveClauseBlocks();
-  return composeContract(blocks, facts).body;
-}
 
 // ---- Admin: generate a contract from an (accepted) quote ----
 export async function createContractFromQuoteAction(
   quoteId: string,
 ): Promise<Result<{ contract_id: string }>> {
   const me = await requireStaff();
-  const admin = createAdminSupabase();
-
-  const { data: quote } = await admin
-    .from("quotes")
-    .select("*")
-    .eq("id", quoteId)
-    .maybeSingle();
-  if (!quote) return { ok: false, error: "견적을 찾을 수 없습니다" };
-
-  // Resolve client + name
-  let clientId = (quote.user_id as string | null) ?? null;
-  let customerName = "고객";
-  if (clientId) {
-    const { data: p } = await admin
-      .from("profiles")
-      .select("name, company_name")
-      .eq("id", clientId)
-      .maybeSingle();
-    customerName = p?.company_name || p?.name || customerName;
-  } else if (quote.inquiry_id) {
-    const { data: inq } = await admin
-      .from("inquiries")
-      .select("name, company, user_id")
-      .eq("id", quote.inquiry_id)
-      .maybeSingle();
-    if (inq?.user_id) clientId = inq.user_id;
-    customerName = inq?.company || inq?.name || customerName;
-  }
-
-  const amount = (quote.total_price as number) ?? 0;
-  // Recommend a template from the quote's service/category/title.
-  const kind = recommendTemplate({
-    serviceType: quote.service_type as string | null,
-    title: quote.title as string,
-  });
-  const facts = composeFactsFromQuote(quote as QuoteRow, customerName, kind);
-  const title = contractTitleFor(kind, quote.title as string);
-  const body = await composeBody(facts);
-
-  const { data: inserted, error } = await admin
-    .from("contracts")
-    .insert({
-      quote_id: quoteId,
-      client_id: clientId,
-      title,
-      body,
-      amount,
-      template_kind: kind,
-      status: "draft",
-      created_by: me.id,
-      current_version: 1,
-    })
-    .select("id, contract_number")
-    .single();
-  if (error || !inserted) {
-    return { ok: false, error: error?.message ?? "계약서 생성 실패" };
-  }
-
-  await admin.from("contract_versions").insert({
-    contract_id: inserted.id,
-    version: 1,
-    title,
-    body,
-    amount,
-    snapshot: { quote_id: quoteId, source: "quote", template_kind: kind },
-    created_by: me.id,
-  });
-
-  await logActivity({
-    actor_id: me.id,
-    entity_type: "contract",
-    entity_id: inserted.id,
-    action: "contract_created",
-    metadata: { quote_id: quoteId, contract_number: inserted.contract_number },
-  });
-  if (quote.inquiry_id) {
-    void logCrmActivity({
-      inquiryId: quote.inquiry_id as string,
-      actorId: me.id,
-      type: "contract",
-      body: `계약서 생성 (${inserted.contract_number})`,
-    });
-  }
-
+  // Delegates to the shared, idempotent provisioning helper (same logic the
+  // webhook uses). Returns the existing contract if one already exists.
+  const r = await ensureContractForQuote(quoteId, { actorId: me.id });
+  if (!r.ok) return { ok: false, error: r.error };
   revalidatePath("/admin/contracts");
-  return { ok: true, contract_id: inserted.id };
+  return { ok: true, contract_id: r.contractId };
 }
 
 // ---- Admin: save an edited draft → bumps version ----
@@ -246,6 +117,15 @@ export async function sendContractAction(id: string): Promise<Result> {
     contract_id: id,
     contract_number: contract.contract_number,
     title: contract.title,
+  });
+
+  // Email the review/sign link to the customer (best-effort; logs failures).
+  await emailContractToClient({
+    id: contract.id,
+    title: contract.title,
+    amount: contract.amount,
+    client_id: contract.client_id,
+    contract_number: contract.contract_number,
   });
 
   revalidatePath(`/admin/contracts/${id}`);

@@ -6,6 +6,7 @@ import { createNotification, notifyStaff } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
 import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
 import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
+import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -229,6 +230,24 @@ export async function POST(req: Request) {
           paymentTitle: payment.title,
           amount: payment.amount,
           meUrl: `${siteUrl}/me/projects`,
+        });
+      }
+    }
+
+    // 예약금(deposit) 결제 완료 → 계약서 자동 생성 + 발송 (idempotent).
+    // Awaited inside a guard so a failure is logged but never blocks the ack.
+    if (payment.type === "deposit" && payment.quote_id) {
+      try {
+        await provisionContractForPaidDeposit(payment.quote_id);
+      } catch (err) {
+        await logActivity({
+          entity_type: "contract",
+          entity_id: null,
+          action: "contract_autoprovision_error",
+          metadata: {
+            quote_id: payment.quote_id,
+            error: err instanceof Error ? err.message : String(err),
+          },
         });
       }
     }

@@ -149,6 +149,27 @@ export const projectDelivered = (d: ProjectDeliveredData) => ({
   ),
 });
 
+export type ContractSentData = {
+  name: string;
+  contractTitle: string;
+  amount: number;
+  contractUrl: string;
+};
+export const contractSent = (d: ContractSentData) => ({
+  subject: `[STUDIO BODA] 전자계약서가 도착했습니다 · ${d.contractTitle}`,
+  html: wrapper(
+    "전자계약서 검토 및 서명 요청",
+    `<p><b>${escapeHtml(d.name)}</b>님, 예약금 결제가 확인되어 전자계약서를 보내드립니다.</p>
+     <ul style="padding-left:18px;margin:12px 0;">
+       <li>계약: <b>${escapeHtml(d.contractTitle)}</b></li>
+       <li>계약 금액: <b style="color:#0A0A12;">${fmt(d.amount)}원</b> <span style="color:#7E7E8C;">(VAT 별도)</span></li>
+     </ul>
+     <p>아래 버튼에서 계약 내용을 검토하고 전자서명해주세요. 로그인 후 마이페이지 &gt; 계약서에서도 확인할 수 있습니다.</p>`,
+    "계약서 검토 및 서명",
+    d.contractUrl,
+  ),
+});
+
 // ───────────── render dispatcher ─────────────
 
 export type TemplateMap = {
@@ -157,6 +178,7 @@ export type TemplateMap = {
   payment_requested: PaymentRequestedData;
   payment_paid: PaymentPaidData;
   project_delivered: ProjectDeliveredData;
+  contract_sent: ContractSentData;
 };
 export type TemplateName = keyof TemplateMap;
 
@@ -175,6 +197,8 @@ export function renderTemplate<T extends TemplateName>(
       return paymentPaid(data as PaymentPaidData);
     case "project_delivered":
       return projectDelivered(data as ProjectDeliveredData);
+    case "contract_sent":
+      return contractSent(data as ContractSentData);
     default: {
       const _exhaustive: never = name;
       throw new Error(`Unknown template: ${String(_exhaustive)}`);
