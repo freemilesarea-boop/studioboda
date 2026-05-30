@@ -8,6 +8,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { QuoteStatusBadge } from "@/components/admin/Badge";
 import type { Quote, QuoteOption } from "@/lib/types/db";
 import { QuoteEditor } from "./QuoteEditor";
+import { QuoteContractButton } from "./QuoteContractButton";
 import { resolveQuoteBuyer } from "@/lib/queries/buyer";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,15 @@ export default async function QuoteDetailPage({
 
   const buyer = await resolveQuoteBuyer(q.id);
 
+  const { data: existingContract } = await admin
+    .from("contracts")
+    .select("id")
+    .eq("quote_id", q.id)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 text-[12px]">
@@ -68,6 +78,10 @@ export default async function QuoteDetailPage({
             <i className="ti ti-sparkles text-[14px]" aria-hidden />
             AI 브리프
           </Link>
+          <QuoteContractButton
+            quoteId={q.id}
+            existingContractId={(existingContract as { id: string } | null)?.id ?? null}
+          />
           <Link
             href={`/admin/print/quote/${q.id}`}
             target="_blank"

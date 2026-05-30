@@ -509,3 +509,231 @@ export const subscriptionInvoiceStatusLabels: Record<
   failed: "결제 실패",
   canceled: "취소됨",
 };
+
+// ============================================================
+// Phase 2 — Sales / Contract / Operations
+// ============================================================
+
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "meeting"
+  | "quoted"
+  | "contract_sent"
+  | "contract_signed"
+  | "paid"
+  | "in_progress"
+  | "completed"
+  | "lost";
+
+export const leadStatusLabels: Record<LeadStatus, string> = {
+  new: "신규",
+  contacted: "상담 접촉",
+  meeting: "미팅",
+  quoted: "견적 발송",
+  contract_sent: "계약 발송",
+  contract_signed: "계약 완료",
+  paid: "결제 완료",
+  in_progress: "진행 중",
+  completed: "완료",
+  lost: "실패",
+};
+
+// Ordered pipeline columns for the CRM kanban board.
+export const LEAD_PIPELINE: LeadStatus[] = [
+  "new",
+  "contacted",
+  "meeting",
+  "quoted",
+  "contract_sent",
+  "contract_signed",
+  "paid",
+  "in_progress",
+  "completed",
+  "lost",
+];
+
+export type CrmActivityType =
+  | "note"
+  | "status_change"
+  | "call"
+  | "meeting"
+  | "email"
+  | "quote"
+  | "contract"
+  | "payment"
+  | "system";
+
+export type CrmActivity = {
+  id: string;
+  inquiry_id: string;
+  actor_id: string | null;
+  type: CrmActivityType;
+  from_status: string | null;
+  to_status: string | null;
+  body: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export type ContractStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "signed"
+  | "expired"
+  | "cancelled";
+
+export const contractStatusLabels: Record<ContractStatus, string> = {
+  draft: "작성 중",
+  sent: "발송됨",
+  viewed: "열람함",
+  signed: "서명 완료",
+  expired: "만료",
+  cancelled: "취소",
+};
+
+export type Contract = {
+  id: string;
+  contract_number: string;
+  quote_id: string | null;
+  project_id: string | null;
+  client_id: string | null;
+  title: string;
+  body: string | null;
+  amount: number;
+  status: ContractStatus;
+  pdf_url: string | null;
+  client_signature: string | null;
+  admin_signature: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  signed_at: string | null;
+  admin_signed_at: string | null;
+  expires_at: string | null;
+  current_version: number;
+  metadata: Record<string, unknown>;
+  created_by: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ContractVersion = {
+  id: string;
+  contract_id: string;
+  version: number;
+  title: string | null;
+  body: string | null;
+  amount: number | null;
+  pdf_url: string | null;
+  snapshot: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type CaseStudyStatus = "draft" | "published" | "archived";
+
+export type CaseStudyMetric = {
+  label: string;
+  value: string;
+  delta?: string;
+};
+
+export type CaseStudy = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  client_name: string | null;
+  service_type: string | null;
+  category: string | null;
+  summary: string | null;
+  problem: string | null;
+  solution: string | null;
+  result_summary: string | null;
+  tech_stack: string[];
+  metrics: CaseStudyMetric[];
+  thumbnail_url: string | null;
+  cover_url: string | null;
+  portfolio_item_id: string | null;
+  status: CaseStudyStatus;
+  is_featured: boolean;
+  sort_order: number;
+  published_at: string | null;
+  created_by: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CaseStudySectionKind =
+  | "overview"
+  | "problem"
+  | "solution"
+  | "process"
+  | "result"
+  | "tech"
+  | "custom";
+
+export type CaseStudySection = {
+  id: string;
+  case_study_id: string;
+  kind: CaseStudySectionKind;
+  heading: string | null;
+  body: string | null;
+  media: unknown[];
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReviewStatus = "pending" | "approved" | "rejected" | "hidden";
+
+export const reviewStatusLabels: Record<ReviewStatus, string> = {
+  pending: "승인 대기",
+  approved: "공개",
+  rejected: "거절",
+  hidden: "숨김",
+};
+
+export type Review = {
+  id: string;
+  author_id: string | null;
+  project_id: string | null;
+  author_name: string | null;
+  company: string | null;
+  rating: number;
+  title: string | null;
+  body: string;
+  status: ReviewStatus;
+  is_featured: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FaqCategory = {
+  id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FaqItem = {
+  id: string;
+  category_id: string | null;
+  question: string;
+  answer: string;
+  sort_order: number;
+  active: boolean;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};

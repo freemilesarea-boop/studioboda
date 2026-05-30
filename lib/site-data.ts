@@ -901,10 +901,10 @@ export const footerLinks = [
     title: "리소스",
     items: [
       { label: "포트폴리오", href: "/portfolio" },
-      { label: "제작 프로세스", href: "/#process" },
-      { label: "가격 정책", href: "/#pricing" },
-      { label: "FAQ", href: "/#faq" },
-      { label: "견적 계산기", href: "/#quote" },
+      { label: "성공사례", href: "/case-studies" },
+      { label: "제작 프로세스", href: "/process" },
+      { label: "고객 후기", href: "/reviews" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
@@ -919,6 +919,7 @@ export const footerLinks = [
   {
     title: "스튜디오",
     items: [
+      { label: "회사소개", href: "/about" },
       { label: "문의하기", href: "/#inquiry" },
       { label: "이용약관", href: "/legal/terms" },
       { label: "개인정보처리방침", href: "/legal/privacy" },

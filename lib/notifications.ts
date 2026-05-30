@@ -22,7 +22,11 @@ export type NotificationType =
   | "subscription_charge_failed"
   | "subscription_canceled"
   | "tax_document_requested"
-  | "tax_document_issued";
+  | "tax_document_issued"
+  | "contract_sent"
+  | "contract_viewed"
+  | "contract_signed"
+  | "review_requested";
 
 export async function createNotification(
   userId: string | null | undefined,

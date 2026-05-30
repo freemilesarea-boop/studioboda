@@ -118,6 +118,24 @@ const TYPE_META: Record<
     label: "증빙 발행 완료",
     hrefFor: () => "/me/payments",
   },
+  contract_sent: {
+    icon: "ti-file-text",
+    tone: "bg-iris/15 text-iris",
+    label: "계약서 도착",
+    hrefFor: (p) =>
+      typeof p.contract_id === "string"
+        ? `/me/contracts/${p.contract_id}`
+        : "/me/contracts",
+  },
+  contract_signed: {
+    icon: "ti-file-check",
+    tone: "bg-success/15 text-success",
+    label: "계약 체결 완료",
+    hrefFor: (p) =>
+      typeof p.contract_id === "string"
+        ? `/me/contracts/${p.contract_id}`
+        : "/me/contracts",
+  },
 };
 
 const fallback = {
@@ -252,6 +270,10 @@ function summary(n: Notification): string {
       return title ? `${title} · 증빙 발행 요청` : "증빙 발행 요청이 접수되었습니다";
     case "tax_document_issued":
       return title ? `${title} · 증빙 발행 완료` : "증빙이 발행되었습니다";
+    case "contract_sent":
+      return "검토하고 서명할 계약서가 도착했습니다";
+    case "contract_signed":
+      return "계약이 체결되었습니다";
     default:
       return "새 알림이 있습니다";
   }
