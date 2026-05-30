@@ -93,3 +93,38 @@ export async function adminGetContract(id: string): Promise<{
     versions: (versions ?? []) as ContractVersion[],
   };
 }
+
+export type ContractDepositInfo = {
+  status: "paid" | "pending" | "none";
+  amount: number | null;
+  payUrl: string | null;
+  paidAt: string | null;
+};
+
+/**
+ * Read the deposit (예약금) payment tied to a contract's quote, for display on
+ * the customer/admin contract detail. Read-only; does not create a charge.
+ */
+export async function getContractDepositInfo(
+  quoteId: string | null,
+): Promise<ContractDepositInfo> {
+  if (!quoteId) return { status: "none", amount: null, payUrl: null, paidAt: null };
+  const admin = safeAdmin();
+  if (!admin) return { status: "none", amount: null, payUrl: null, paidAt: null };
+  const { data } = await admin
+    .from("payments")
+    .select("status, amount, payapp_payurl, paid_at")
+    .eq("quote_id", quoteId)
+    .eq("type", "deposit")
+    .in("status", ["pending", "paid"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return { status: "none", amount: null, payUrl: null, paidAt: null };
+  return {
+    status: data.status === "paid" ? "paid" : "pending",
+    amount: (data.amount as number | null) ?? null,
+    payUrl: (data.payapp_payurl as string | null) ?? null,
+    paidAt: (data.paid_at as string | null) ?? null,
+  };
+}

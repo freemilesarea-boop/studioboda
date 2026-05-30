@@ -61,7 +61,7 @@ export default async function QuoteDetailPage({
 
   const { data: existingContract } = await admin
     .from("contracts")
-    .select("id")
+    .select("id, status")
     .eq("quote_id", q.id)
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -84,7 +84,9 @@ export default async function QuoteDetailPage({
           </Link>
           <QuoteContractButton
             quoteId={q.id}
-            existingContractId={(existingContract as { id: string } | null)?.id ?? null}
+            contract={
+              (existingContract as { id: string; status: string } | null) ?? null
+            }
           />
           <Link
             href={`/admin/print/quote/${q.id}`}

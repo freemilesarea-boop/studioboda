@@ -7,6 +7,7 @@ import { sendTemplate } from "@/lib/email/send";
 import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
 import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
+import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -149,11 +150,11 @@ export async function POST(req: Request) {
           .update({ payment_status: "deposit_paid" })
           .eq("id", payment.quote_id);
       }
-      if (payment.project_id) {
-        await admin
-          .from("projects")
-          .update({ billing_status: "in_progress" })
-          .eq("id", payment.project_id);
+      // Kickoff gate: deposit paid alone does NOT start the project. The
+      // project enters 진행중 only when the contract is also signed.
+      // tryKickoffForQuote checks both conditions and is idempotent.
+      if (payment.quote_id) {
+        await tryKickoffForQuote(payment.quote_id);
       }
     } else if (payment.type === "balance") {
       if (payment.quote_id) {
@@ -198,13 +199,9 @@ export async function POST(req: Request) {
       title: payment.title,
     });
 
-    // Side: project_started event for deposit
-    if (payment.type === "deposit" && payment.project_id) {
-      void createNotification(payment.user_id, "project_started", {
-        project_id: payment.project_id,
-        title: payment.title,
-      });
-    }
+    // Note: the project_started notification is fired by tryKickoffForQuote
+    // only when BOTH contract-signed and deposit-paid hold — not on deposit
+    // payment alone — so it is intentionally not sent here.
     if (payment.type === "balance" && payment.project_id) {
       void createNotification(payment.user_id, "project_completed", {
         project_id: payment.project_id,

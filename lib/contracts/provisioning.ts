@@ -214,11 +214,16 @@ export async function emailContractToParties(
     amount: number;
     client_id: string | null;
     contract_number?: string | null;
+    quote_id?: string | null;
   },
   opts?: { payUrl?: string | null },
 ): Promise<boolean> {
   const admin = createAdminSupabase();
   const split = depositSplit(contract.amount, null); // 30% policy
+  // 견적서 열람 링크 — 고객 견적 상세(있으면). 견적서·계약서·결제를 한 메일에.
+  const quoteUrl = contract.quote_id
+    ? `${siteUrl}/me/quotes/${contract.quote_id}`
+    : null;
   const baseData = (name: string, payUrl: string | null) => ({
     name,
     contractTitle: contract.title,
@@ -226,6 +231,7 @@ export async function emailContractToParties(
     depositAmount: split.deposit,
     balanceAmount: split.balance,
     contractUrl: `${siteUrl}/me/contracts/${contract.id}`,
+    quoteUrl,
     payUrl,
   });
 
@@ -365,6 +371,7 @@ export async function sendContractIfDraft(
       amount: contract.amount,
       client_id: contract.client_id,
       contract_number: contract.contract_number,
+      quote_id: contract.quote_id,
     },
     { payUrl },
   );

@@ -156,13 +156,14 @@ export type ContractSentData = {
   depositAmount: number;
   balanceAmount: number;
   contractUrl: string;
+  quoteUrl?: string | null; // 견적서 열람/PDF 링크
   payUrl?: string | null; // 예약금 결제 링크 (미결제 시에만)
 };
 export const contractSent = (d: ContractSentData) => ({
-  subject: `[STUDIO BODA] 전자계약서와 예약금 안내 · ${d.contractTitle}`,
+  subject: `[STUDIO BODA] 견적서·전자계약서·예약금 안내 · ${d.contractTitle}`,
   html: wrapper(
-    "전자계약서 검토 · 서명 · 예약금 안내",
-    `<p><b>${escapeHtml(d.name)}</b>님, 전자계약서를 보내드립니다. 계약 내용을 검토하고 전자서명해주세요.</p>
+    "견적서 · 전자계약서 · 예약금 안내",
+    `<p><b>${escapeHtml(d.name)}</b>님, 견적서와 전자계약서를 함께 보내드립니다. 견적 내용을 확인하고 계약서에 전자서명해주세요.</p>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0;border:1px solid #E6E6EC;border-radius:12px;overflow:hidden;font-size:13px;">
        <tr><td style="padding:10px 14px;background:#F6F6FA;color:#7E7E8C;">계약</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${escapeHtml(d.contractTitle)}</td></tr>
        <tr><td style="padding:10px 14px;color:#7E7E8C;border-top:1px solid #E6E6EC;">총 계약금액</td><td style="padding:10px 14px;text-align:right;font-weight:700;border-top:1px solid #E6E6EC;">${fmt(d.amount)}원 <span style="color:#7E7E8C;font-weight:400;">(VAT 별도)</span></td></tr>
@@ -173,13 +174,21 @@ export const contractSent = (d: ContractSentData) => ({
        <b style="color:#0A0A12;">예약금 환불 불가 안내</b><br/>
        예약금은 착수금의 성격으로, 계약 체결 및 결제 완료 후 단순 변심·취향 불일치·본결제 미진행·계약 취소 사유가 발생하더라도 환불되지 않습니다. 자세한 내용은 계약서 조항을 확인해주세요.
      </div>
+     <div style="margin:12px 0;padding:12px 14px;background:#F0F1FF;border:1px solid #6E5BFF33;border-radius:10px;font-size:12.5px;color:#494956;">
+       <b style="color:#0A0A12;">프로젝트 착수 조건</b><br/>
+       ① 계약서 전자서명 완료 &nbsp;②&nbsp; 예약금 결제 완료 — 두 가지가 모두 완료되면 제작이 착수됩니다. 결제는 서명 전·후 언제든 가능합니다.
+     </div>
      ${
-       d.payUrl
-         ? `<p style="margin:14px 0 0;">계약 검토 후 아래 버튼으로 예약금을 결제하시면 제작이 착수됩니다.</p>
-            <p style="margin:10px 0 0;"><a href="${escapeAttr(d.payUrl)}" style="display:inline-block;background:#0A0A12;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;font-size:13px;">예약금 ${fmt(d.depositAmount)}원 결제하기 →</a></p>`
+       d.quoteUrl
+         ? `<p style="margin:14px 0 0;"><a href="${escapeAttr(d.quoteUrl)}" style="display:inline-block;border:1px solid #E6E6EC;color:#0A0A12;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;">📄 견적서 보기</a></p>`
          : ""
      }
-     <p style="margin:14px 0 0;color:#7E7E8C;font-size:12px;">로그인 후 마이페이지 &gt; 계약서에서도 확인할 수 있습니다.</p>`,
+     ${
+       d.payUrl
+         ? `<p style="margin:10px 0 0;"><a href="${escapeAttr(d.payUrl)}" style="display:inline-block;background:#0A0A12;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;font-size:13px;">예약금 ${fmt(d.depositAmount)}원 결제하기 →</a></p>`
+         : ""
+     }
+     <p style="margin:14px 0 0;color:#7E7E8C;font-size:12px;">로그인 후 마이페이지 &gt; 계약서/견적에서도 확인할 수 있습니다.</p>`,
     "계약서 검토 및 서명",
     d.contractUrl,
   ),
