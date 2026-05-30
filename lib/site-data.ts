@@ -1,3 +1,5 @@
+import { companyBusinessLine } from "./company";
+
 export const brand = {
   name: "STUDIO BODA",
   shortName: "BODA",
@@ -928,7 +930,9 @@ export const footerLinks = [
 export const footerMeta = {
   status: "운영 중 · 평균 회신 24시간 이내",
   hq: "Seoul, KR · KST (UTC+9)",
-  business: "사업자번호 000-00-00000",
+  // Derived from lib/company.ts — empty string until real 사업자 정보 is set,
+  // so the footer omits the line rather than showing a placeholder number.
+  business: companyBusinessLine(),
   privacy: "개인정보 보호 · SSL 보안 · NDA 가능",
 };
 

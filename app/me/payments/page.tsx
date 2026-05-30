@@ -6,10 +6,12 @@ import { listMyPayments } from "@/lib/queries/payments";
 import {
   paymentStatusLabels,
   paymentTypeLabels,
+  type AccountType,
   type Payment,
   type PaymentStatus,
   type PaymentType,
 } from "@/lib/types/db";
+import { TaxDocRequest } from "./TaxDocRequest";
 
 export const metadata: Metadata = {
   title: "결제",
@@ -85,6 +87,7 @@ export default async function MyPaymentsPage({
         count={paid.length}
         empty="완료된 결제가 아직 없습니다."
         payments={paid}
+        accountType={me.account_type}
       />
 
       {others.length > 0 ? (
@@ -105,12 +108,14 @@ function Group({
   empty,
   payments,
   showPayButton,
+  accountType,
 }: {
   title: string;
   count: number;
   empty: string;
   payments: Payment[];
   showPayButton?: boolean;
+  accountType?: AccountType;
 }) {
   return (
     <section>
@@ -129,7 +134,12 @@ function Group({
       ) : (
         <ul className="space-y-2.5">
           {payments.map((p) => (
-            <PaymentCard key={p.id} p={p} showPayButton={showPayButton} />
+            <PaymentCard
+              key={p.id}
+              p={p}
+              showPayButton={showPayButton}
+              accountType={accountType}
+            />
           ))}
         </ul>
       )}
@@ -140,10 +150,15 @@ function Group({
 function PaymentCard({
   p,
   showPayButton,
+  accountType,
 }: {
   p: Payment;
   showPayButton?: boolean;
+  accountType?: AccountType;
 }) {
+  const taxDoc =
+    (p.metadata as { tax_doc?: { type: "tax_invoice" | "cash_receipt"; status: "requested" | "issued" } } | null)
+      ?.tax_doc ?? null;
   return (
     <li className="rounded-2xl border border-ink-15 bg-white px-4 py-4 sm:px-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -193,6 +208,13 @@ function PaymentCard({
           ) : null}
           {p.status === "pending" && !p.payapp_payurl ? (
             <p className="text-[11px] text-warning">결제 링크 발급 중</p>
+          ) : null}
+          {p.status === "paid" && accountType ? (
+            <TaxDocRequest
+              paymentId={p.id}
+              accountType={accountType}
+              taxDoc={taxDoc}
+            />
           ) : null}
         </div>
       </div>

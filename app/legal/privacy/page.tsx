@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { company } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "개인정보처리방침 · STUDIO BODA",
@@ -122,9 +123,12 @@ export default function PrivacyPage() {
 
       <Section title="10. 개인정보보호 책임자">
         <ul className="boda-list">
-          <li>이름: 김보다 (Creative Director)</li>
-          <li>이메일: hello@studioboda.kr</li>
-          <li>소속: STUDIO BODA</li>
+          <li>직책: {company.privacyOfficerTitle}</li>
+          {company.privacyOfficerName ? (
+            <li>이름: {company.privacyOfficerName}</li>
+          ) : null}
+          <li>이메일: {company.privacyOfficerEmail}</li>
+          <li>소속: {company.name}</li>
         </ul>
       </Section>
 

@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
-import { requireStaff } from "@/lib/auth";
+import { getProfile, requireStaff } from "@/lib/auth";
 import { getPaymentProvider } from "@/lib/payments/provider";
-import { createNotification } from "@/lib/notifications";
+import { createNotification, notifyStaff } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
 import type { PaymentType } from "@/lib/types/db";
 
@@ -459,4 +459,83 @@ export async function refundPaymentAction(paymentId: string, reason: string) {
   revalidatePath("/admin/payments");
   revalidatePath("/me/payments");
   return { ok: true as const, providerNote };
+}
+
+// ---- Customer: request a tax invoice (세금계산서) or cash receipt (현금영수증) ----
+//
+// We do not yet integrate a tax-invoice issuer (e.g. Barobill / Popbill), so
+// this records the request on the payment's metadata and notifies staff, who
+// issue the document out-of-band and mark it issued. Idempotent: a second
+// request while one is pending/issued is a no-op success.
+type TaxDocType = "tax_invoice" | "cash_receipt";
+
+export type TaxDocState = {
+  type: TaxDocType;
+  status: "requested" | "issued";
+  requested_at: string;
+  issued_at?: string;
+};
+
+export async function requestTaxDocumentAction(formData: FormData) {
+  const me = await getProfile();
+  if (!me) return { ok: false as const, error: "로그인이 필요합니다" };
+
+  const paymentId = String(formData.get("payment_id") ?? "").trim();
+  const docTypeRaw = String(formData.get("doc_type") ?? "").trim();
+  const docType: TaxDocType =
+    docTypeRaw === "cash_receipt" ? "cash_receipt" : "tax_invoice";
+  if (!paymentId) return { ok: false as const, error: "결제 정보가 없습니다" };
+
+  const admin = createAdminSupabase();
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id, user_id, title, amount, status, metadata")
+    .eq("id", paymentId)
+    .eq("user_id", me.id)
+    .maybeSingle();
+  if (!payment) return { ok: false as const, error: "결제를 찾을 수 없습니다" };
+  if (payment.status !== "paid") {
+    return {
+      ok: false as const,
+      error: "결제가 완료된 건만 증빙을 요청할 수 있습니다",
+    };
+  }
+
+  const metadata = (payment.metadata ?? {}) as Record<string, unknown>;
+  const existing = metadata.tax_doc as TaxDocState | undefined;
+  if (existing && (existing.status === "requested" || existing.status === "issued")) {
+    // Already requested or issued — surface success without re-notifying.
+    return { ok: true as const, alreadyRequested: true };
+  }
+
+  const taxDoc: TaxDocState = {
+    type: docType,
+    status: "requested",
+    requested_at: new Date().toISOString(),
+  };
+
+  const { error } = await admin
+    .from("payments")
+    .update({ metadata: { ...metadata, tax_doc: taxDoc } })
+    .eq("id", paymentId);
+  if (error) return { ok: false as const, error: error.message };
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "payment",
+    entity_id: paymentId,
+    action: "tax_document_requested",
+    metadata: { doc_type: docType, title: payment.title, amount: payment.amount },
+  });
+
+  void notifyStaff("tax_document_requested", {
+    payment_id: paymentId,
+    user_id: me.id,
+    doc_type: docType,
+    title: payment.title,
+    amount: payment.amount,
+  });
+
+  revalidatePath("/me/payments");
+  return { ok: true as const };
 }

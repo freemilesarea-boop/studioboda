@@ -106,6 +106,18 @@ const TYPE_META: Record<
         ? `/me/projects/${p.project_id}`
         : "/me/projects",
   },
+  tax_document_requested: {
+    icon: "ti-receipt",
+    tone: "bg-warning/15 text-warning",
+    label: "증빙 발행 요청",
+    hrefFor: () => "/me/payments",
+  },
+  tax_document_issued: {
+    icon: "ti-receipt-2",
+    tone: "bg-success/15 text-success",
+    label: "증빙 발행 완료",
+    hrefFor: () => "/me/payments",
+  },
 };
 
 const fallback = {
@@ -236,6 +248,10 @@ function summary(n: Notification): string {
       return "고객이 수정 요청을 보냈습니다";
     case "comment_posted":
       return "새 메시지가 도착했습니다";
+    case "tax_document_requested":
+      return title ? `${title} · 증빙 발행 요청` : "증빙 발행 요청이 접수되었습니다";
+    case "tax_document_issued":
+      return title ? `${title} · 증빙 발행 완료` : "증빙이 발행되었습니다";
     default:
       return "새 알림이 있습니다";
   }
