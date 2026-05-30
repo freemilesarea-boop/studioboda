@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProfile } from "@/lib/auth";
-import { getMyContract } from "@/lib/queries/contracts";
+import { getMyContract, getContractDepositInfo } from "@/lib/queries/contracts";
 import { ContractDocument } from "@/components/ContractDocument";
 import { contractTemplateLabels } from "@/lib/contracts/templates";
-import { contractStatusLabels } from "@/lib/types/db";
+import { contractStage, contractStageLabels } from "@/lib/contracts/stage";
 import { ContractSign } from "./ContractSign";
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
@@ -26,6 +26,10 @@ export default async function MyContractDetailPage({
   if (!me) return null;
   const contract = await getMyContract(me.id, params.id);
   if (!contract) notFound();
+
+  const deposit = await getContractDepositInfo(contract.quote_id);
+  const depositPaid = deposit.status === "paid";
+  const stage = contractStage(contract, depositPaid);
 
   const clientName =
     (me.account_type === "business" ? me.company_name : me.name) ||
@@ -65,12 +69,20 @@ export default async function MyContractDetailPage({
             value={contractTemplateLabels[contract.template_kind]}
           />
           <Summary label="계약 금액" value={`${fmt(contract.amount)}원`} accent />
-          <Summary label="상태" value={contractStatusLabels[contract.status]} />
+          <Summary label="진행 상태" value={contractStageLabels[stage]} />
         </dl>
         <p className="mt-3 text-[11.5px] text-ink-50">
           VAT 별도 · 전체 조항은 아래 계약 전문에서 확인하세요.
         </p>
       </section>
+
+      <DepositPanel
+        contractId={contract.id}
+        depositStatus={deposit.status}
+        amount={deposit.amount ?? Math.round((contract.amount * 30) / 100)}
+        payUrl={deposit.payUrl}
+        clientSigned={Boolean(contract.client_signature)}
+      />
 
       <div className="overflow-hidden rounded-2xl border border-ink-15">
         <ContractDocument
@@ -116,5 +128,72 @@ function Summary({
         {value}
       </dd>
     </div>
+  );
+}
+
+// 예약금(30%) 결제 안내 — 서명 전/후 모두 결제 상태를 보여주고, 미결제 시
+// PayApp 결제 링크 버튼을 노출한다. 결제는 계약서 확인 후 고객이 진행한다.
+function DepositPanel({
+  contractId,
+  depositStatus,
+  amount,
+  payUrl,
+  clientSigned,
+}: {
+  contractId: string;
+  depositStatus: "paid" | "pending" | "none";
+  amount: number;
+  payUrl: string | null;
+  clientSigned: boolean;
+}) {
+  void contractId;
+  if (depositStatus === "paid") {
+    return (
+      <section className="rounded-2xl border border-success/30 bg-success/[0.06] p-5">
+        <div className="flex items-center gap-2">
+          <i className="ti ti-circle-check text-[18px] text-success" aria-hidden />
+          <h2 className="font-display text-[14px] font-bold text-ink-100">
+            예약금 결제 완료
+          </h2>
+        </div>
+        <p className="mt-1.5 text-[12.5px] text-ink-70">
+          예약금 <b className="num">{fmt(amount)}원</b>이 결제되었습니다. 운영팀이 제작을
+          착수합니다.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-iris/30 bg-iris-light/40 p-5">
+      <h2 className="font-display text-[14px] font-bold text-ink-100">
+        예약금 결제 (30%)
+      </h2>
+      <p className="mt-1 text-[12px] text-ink-50">
+        {clientSigned
+          ? "서명이 완료되었습니다. 아래에서 예약금을 결제하면 제작이 착수됩니다."
+          : "계약 내용을 확인하고 서명하신 뒤 예약금을 결제해주세요. 지금 결제하셔도 됩니다."}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="num font-display text-[22px] font-extrabold tracking-tightish text-iris">
+          {fmt(amount)}원
+          <span className="ml-1 text-[11px] font-bold text-ink-50">VAT 별도</span>
+        </p>
+        {payUrl ? (
+          <a
+            href={payUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center rounded-lg bg-iris px-5 font-display text-[13px] font-bold text-white hover:opacity-90"
+          >
+            예약금 결제하기 →
+          </a>
+        ) : (
+          <span className="text-[11.5px] text-warning">
+            결제 링크 발급 중 · 운영팀이 곧 안내합니다
+          </span>
+        )}
+      </div>
+    </section>
   );
 }

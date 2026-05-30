@@ -17,10 +17,12 @@ import type { ContractComposeFacts } from "@/lib/contracts/engine";
 import {
   composeBody,
   composeFactsFromQuote,
+  emailContractToParties,
   ensureContractForQuote,
   sendContractIfDraft,
   type QuoteRow,
 } from "@/lib/contracts/provisioning";
+import { ensureDepositPaymentForQuote } from "@/lib/payments/provision";
 import type { Contract } from "@/lib/types/db";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
