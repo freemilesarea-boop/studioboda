@@ -219,15 +219,20 @@ export function QuotePaymentPanel({
         />
       </div>
 
+      <div className="mb-3 rounded-lg border border-iris/30 bg-iris/[0.06] px-3 py-2 text-[11.5px] text-ink-70">
+        <b className="text-ink-100">권장:</b> 상단의 <b>“견적·계약·예약금 통합 발송”</b>
+        버튼을 사용하면 견적서·계약서·예약금 결제 링크가 한 번에 고객에게
+        발송됩니다. 아래 버튼은 결제 청구만 단독 발행하는 보조 기능입니다.
+      </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={pending || hasOpen("deposit") || !!blocked}
           title={blocked ?? undefined}
           onClick={() => issue("deposit")}
-          className="inline-flex h-10 items-center rounded-lg bg-iris px-4 font-display text-[12.5px] font-bold text-white hover:opacity-90 disabled:opacity-50"
+          className="inline-flex h-10 items-center rounded-lg border border-iris/40 bg-white px-4 font-display text-[12.5px] font-bold text-iris hover:bg-iris/5 disabled:opacity-50"
         >
-          {hasOpen("deposit") ? "예약금 발행됨" : "예약금 청구 발행"}
+          {hasOpen("deposit") ? "예약금 발행됨" : "예약금 청구만 발행"}
         </button>
         <button
           type="button"

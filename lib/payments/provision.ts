@@ -23,6 +23,9 @@ export type CreatePaymentInput = {
   title?: string;
   description?: string;
   amount?: number; // only used for type='extra'
+  // When true, suppress the standalone payment_requested notification/email —
+  // the caller (e.g. the quote package flow) sends its own combined message.
+  silent?: boolean;
 };
 
 export type CreatePaymentResult =
@@ -257,27 +260,29 @@ export async function createPaymentCore(
     metadata: { type: input.type, amount, quote_id: quote.id },
   });
 
-  void createNotification(userId, "payment_requested", {
-    payment_id: payment.id,
-    type: input.type,
-    amount,
-    title,
-    pay_url: result.payUrl,
-  });
-
-  const { data: profileForEmail } = await admin
-    .from("profiles")
-    .select("email,name,company_name")
-    .eq("id", userId)
-    .maybeSingle();
-  const recipient = profileForEmail?.email ?? buyerEmail;
-  if (recipient) {
-    void sendTemplate(recipient, "payment_requested", {
-      name: profileForEmail?.name ?? profileForEmail?.company_name ?? buyerName,
-      paymentTitle: title,
+  if (!input.silent) {
+    void createNotification(userId, "payment_requested", {
+      payment_id: payment.id,
+      type: input.type,
       amount,
-      payUrl: result.payUrl,
+      title,
+      pay_url: result.payUrl,
     });
+
+    const { data: profileForEmail } = await admin
+      .from("profiles")
+      .select("email,name,company_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const recipient = profileForEmail?.email ?? buyerEmail;
+    if (recipient) {
+      void sendTemplate(recipient, "payment_requested", {
+        name: profileForEmail?.name ?? profileForEmail?.company_name ?? buyerName,
+        paymentTitle: title,
+        amount,
+        payUrl: result.payUrl,
+      });
+    }
   }
 
   return { ok: true, payUrl: result.payUrl, paymentId: payment.id };
@@ -297,6 +302,7 @@ export type DepositChargeInfo = {
 export async function ensureDepositPaymentForQuote(
   quoteId: string,
   actorId: string | null,
+  opts?: { silent?: boolean },
 ): Promise<DepositChargeInfo> {
   const admin = createAdminSupabase();
   const { data: existing } = await admin
@@ -317,7 +323,10 @@ export async function ensureDepositPaymentForQuote(
     };
   }
 
-  const created = await createPaymentCore({ quoteId, type: "deposit" }, actorId);
+  const created = await createPaymentCore(
+    { quoteId, type: "deposit", silent: opts?.silent ?? false },
+    actorId,
+  );
   if (!created.ok) {
     await logActivity({
       entity_type: "payment",
