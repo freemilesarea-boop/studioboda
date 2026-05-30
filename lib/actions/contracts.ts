@@ -107,6 +107,58 @@ export async function sendContractAction(id: string): Promise<Result> {
   return { ok: true };
 }
 
+// ---- Admin: re-send an already-sent contract email (no status change) ----
+// `sendContractAction` only fires for drafts (idempotent first send). Re-sending
+// re-delivers the email (with the deposit pay link) to 을 + 갑 without resetting
+// the lifecycle.
+export async function resendContractEmailAction(id: string): Promise<Result> {
+  const me = await requireStaff();
+  const admin = createAdminSupabase();
+  const { data: c } = await admin
+    .from("contracts")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (!c) return { ok: false, error: "계약서를 찾을 수 없습니다" };
+  const contract = c as Contract;
+  if (!contract.client_id) {
+    return { ok: false, error: "계약서에 연결된 고객 계정이 없습니다" };
+  }
+  if (contract.status === "draft") {
+    return { ok: false, error: "아직 발송되지 않은 계약입니다. '계약서 발송'을 먼저 사용하세요" };
+  }
+  if (["cancelled", "expired"].includes(contract.status)) {
+    return { ok: false, error: "취소·만료된 계약은 재발송할 수 없습니다" };
+  }
+
+  // Ensure a deposit charge exists; include its pay link unless already paid.
+  let payUrl: string | null = null;
+  if (contract.quote_id) {
+    const dep = await ensureDepositPaymentForQuote(contract.quote_id, me.id);
+    payUrl = dep.status === "paid" ? null : dep.payUrl;
+  }
+
+  await emailContractToParties(
+    {
+      id: contract.id,
+      title: contract.title,
+      amount: contract.amount,
+      client_id: contract.client_id,
+      contract_number: contract.contract_number,
+    },
+    { payUrl },
+  );
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "contract",
+    entity_id: id,
+    action: "contract_resent",
+  });
+  revalidatePath(`/admin/contracts/${id}`);
+  return { ok: true };
+}
+
 // ---- Admin: cancel ----
 export async function cancelContractAction(id: string): Promise<Result> {
   const me = await requireStaff();
