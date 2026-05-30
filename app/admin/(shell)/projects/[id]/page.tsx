@@ -26,6 +26,8 @@ import { FilesPanel } from "./FilesPanel";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AIToolsPanel } from "./AIToolsPanel";
 import { AIAssetsList } from "./AIAssetsList";
+import { KickoffOverride } from "./KickoffOverride";
+import { kickoffReadinessForQuote } from "@/lib/projects/kickoff";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -116,6 +118,17 @@ export default async function ProjectDetailPage({
   >[];
   const brandRow = brand as BrandProfile | null;
 
+  // Kickoff gate readiness (계약서 서명 + 예약금 결제) for the status checklist.
+  const kickoff = p.quote_id
+    ? await kickoffReadinessForQuote(p.quote_id)
+    : null;
+  const contractSigned = kickoff?.contractSigned ?? false;
+  const depositPaid = kickoff?.depositPaid ?? false;
+  const contractSent = Boolean(
+    quote || paymentRows.length > 0 || contractSigned,
+  );
+  const inProgress = !["queued"].includes(p.status) && p.billing_status === "in_progress";
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2 text-[12px] text-ink-50">
@@ -189,6 +202,24 @@ export default async function ProjectDetailPage({
                 value={format(new Date(p.created_at), "yyyy-MM-dd")}
               />
             </dl>
+          </AdminCard>
+
+          <AdminCard title="착수 체크리스트">
+            <ul className="space-y-1.5">
+              <CheckRow done label="견적 발송" />
+              <CheckRow done={contractSent} label="계약서 발송" />
+              <CheckRow done={contractSigned} label="계약서 서명 완료" />
+              <CheckRow done={depositPaid} label="예약금 결제 완료" />
+              <CheckRow
+                done={contractSigned && depositPaid}
+                label="착수 가능"
+                accent
+              />
+              <CheckRow done={inProgress} label="진행중" accent />
+            </ul>
+            {!inProgress && !(contractSigned && depositPaid) ? (
+              <KickoffOverride projectId={p.id} />
+            ) : null}
           </AdminCard>
 
           <AdminCard title="빠른 액션">
@@ -354,5 +385,42 @@ function Row({
         {value}
       </dd>
     </div>
+  );
+}
+
+function CheckRow({
+  done,
+  label,
+  accent,
+}: {
+  done: boolean;
+  label: string;
+  accent?: boolean;
+}) {
+  return (
+    <li className="flex items-center gap-2 text-[12.5px]">
+      <span
+        className={`grid h-4 w-4 shrink-0 place-items-center rounded-[5px] border ${
+          done
+            ? accent
+              ? "border-success bg-success text-white"
+              : "border-iris bg-iris text-white"
+            : "border-ink-30 bg-white text-transparent"
+        }`}
+      >
+        <i className="ti ti-check text-[11px]" aria-hidden />
+      </span>
+      <span
+        className={
+          done
+            ? accent
+              ? "font-bold text-success"
+              : "text-ink-100"
+            : "text-ink-50"
+        }
+      >
+        {label}
+      </span>
+    </li>
   );
 }

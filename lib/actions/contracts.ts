@@ -6,6 +6,7 @@ import { requireStaff, getProfile } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification, notifyStaff } from "@/lib/notifications";
 import { setLeadStatusForInquiry } from "@/lib/actions/crm";
+import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import {
   CONTRACT_TEMPLATE_KINDS,
   contractTitleFor,
@@ -145,6 +146,7 @@ export async function resendContractEmailAction(id: string): Promise<Result> {
       amount: contract.amount,
       client_id: contract.client_id,
       contract_number: contract.contract_number,
+      quote_id: contract.quote_id,
     },
     { payUrl },
   );
@@ -290,6 +292,9 @@ export async function signContractAction(
     if (q?.inquiry_id) {
       void setLeadStatusForInquiry(q.inquiry_id as string, "contract_signed", me.id);
     }
+    // Kickoff gate: if the deposit is already paid, signing now satisfies both
+    // conditions → move the project to 진행중. Idempotent (no-op otherwise).
+    await tryKickoffForQuote(contract.quote_id);
   }
 
   revalidatePath("/me/contracts");
