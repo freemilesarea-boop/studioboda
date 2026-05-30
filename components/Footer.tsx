@@ -66,7 +66,8 @@ export function Footer() {
         <div className="flex flex-col gap-1 text-[11px] text-ink-50">
           <p>{brand.copyright}</p>
           <p className="num font-mono text-[10px]">
-            {footerMeta.hq} · {footerMeta.business}
+            {footerMeta.hq}
+            {footerMeta.business ? ` · ${footerMeta.business}` : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

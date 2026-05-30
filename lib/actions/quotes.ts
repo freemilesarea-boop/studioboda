@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
 import { quoteSchema, type QuoteInput } from "@/lib/schemas";
+import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
 import type { QuoteOption, QuoteStatus } from "@/lib/types/db";
 
 const totalFor = (base: number, options: QuoteOption[]) =>
@@ -25,6 +26,9 @@ export async function createQuoteAction(input: QuoteInput) {
     .insert({
       ...parsed.data,
       total_price: total,
+      // 예약금 30% / 잔금 70% — set explicitly so the split is consistent
+      // regardless of any DB column default.
+      deposit_rate: DEFAULT_DEPOSIT_RATE,
     })
     .select("id")
     .single();

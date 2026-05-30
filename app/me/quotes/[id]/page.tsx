@@ -70,11 +70,20 @@ export default async function MyQuoteDetailPage({
               : ""}
           </p>
         </div>
-        <span
-          className={`rounded-full px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-caption ${TONE[q.status]}`}
-        >
-          {quoteStatusLabels[q.status]}
-        </span>
+        <div className="flex items-center gap-2.5">
+          <Link
+            href={`/quote/${q.id}/print`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-ink-15 px-3 py-1.5 font-display text-[12px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100"
+          >
+            <i className="ti ti-download text-[14px]" aria-hidden />
+            견적서 PDF
+          </Link>
+          <span
+            className={`rounded-full px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-caption ${TONE[q.status]}`}
+          >
+            {quoteStatusLabels[q.status]}
+          </span>
+        </div>
       </header>
 
       <section className="rounded-2xl border border-ink-15 bg-white p-5">

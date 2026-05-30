@@ -1,3 +1,5 @@
+import { companyBusinessLine } from "./company";
+
 export const brand = {
   name: "STUDIO BODA",
   shortName: "BODA",
@@ -899,10 +901,10 @@ export const footerLinks = [
     title: "리소스",
     items: [
       { label: "포트폴리오", href: "/portfolio" },
-      { label: "제작 프로세스", href: "/#process" },
-      { label: "가격 정책", href: "/#pricing" },
-      { label: "FAQ", href: "/#faq" },
-      { label: "견적 계산기", href: "/#quote" },
+      { label: "성공사례", href: "/case-studies" },
+      { label: "제작 프로세스", href: "/process" },
+      { label: "고객 후기", href: "/reviews" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
@@ -917,6 +919,7 @@ export const footerLinks = [
   {
     title: "스튜디오",
     items: [
+      { label: "회사소개", href: "/about" },
       { label: "문의하기", href: "/#inquiry" },
       { label: "이용약관", href: "/legal/terms" },
       { label: "개인정보처리방침", href: "/legal/privacy" },
@@ -928,7 +931,9 @@ export const footerLinks = [
 export const footerMeta = {
   status: "운영 중 · 평균 회신 24시간 이내",
   hq: "Seoul, KR · KST (UTC+9)",
-  business: "사업자번호 000-00-00000",
+  // Derived from lib/company.ts — empty string until real 사업자 정보 is set,
+  // so the footer omits the line rather than showing a placeholder number.
+  business: companyBusinessLine(),
   privacy: "개인정보 보호 · SSL 보안 · NDA 가능",
 };
 

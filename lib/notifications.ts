@@ -20,7 +20,13 @@ export type NotificationType =
   | "subscription_activated"
   | "subscription_charged"
   | "subscription_charge_failed"
-  | "subscription_canceled";
+  | "subscription_canceled"
+  | "tax_document_requested"
+  | "tax_document_issued"
+  | "contract_sent"
+  | "contract_viewed"
+  | "contract_signed"
+  | "review_requested";
 
 export async function createNotification(
   userId: string | null | undefined,
