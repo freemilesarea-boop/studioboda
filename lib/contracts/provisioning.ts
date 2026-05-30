@@ -15,7 +15,8 @@ import { sendTemplate } from "@/lib/email/send";
 import { logCrmActivity } from "@/lib/actions/crm";
 import { getEffectiveClauseBlocks } from "@/lib/queries/contract-clauses";
 import { siteUrl } from "@/lib/company";
-import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { depositSplit } from "@/lib/payments/constants";
+import { ensureDepositPaymentForQuote } from "@/lib/payments/provision";
 import { composeContract, type ContractComposeFacts } from "./engine";
 import {
   contractTitleFor,
@@ -46,10 +47,12 @@ export function composeFactsFromQuote(
   kind: ContractTemplateKind,
 ): ContractComposeFacts {
   const amount = quote.total_price ?? 0;
-  const depositRate = quote.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
-  const depositAmount =
-    quote.deposit_amount ?? Math.round((amount * depositRate) / 100);
-  const balanceAmount = quote.balance_amount ?? amount - depositAmount;
+  // Enforce the 30% deposit policy (legacy 10%/null → 30%), ignoring any
+  // legacy stored deposit_amount/balance_amount.
+  const split = depositSplit(amount, quote.deposit_rate);
+  const depositRate = split.rate;
+  const depositAmount = split.deposit;
+  const balanceAmount = split.balance;
   const options = Array.isArray(quote.options)
     ? (quote.options as QuoteOption[])
     : [];
@@ -204,57 +207,91 @@ export async function ensureContractForQuote(
  * Email the contract review/sign link to the client. Logs failures to
  * activity_logs (and pings staff) so a missing/failed email is visible.
  */
-export async function emailContractToClient(contract: {
-  id: string;
-  title: string;
-  amount: number;
-  client_id: string | null;
-  contract_number?: string | null;
-}): Promise<boolean> {
-  if (!contract.client_id) return false;
+export async function emailContractToParties(
+  contract: {
+    id: string;
+    title: string;
+    amount: number;
+    client_id: string | null;
+    contract_number?: string | null;
+  },
+  opts?: { payUrl?: string | null },
+): Promise<boolean> {
   const admin = createAdminSupabase();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("email, name, company_name")
-    .eq("id", contract.client_id)
-    .maybeSingle();
-  const recipient = profile?.email ?? null;
-  if (!recipient) {
-    await logActivity({
-      entity_type: "contract",
-      entity_id: contract.id,
-      action: "contract_email_skipped_no_recipient",
-    });
-    return false;
-  }
-  const name = profile?.name ?? profile?.company_name ?? "고객";
-  const res = await sendTemplate(recipient, "contract_sent", {
+  const split = depositSplit(contract.amount, null); // 30% policy
+  const baseData = (name: string, payUrl: string | null) => ({
     name,
     contractTitle: contract.title,
     amount: contract.amount,
+    depositAmount: split.deposit,
+    balanceAmount: split.balance,
     contractUrl: `${siteUrl}/me/contracts/${contract.id}`,
+    payUrl,
   });
-  if (!res.ok) {
-    await logActivity({
-      entity_type: "contract",
-      entity_id: contract.id,
-      action: "contract_email_failed",
-      metadata: { error: res.error ?? "unknown", recipient },
-    });
-    void notifyStaff("contract_sent", {
-      contract_id: contract.id,
-      email_failed: true,
-      reason: res.error,
-    });
-    return false;
+
+  // ── 을 (고객) — primary recipient, includes the deposit pay link ──
+  let clientOk = false;
+  if (contract.client_id) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("email, name, company_name")
+      .eq("id", contract.client_id)
+      .maybeSingle();
+    const recipient = profile?.email ?? null;
+    if (recipient) {
+      const name = profile?.name ?? profile?.company_name ?? "고객";
+      const res = await sendTemplate(
+        recipient,
+        "contract_sent",
+        baseData(name, opts?.payUrl ?? null),
+      );
+      clientOk = res.ok;
+      await logActivity({
+        entity_type: "contract",
+        entity_id: contract.id,
+        action: res.ok ? "contract_email_sent" : "contract_email_failed",
+        metadata: { recipient, party: "client", error: res.ok ? undefined : res.error },
+      });
+      if (!res.ok) {
+        void notifyStaff("contract_sent", {
+          contract_id: contract.id,
+          email_failed: true,
+          reason: res.error,
+        });
+      }
+    } else {
+      await logActivity({
+        entity_type: "contract",
+        entity_id: contract.id,
+        action: "contract_email_skipped_no_recipient",
+        metadata: { party: "client" },
+      });
+    }
   }
-  await logActivity({
-    entity_type: "contract",
-    entity_id: contract.id,
-    action: "contract_email_sent",
-    metadata: { recipient },
-  });
-  return true;
+
+  // ── 갑 (회사) — all staff (admin/manager) with an email; copy WITHOUT pay link ──
+  const { data: staff } = await admin
+    .from("profiles")
+    .select("email, name")
+    .in("role", ["admin", "manager"]);
+  for (const s of staff ?? []) {
+    if (!s.email) continue;
+    const res = await sendTemplate(
+      s.email,
+      "contract_sent",
+      baseData(s.name ?? "STUDIO BODA", null),
+    );
+    if (!res.ok) {
+      await logActivity({
+        entity_type: "contract",
+        entity_id: contract.id,
+        action: "contract_email_failed",
+        metadata: { recipient: s.email, party: "staff", error: res.error },
+      });
+    }
+  }
+
+  return clientOk;
 }
 
 /**
@@ -310,13 +347,27 @@ export async function sendContractIfDraft(
     contract_number: contract.contract_number,
   });
 
-  await emailContractToClient({
-    id: contract.id,
-    title: contract.title,
-    amount: contract.amount,
-    client_id: contract.client_id,
-    contract_number: contract.contract_number,
-  });
+  // 예약금 청구 동시 발송: ensure a deposit charge exists; include the pay link
+  // in the email unless the deposit is already paid (webhook fallback path).
+  let payUrl: string | null = null;
+  if (contract.quote_id) {
+    const dep = await ensureDepositPaymentForQuote(
+      contract.quote_id,
+      opts?.actorId ?? null,
+    );
+    payUrl = dep.status === "paid" ? null : dep.payUrl;
+  }
+
+  await emailContractToParties(
+    {
+      id: contract.id,
+      title: contract.title,
+      amount: contract.amount,
+      client_id: contract.client_id,
+      contract_number: contract.contract_number,
+    },
+    { payUrl },
+  );
 
   return { ok: true, sent: true };
 }

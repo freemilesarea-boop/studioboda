@@ -17,8 +17,8 @@ import type { ContractComposeFacts } from "@/lib/contracts/engine";
 import {
   composeBody,
   composeFactsFromQuote,
-  emailContractToClient,
   ensureContractForQuote,
+  sendContractIfDraft,
   type QuoteRow,
 } from "@/lib/contracts/provisioning";
 import type { Contract } from "@/lib/types/db";
@@ -90,44 +90,16 @@ export async function saveContractDraftAction(
   return { ok: true };
 }
 
-// ---- Admin: send to customer ----
+// ---- Admin: send to customer (계약서 + 예약금 청구 동시 발송) ----
+// Delegates to the shared send flow: guards against double-send (draft only),
+// ensures a deposit charge exists, and emails both 을(고객) and 갑(관리자 전원).
 export async function sendContractAction(id: string): Promise<Result> {
   const me = await requireStaff();
-  const admin = createAdminSupabase();
-  const { data: c } = await admin.from("contracts").select("*").eq("id", id).maybeSingle();
-  if (!c) return { ok: false, error: "계약서를 찾을 수 없습니다" };
-  const contract = c as Contract;
-  if (!contract.client_id) {
-    return { ok: false, error: "계약서에 연결된 고객 계정이 없습니다" };
+  const r = await sendContractIfDraft(id, { actorId: me.id });
+  if (!r.ok) return { ok: false, error: r.error ?? "발송 실패" };
+  if (!r.sent) {
+    return { ok: false, error: "이미 발송된 계약이거나 발송할 수 없는 상태입니다" };
   }
-  if (contract.status === "signed") return { ok: false, error: "이미 완료된 계약입니다" };
-
-  await admin
-    .from("contracts")
-    .update({ status: "sent", sent_at: new Date().toISOString() })
-    .eq("id", id);
-
-  await logActivity({
-    actor_id: me.id,
-    entity_type: "contract",
-    entity_id: id,
-    action: "contract_sent",
-  });
-  void createNotification(contract.client_id, "contract_sent", {
-    contract_id: id,
-    contract_number: contract.contract_number,
-    title: contract.title,
-  });
-
-  // Email the review/sign link to the customer (best-effort; logs failures).
-  await emailContractToClient({
-    id: contract.id,
-    title: contract.title,
-    amount: contract.amount,
-    client_id: contract.client_id,
-    contract_number: contract.contract_number,
-  });
-
   revalidatePath(`/admin/contracts/${id}`);
   revalidatePath("/me/contracts");
   return { ok: true };

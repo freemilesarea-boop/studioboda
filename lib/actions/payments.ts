@@ -7,7 +7,7 @@ import { getProfile, requireStaff } from "@/lib/auth";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { createNotification, notifyStaff } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
-import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { depositSplit } from "@/lib/payments/constants";
 import type { PaymentType } from "@/lib/types/db";
 
 const SITE_URL = () =>
@@ -33,9 +33,25 @@ export async function createPaymentAction(input: CreateInput) {
   if (!quote) return { ok: false as const, error: "견적을 찾을 수 없습니다" };
 
   const totalPrice = (quote.total_price as number) ?? 0;
-  const depositRate = (quote.deposit_rate ?? DEFAULT_DEPOSIT_RATE) as number;
-  const depositAmount = Math.round((totalPrice * depositRate) / 100);
-  const balanceAmount = totalPrice - depositAmount;
+  // Enforce the 30% deposit policy (legacy 10%/null → 30%) and backfill the
+  // quote so admin/customer/contract/receipt surfaces all show 30%.
+  const split = depositSplit(totalPrice, quote.deposit_rate as number | null);
+  const depositAmount = split.deposit;
+  const balanceAmount = split.balance;
+  if (
+    quote.deposit_rate !== split.rate ||
+    quote.deposit_amount !== depositAmount ||
+    quote.balance_amount !== balanceAmount
+  ) {
+    await admin
+      .from("quotes")
+      .update({
+        deposit_rate: split.rate,
+        deposit_amount: depositAmount,
+        balance_amount: balanceAmount,
+      })
+      .eq("id", quote.id);
+  }
 
   // Server-side amount computation. Never trust the client.
   let amount: number;

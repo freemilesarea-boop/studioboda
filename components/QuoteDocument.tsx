@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { company, siteUrl } from "@/lib/company";
-import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { depositSplit } from "@/lib/payments/constants";
 import type { Quote, QuoteOption } from "@/lib/types/db";
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
@@ -25,10 +25,11 @@ export function QuoteDocument({
   customer: QuoteCustomer;
 }) {
   const options = (q.options as QuoteOption[]) ?? [];
-  const depositRate = q.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
-  const deposit =
-    q.deposit_amount ?? Math.round((q.total_price * depositRate) / 100);
-  const balance = q.balance_amount ?? q.total_price - deposit;
+  const {
+    rate: depositRate,
+    deposit,
+    balance,
+  } = depositSplit(q.total_price, q.deposit_rate);
 
   return (
     <>

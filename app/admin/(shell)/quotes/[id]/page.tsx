@@ -10,7 +10,7 @@ import type { Quote, QuoteOption } from "@/lib/types/db";
 import { QuoteEditor } from "./QuoteEditor";
 import { QuoteContractButton } from "./QuoteContractButton";
 import { resolveQuoteBuyer } from "@/lib/queries/buyer";
-import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { depositSplit } from "@/lib/payments/constants";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -49,10 +49,13 @@ export default async function QuoteDetailPage({
     created_at: string;
   }[];
 
-  const depositRate = q.deposit_rate ?? DEFAULT_DEPOSIT_RATE;
-  const depositAmount =
-    q.deposit_amount ?? Math.round((q.total_price * depositRate) / 100);
-  const balanceAmount = q.balance_amount ?? q.total_price - depositAmount;
+  // Enforce 30% policy in display (legacy 10%/null → 30%), ignoring stored
+  // legacy deposit_amount/balance_amount.
+  const {
+    rate: depositRate,
+    deposit: depositAmount,
+    balance: balanceAmount,
+  } = depositSplit(q.total_price, q.deposit_rate);
 
   const buyer = await resolveQuoteBuyer(q.id);
 
