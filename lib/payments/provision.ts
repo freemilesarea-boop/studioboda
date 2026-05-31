@@ -305,6 +305,20 @@ export async function ensureDepositPaymentForQuote(
   opts?: { silent?: boolean },
 ): Promise<DepositChargeInfo> {
   const admin = createAdminSupabase();
+
+  // Expected deposit amount under the current 30% policy.
+  const { data: quoteRow } = await admin
+    .from("quotes")
+    .select("total_price, deposit_rate")
+    .eq("id", quoteId)
+    .maybeSingle();
+  const expected = quoteRow
+    ? depositSplit(
+        (quoteRow.total_price as number) ?? 0,
+        quoteRow.deposit_rate as number | null,
+      ).deposit
+    : null;
+
   const { data: existing } = await admin
     .from("payments")
     .select("id,status,amount,payapp_payurl")
@@ -316,11 +330,39 @@ export async function ensureDepositPaymentForQuote(
     .maybeSingle();
 
   if (existing) {
-    return {
-      status: existing.status === "paid" ? "paid" : "pending",
-      payUrl: (existing.payapp_payurl as string | null) ?? null,
-      amount: (existing.amount as number | null) ?? null,
-    };
+    // Paid deposits are final regardless of amount.
+    if (existing.status === "paid") {
+      return {
+        status: "paid",
+        payUrl: (existing.payapp_payurl as string | null) ?? null,
+        amount: (existing.amount as number | null) ?? null,
+      };
+    }
+    // Pending deposit at the correct (30%) amount → reuse it.
+    if (expected == null || existing.amount === expected) {
+      return {
+        status: "pending",
+        payUrl: (existing.payapp_payurl as string | null) ?? null,
+        amount: (existing.amount as number | null) ?? null,
+      };
+    }
+    // Pending deposit at a STALE amount (e.g. legacy 10%) → cancel & recreate
+    // so the customer is never asked to pay the wrong amount.
+    await admin
+      .from("payments")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancel_reason: `예약금 정책 변경(30%) 재발행: 기존 ${existing.amount}원 무효화`,
+      })
+      .eq("id", existing.id);
+    await logActivity({
+      entity_type: "payment",
+      entity_id: existing.id as string,
+      action: "deposit_superseded_amount_change",
+      metadata: { quote_id: quoteId, old_amount: existing.amount, new_amount: expected },
+    });
+    // fall through to create a fresh 30% deposit
   }
 
   const created = await createPaymentCore(
