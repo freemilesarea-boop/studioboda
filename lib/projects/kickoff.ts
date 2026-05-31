@@ -13,6 +13,7 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { createNotification, notifyStaff } from "@/lib/notifications";
+import { dispatchKakao } from "@/lib/notifications/dispatch";
 import { setLeadStatusForInquiry } from "@/lib/actions/crm";
 
 export type KickoffReadiness = {
@@ -134,6 +135,11 @@ export async function tryKickoffForQuote(
     void createNotification(project.user_id, "project_started", {
       project_id: r.projectId,
       title: project.title,
+    });
+    void dispatchKakao({
+      userId: project.user_id,
+      type: "project_started",
+      payload: { project_id: r.projectId, title: project.title },
     });
   }
   void notifyStaff("project_started", {

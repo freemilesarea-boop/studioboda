@@ -27,7 +27,17 @@ export type NotificationType =
   | "contract_viewed"
   | "contract_signed"
   | "quote_package_sent"
-  | "review_requested";
+  | "review_requested"
+  // canonical channel-event names (registry-mapped; additive)
+  | "quote_sent"
+  | "contract_client_signed"
+  | "contract_admin_signed"
+  | "deposit_payment_requested"
+  | "deposit_paid"
+  | "balance_payment_requested"
+  | "balance_paid"
+  | "project_update"
+  | "final_delivery_uploaded";
 
 export async function createNotification(
   userId: string | null | undefined,

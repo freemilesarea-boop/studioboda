@@ -6,10 +6,11 @@ import { Pricing } from "@/components/Pricing";
 import { CTASection } from "@/components/CTASection";
 import { Footer } from "@/components/Footer";
 import { MobileCTA } from "@/components/MobileCTA";
+import { HomeNotificationBanner } from "@/components/HomeNotificationBanner";
 
-// ISR — the landing pulls featured portfolio items from DB. Re-render at most
-// once a minute, otherwise serve the cached HTML straight from the CDN.
-export const revalidate = 60;
+// Per-user progress banner is rendered for logged-in customers, so the page
+// must render dynamically rather than be served from the ISR cache.
+export const dynamic = "force-dynamic";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -37,6 +38,7 @@ export default async function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Header />
+      <HomeNotificationBanner />
       <main id="top">
         <Hero />
         <HowItWorks />
