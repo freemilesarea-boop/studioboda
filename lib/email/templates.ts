@@ -175,8 +175,13 @@ export const contractSent = (d: ContractSentData) => ({
        예약금은 착수금의 성격으로, 계약 체결 및 결제 완료 후 단순 변심·취향 불일치·본결제 미진행·계약 취소 사유가 발생하더라도 환불되지 않습니다. 자세한 내용은 계약서 조항을 확인해주세요.
      </div>
      <div style="margin:12px 0;padding:12px 14px;background:#F0F1FF;border:1px solid #6E5BFF33;border-radius:10px;font-size:12.5px;color:#494956;">
-       <b style="color:#0A0A12;">프로젝트 착수 조건</b><br/>
-       ① 계약서 전자서명 완료 &nbsp;②&nbsp; 예약금 결제 완료 — 두 가지가 모두 완료되면 제작이 착수됩니다. 결제는 서명 전·후 언제든 가능합니다.
+       <b style="color:#0A0A12;">진행 순서</b>
+       <ol style="margin:6px 0 0;padding-left:18px;">
+         <li>견적서 확인</li>
+         <li>계약서 확인 및 전자서명</li>
+         <li>예약금 결제</li>
+         <li>제작 착수 (계약 서명 + 예약금 결제 완료 시)</li>
+       </ol>
      </div>
      ${
        d.quoteUrl

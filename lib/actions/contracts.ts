@@ -41,6 +41,50 @@ export async function createContractFromQuoteAction(
   return { ok: true, contract_id: r.contractId };
 }
 
+// ---- Admin: 견적·계약·예약금 통합 발송 (single button) ----
+// One action that runs the whole send flow in order:
+//   1) 견적 조회·고객 확인 (ensureContractForQuote 내부)
+//   2) 계약서 없으면 생성 (+ contract_versions v1)
+//   3) 예약금 결제 없으면 생성 (sendContractIfDraft → ensureDepositPaymentForQuote)
+//   4) 계약서 draft면 sent 처리
+//   5) 견적서·계약서·예약금 결제 링크를 담은 통합 이메일을 을(고객)+갑(전원)에 발송
+//   6) 통합 notification 생성 + activity_logs 기록
+// 멱등: 계약서/예약금 중복 생성 없음. 이미 발송된 계약이면 이메일만 재발송.
+export async function sendQuotePackageAction(
+  quoteId: string,
+): Promise<Result<{ contract_id: string; resent: boolean }>> {
+  const me = await requireStaff();
+
+  // 1~2) 계약서 보장 (idempotent)
+  const ensured = await ensureContractForQuote(quoteId, { actorId: me.id });
+  if (!ensured.ok) return { ok: false, error: ensured.error };
+
+  // 3~6) draft면 발송(예약금 보장 + 통합 이메일 + 알림). 이미 발송됐으면 이메일만 재발송.
+  const sent = await sendContractIfDraft(ensured.contractId, { actorId: me.id });
+  if (!sent.ok) return { ok: false, error: sent.error ?? "발송 실패" };
+
+  let resent = false;
+  if (!sent.sent) {
+    // 이미 sent/viewed/signed — 이메일만 재발송 (중복 생성 없음)
+    const re = await resendContractEmailAction(ensured.contractId);
+    if (!re.ok) return { ok: false, error: re.error };
+    resent = true;
+  }
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "quote",
+    entity_id: quoteId,
+    action: "quote_package_sent",
+    metadata: { contract_id: ensured.contractId, resent },
+  });
+
+  revalidatePath("/admin/contracts");
+  revalidatePath(`/admin/quotes/${quoteId}`);
+  revalidatePath("/me/contracts");
+  return { ok: true, contract_id: ensured.contractId, resent };
+}
+
 // ---- Admin: save an edited draft → bumps version ----
 export async function saveContractDraftAction(
   id: string,

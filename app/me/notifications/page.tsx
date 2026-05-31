@@ -136,6 +136,15 @@ const TYPE_META: Record<
         ? `/me/contracts/${p.contract_id}`
         : "/me/contracts",
   },
+  quote_package_sent: {
+    icon: "ti-mail-fast",
+    tone: "bg-iris/15 text-iris",
+    label: "견적서·계약서·예약금 안내",
+    hrefFor: (p) =>
+      typeof p.contract_id === "string"
+        ? `/me/contracts/${p.contract_id}`
+        : "/me/contracts",
+  },
 };
 
 const fallback = {
@@ -274,6 +283,8 @@ function summary(n: Notification): string {
       return "검토하고 서명할 계약서가 도착했습니다";
     case "contract_signed":
       return "계약이 체결되었습니다";
+    case "quote_package_sent":
+      return "견적서 확인 → 계약서 서명 → 예약금 결제 순으로 진행해주세요";
     default:
       return "새 알림이 있습니다";
   }

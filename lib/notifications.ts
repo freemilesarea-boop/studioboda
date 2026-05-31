@@ -26,6 +26,7 @@ export type NotificationType =
   | "contract_sent"
   | "contract_viewed"
   | "contract_signed"
+  | "quote_package_sent"
   | "review_requested";
 
 export async function createNotification(

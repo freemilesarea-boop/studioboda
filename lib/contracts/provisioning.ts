@@ -343,26 +343,31 @@ export async function sendContractIfDraft(
     action: "contract_sent",
     metadata: { auto: opts?.actorId ? false : true },
   });
-  void createNotification(contract.client_id, "contract_sent", {
+  // 예약금 청구 동시 발송: ensure a deposit charge exists; include the pay link
+  // in the email unless the deposit is already paid (webhook fallback path).
+  // silent=true so it doesn't fire a separate payment_requested email — the
+  // combined package email below carries the deposit pay link.
+  let payUrl: string | null = null;
+  if (contract.quote_id) {
+    const dep = await ensureDepositPaymentForQuote(
+      contract.quote_id,
+      opts?.actorId ?? null,
+      { silent: true },
+    );
+    payUrl = dep.status === "paid" ? null : dep.payUrl;
+  }
+
+  // One combined customer notification covering 견적서·계약서·예약금 결제.
+  void createNotification(contract.client_id, "quote_package_sent", {
     contract_id: contractId,
     contract_number: contract.contract_number,
+    quote_id: contract.quote_id,
     title: contract.title,
   });
   void notifyStaff("contract_sent", {
     contract_id: contractId,
     contract_number: contract.contract_number,
   });
-
-  // 예약금 청구 동시 발송: ensure a deposit charge exists; include the pay link
-  // in the email unless the deposit is already paid (webhook fallback path).
-  let payUrl: string | null = null;
-  if (contract.quote_id) {
-    const dep = await ensureDepositPaymentForQuote(
-      contract.quote_id,
-      opts?.actorId ?? null,
-    );
-    payUrl = dep.status === "paid" ? null : dep.payUrl;
-  }
 
   await emailContractToParties(
     {
