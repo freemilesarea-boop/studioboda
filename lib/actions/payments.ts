@@ -8,6 +8,7 @@ import { getPaymentProvider } from "@/lib/payments/provider";
 import { createNotification, notifyStaff } from "@/lib/notifications";
 import { sendTemplate } from "@/lib/email/send";
 import { depositSplit } from "@/lib/payments/constants";
+import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import type { PaymentType } from "@/lib/types/db";
 
 const SITE_URL = () =>
@@ -449,6 +450,12 @@ export async function refundPaymentAction(paymentId: string, reason: string) {
         .update({ billing_status: "in_progress" })
         .eq("id", payment.project_id);
     }
+  }
+
+  // Re-sync the inquiry pipeline from the now-updated ledger (refund downgrades
+  // 진행/완료 back toward 견적 발송 when no active paid remains).
+  if (payment.quote_id) {
+    await syncInquiryPipelineForQuote(payment.quote_id, { actorId: me.id });
   }
 
   await logActivity({

@@ -173,11 +173,12 @@ export async function POST(req: Request) {
       }
     }
     // type='extra' has no automatic side-effects
+  }
 
-    // Sync 문의 목록 상태 (inquiries.status): deposit→진행, balance→완료.
-    if (payment.quote_id) {
-      await syncInquiryPipelineForQuote(payment.quote_id);
-    }
+  // Re-sync 문의 상태 from the updated ledger for ANY terminal event
+  // (paid→진행/완료, cancelled/refunded→견적 발송 복귀). Idempotent.
+  if (payment.quote_id && event.status !== "pending") {
+    await syncInquiryPipelineForQuote(payment.quote_id);
   }
 
   await logActivity({

@@ -158,6 +158,10 @@ const LEAD_FOR_INQUIRY: Record<string, LeadStatus> = {
   quoted: "quoted",
 };
 
+// Inquiry statuses that this pipeline owns (payment-driven). We only ever
+// auto-move within these; human-set values like contacted are left alone.
+const PIPELINE_OWNED = new Set(["quoted", "converted", "in_progress", "completed"]);
+
 export async function syncInquiryPipelineForQuote(
   quoteId: string,
   opts?: { actorId?: string | null },
@@ -165,37 +169,41 @@ export async function syncInquiryPipelineForQuote(
   const admin = createAdminSupabase();
   const { data: quote } = await admin
     .from("quotes")
-    .select("id, inquiry_id, payment_status")
+    .select("id, inquiry_id")
     .eq("id", quoteId)
     .maybeSingle();
   if (!quote?.inquiry_id) return;
 
-  // Authoritative paid signals from the payments ledger.
+  // Authoritative ACTIVE-paid signals (refunded/cancelled excluded by status).
   const { data: pays } = await admin
     .from("payments")
     .select("type, status")
     .eq("quote_id", quoteId)
     .eq("status", "paid");
   const paidTypes = new Set((pays ?? []).map((p) => p.type as string));
-  const balancePaid = paidTypes.has("balance") || quote.payment_status === "fully_paid";
-  const depositPaid = paidTypes.has("deposit") || quote.payment_status === "deposit_paid";
+  const balancePaid = paidTypes.has("balance");
+  const depositPaid = paidTypes.has("deposit");
 
-  let target: string | null = null;
-  if (balancePaid) target = "completed";
-  else if (depositPaid) target = "in_progress";
-  if (!target) return;
+  // Derived target from the CURRENT ledger (re-evaluated each call → handles
+  // refunds by downgrading, not just upgrading).
+  const target = balancePaid ? "completed" : depositPaid ? "in_progress" : "quoted";
 
   const { data: inq } = await admin
     .from("inquiries")
-    .select("status, lead_status")
+    .select("status")
     .eq("id", quote.inquiry_id)
     .maybeSingle();
   if (!inq) return;
-
   const cur = (inq.status as string) ?? "new";
-  // Don't move backwards or out of archived.
+
+  // Never touch archived or human-set early stages (new/contacted). Only move
+  // when the inquiry is within the payment-driven set OR moving forward into it.
+  const movingForward = (INQUIRY_RANK[target] ?? 0) > (INQUIRY_RANK[cur] ?? 0);
+  const downgradeWithinPipeline =
+    PIPELINE_OWNED.has(cur) && (INQUIRY_RANK[target] ?? 0) < (INQUIRY_RANK[cur] ?? 0);
   if (cur === "archived") return;
-  if ((INQUIRY_RANK[target] ?? 0) <= (INQUIRY_RANK[cur] ?? 0)) return;
+  if (!movingForward && !downgradeWithinPipeline) return;
+  if (cur === target) return;
 
   const patch: Record<string, string> = { status: target };
   const lead = LEAD_FOR_INQUIRY[target];
@@ -209,12 +217,18 @@ export async function syncInquiryPipelineForQuote(
     action: "inquiry_status_synced",
     metadata: { from: cur, to: target, quote_id: quoteId, source: "payment_pipeline" },
   });
+  const body =
+    target === "completed"
+      ? "본결제 완료 → 완료"
+      : target === "in_progress"
+        ? "예약금 결제 완료 → 진행"
+        : "결제 환불/취소 → 견적 발송 단계로 복귀";
   await logCrmActivity({
     inquiryId: quote.inquiry_id as string,
     actorId: opts?.actorId ?? null,
     type: "status_change",
     fromStatus: cur,
     toStatus: target,
-    body: target === "completed" ? "본결제 완료 → 완료" : "예약금 결제 완료 → 진행",
+    body,
   });
 }
