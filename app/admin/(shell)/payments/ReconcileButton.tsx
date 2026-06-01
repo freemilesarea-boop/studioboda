@@ -17,8 +17,8 @@ export function ReconcileButton() {
       const r = await reconcilePendingPaymentsAction();
       if (r.ok) {
         push(
-          `결제 동기화 완료 · 확인 ${r.checked}건 / 결제완료 반영 ${r.paid}건`,
-          r.paid > 0 ? "success" : undefined,
+          `결제 동기화 완료 · 확인 ${r.checked}건 / 결제완료 ${r.paid}건 / 환불 ${r.refunded}건`,
+          r.paid > 0 || r.refunded > 0 ? "success" : undefined,
         );
         router.refresh();
       } else {

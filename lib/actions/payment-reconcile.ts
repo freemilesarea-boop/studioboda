@@ -110,12 +110,13 @@ export async function applyPaidSideEffects(
 export async function reconcilePendingPaymentsCore(): Promise<{
   checked: number;
   paid: number;
+  refunded: number;
   details: string[];
 }> {
   const admin = createAdminSupabase();
   const provider = getPaymentProvider();
   if (!provider.queryPaymentStatus) {
-    return { checked: 0, paid: 0, details: ["provider has no queryPaymentStatus"] };
+    return { checked: 0, paid: 0, refunded: 0, details: ["provider has no queryPaymentStatus"] };
   }
 
   const { data: pendings } = await admin
@@ -163,14 +164,71 @@ export async function reconcilePendingPaymentsCore(): Promise<{
       details.push(`${row.payapp_mul_no}: ${q.status}`);
     }
   }
-  return { checked: rows.length, paid, details };
+
+  // Second pass: re-verify recent PAID payments against PayApp. If PayApp now
+  // reports a cancellation (refund/매출취소), reflect it as refunded and reverse
+  // the downstream state (quote/project/inquiry). Catches refunds whose webhook
+  // never reached us.
+  let refunded = 0;
+  const { data: paidRows } = await admin
+    .from("payments")
+    .select("id, payapp_mul_no, amount, type, quote_id, project_id")
+    .eq("status", "paid")
+    .not("payapp_mul_no", "is", null)
+    .order("paid_at", { ascending: false })
+    .limit(50);
+
+  for (const p of (paidRows ?? []) as Array<{
+    id: string;
+    payapp_mul_no: string | null;
+    amount: number;
+    type: string;
+    quote_id: string | null;
+    project_id: string | null;
+  }>) {
+    if (!p.payapp_mul_no) continue;
+    const q = await provider.queryPaymentStatus(p.payapp_mul_no);
+    if (!q.ok) continue;
+    if (q.status === "cancelled" || q.status === "failed") {
+      await admin
+        .from("payments")
+        .update({
+          status: "refunded",
+          refunded_at: new Date().toISOString(),
+          refund_reason: "PayApp 취소/환불 자동 반영(reconcile)",
+          metadata: { reconciled_via: "reconcile_refund", last_webhook_state: q.rawState },
+        })
+        .eq("id", p.id);
+      // Reverse quote/project state.
+      if (p.quote_id) {
+        if (p.type === "deposit") {
+          await admin.from("quotes").update({ payment_status: "unpaid" }).eq("id", p.quote_id);
+          if (p.project_id) await admin.from("projects").update({ billing_status: "waiting_deposit" }).eq("id", p.project_id);
+        } else if (p.type === "balance") {
+          await admin.from("quotes").update({ payment_status: "deposit_paid" }).eq("id", p.quote_id);
+          if (p.project_id) await admin.from("projects").update({ billing_status: "in_progress" }).eq("id", p.project_id);
+        }
+        await syncInquiryPipelineForQuote(p.quote_id);
+      }
+      await logActivity({
+        entity_type: "payment",
+        entity_id: p.id,
+        action: "refund_auto_reconciled",
+        metadata: { mul_no: p.payapp_mul_no, raw_state: q.rawState },
+      });
+      refunded += 1;
+      details.push(`${p.payapp_mul_no}: 환불 자동 반영`);
+    }
+  }
+
+  return { checked: rows.length, paid, refunded, details };
 }
 
 /**
  * Staff action wrapper around the reconcile core (manual button).
  */
 export async function reconcilePendingPaymentsAction(): Promise<
-  Result<{ checked: number; paid: number; details: string[] }>
+  Result<{ checked: number; paid: number; refunded: number; details: string[] }>
 > {
   await requireStaff();
   const r = await reconcilePendingPaymentsCore();
