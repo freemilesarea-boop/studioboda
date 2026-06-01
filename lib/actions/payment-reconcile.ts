@@ -98,18 +98,18 @@ export async function applyPaidSideEffects(
 }
 
 /**
- * Staff action: re-query PayApp for every pending payment and apply paid
- * status when PayApp confirms. Resilient fallback when the webhook forward is
- * dropped (e.g. blocked by deployment protection). Returns a summary.
+ * Core reconcile: re-query PayApp for every pending payment and apply paid
+ * status when confirmed. No auth — callable from cron or the staff action.
  */
-export async function reconcilePendingPaymentsAction(): Promise<
-  Result<{ checked: number; paid: number; details: string[] }>
-> {
-  await requireStaff();
+export async function reconcilePendingPaymentsCore(): Promise<{
+  checked: number;
+  paid: number;
+  details: string[];
+}> {
   const admin = createAdminSupabase();
   const provider = getPaymentProvider();
   if (!provider.queryPaymentStatus) {
-    return { ok: false, error: "이 결제 제공자는 상태 조회를 지원하지 않습니다" };
+    return { checked: 0, paid: 0, details: ["provider has no queryPaymentStatus"] };
   }
 
   const { data: pendings } = await admin
@@ -118,7 +118,7 @@ export async function reconcilePendingPaymentsAction(): Promise<
     .eq("status", "pending")
     .not("payapp_mul_no", "is", null)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(100);
 
   const rows = (pendings ?? []) as Array<{
     id: string;
@@ -136,7 +136,6 @@ export async function reconcilePendingPaymentsAction(): Promise<
       continue;
     }
     if (q.status === "paid") {
-      // amount-tamper guard: PayApp price must match our amount when present
       if (q.amount != null && q.amount !== row.amount) {
         details.push(`${row.payapp_mul_no}: 금액불일치(${q.amount}≠${row.amount}) — 보류`);
         await logActivity({
@@ -158,9 +157,19 @@ export async function reconcilePendingPaymentsAction(): Promise<
       details.push(`${row.payapp_mul_no}: ${q.status}`);
     }
   }
+  return { checked: rows.length, paid, details };
+}
 
+/**
+ * Staff action wrapper around the reconcile core (manual button).
+ */
+export async function reconcilePendingPaymentsAction(): Promise<
+  Result<{ checked: number; paid: number; details: string[] }>
+> {
+  await requireStaff();
+  const r = await reconcilePendingPaymentsCore();
   revalidatePath("/admin/payments");
   revalidatePath("/admin/dashboard");
   revalidatePath("/me/payments");
-  return { ok: true, checked: rows.length, paid, details };
+  return { ok: true, ...r };
 }
