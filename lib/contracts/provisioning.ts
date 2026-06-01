@@ -22,7 +22,8 @@ import { composeContract, type ContractComposeFacts } from "./engine";
 import {
   contractTitleFor,
   defaultRevisionCount,
-  recommendTemplate,
+  scopeToTemplateKind,
+  serviceScopeKey,
   type ContractTemplateKind,
 } from "./templates";
 import type { Contract, QuoteOption } from "@/lib/types/db";
@@ -45,35 +46,38 @@ export type QuoteRow = {
 export function composeFactsFromQuote(
   quote: QuoteRow,
   customerName: string,
-  kind: ContractTemplateKind,
+  // kind is optional/ignored — derived from service scope so the title is
+  // always 용역계약서 and the 업무 범위 reflects the real service.
+  _kind?: ContractTemplateKind,
 ): ContractComposeFacts {
   const amount = quote.total_price ?? 0;
-  // Enforce the 30% deposit policy (legacy 10%/null → 30%), ignoring any
-  // legacy stored deposit_amount/balance_amount.
   const split = depositSplit(amount, quote.deposit_rate);
-  const depositRate = split.rate;
-  const depositAmount = split.deposit;
-  const balanceAmount = split.balance;
   const options = Array.isArray(quote.options)
     ? (quote.options as QuoteOption[])
     : [];
   const deliverables = options
     .map((o) => o?.label)
     .filter((l): l is string => typeof l === "string" && l.length > 0);
+  const scopeKey = serviceScopeKey({
+    serviceType: quote.service_type,
+    title: quote.title,
+  });
+  const kind = scopeToTemplateKind(scopeKey);
   return {
     kind,
     customerName,
     projectTitle: quote.title,
     serviceType: quote.service_type,
     amount,
-    depositRate,
-    depositAmount,
-    balanceAmount,
+    depositRate: split.rate,
+    depositAmount: split.deposit,
+    balanceAmount: split.balance,
     monthlyAmount: amount,
     deliveryDays: quote.delivery_days,
     revisionCount: defaultRevisionCount(kind),
     deliverables,
     recurring: kind === "maintenance",
+    scopeKey,
   };
 }
 
@@ -143,11 +147,8 @@ export async function ensureContractForQuote(
     customerName = inq?.company || inq?.name || customerName;
   }
 
-  const kind = recommendTemplate({
-    serviceType: quote.service_type as string | null,
-    title: quote.title as string,
-  });
-  const facts = composeFactsFromQuote(quote as QuoteRow, customerName, kind);
+  const facts = composeFactsFromQuote(quote as QuoteRow, customerName);
+  const kind = facts.kind; // derived from service scope
   const title = contractTitleFor(kind, quote.title as string);
   const body = await composeBody(facts);
   const amount = (quote.total_price as number) ?? 0;

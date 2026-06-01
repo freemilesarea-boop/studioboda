@@ -46,6 +46,10 @@ export type WebhookEvent = {
 
 export type CancelResult = { ok: boolean; error?: string };
 
+export type PaymentStatusQuery =
+  | { ok: true; status: WebhookStatus; amount: number | null; rawState: string | null }
+  | { ok: false; error: string };
+
 export interface PaymentProvider {
   /** Stable name written to payments.metadata.provider */
   readonly name: string;
@@ -58,4 +62,6 @@ export interface PaymentProvider {
     providerPaymentNo: string,
     reason?: string,
   ): Promise<CancelResult>;
+  /** Re-query the provider for a payment's authoritative status (reconcile). */
+  queryPaymentStatus?(providerPaymentNo: string): Promise<PaymentStatusQuery>;
 }

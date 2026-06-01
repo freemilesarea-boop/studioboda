@@ -8,12 +8,12 @@ import { createNotification, notifyStaff } from "@/lib/notifications";
 import { setLeadStatusForInquiry } from "@/lib/actions/crm";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import {
-  CONTRACT_TEMPLATE_KINDS,
   contractTitleFor,
   defaultRevisionCount,
-  type ContractTemplateKind,
+  scopeToTemplateKind,
+  type ServiceScopeKey,
 } from "@/lib/contracts/templates";
-import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { DEFAULT_DEPOSIT_RATE, depositSplit } from "@/lib/payments/constants";
 import type { ContractComposeFacts } from "@/lib/contracts/engine";
 import {
   composeBody,
@@ -346,15 +346,15 @@ export async function signContractAction(
   return { ok: true };
 }
 
-// ---- Admin: change the contract template type → regenerates body (new version) ----
+// ---- Admin: 재생성/업무범위 변경 (regenerate body as a new version) ----
+// The title is always 용역계약서; this regenerates the body from the linked
+// quote. Optionally overrides the 업무 범위(서비스 분류) when scopeOverride is
+// given. Signed contracts are locked.
 export async function changeContractTemplateAction(
   id: string,
-  kind: ContractTemplateKind,
+  scopeOverride?: ServiceScopeKey,
 ): Promise<Result> {
   const me = await requireStaff();
-  if (!CONTRACT_TEMPLATE_KINDS.includes(kind)) {
-    return { ok: false, error: "올바르지 않은 계약서 유형입니다" };
-  }
   const admin = createAdminSupabase();
   const { data: c } = await admin.from("contracts").select("*").eq("id", id).maybeSingle();
   if (!c) return { ok: false, error: "계약서를 찾을 수 없습니다" };
@@ -363,7 +363,6 @@ export async function changeContractTemplateAction(
     return { ok: false, error: "이미 서명 완료된 계약은 변경할 수 없습니다" };
   }
 
-  // Resolve customer name
   let customerName = "고객";
   if (contract.client_id) {
     const { data: p } = await admin
@@ -374,8 +373,7 @@ export async function changeContractTemplateAction(
     customerName = p?.company_name || p?.name || customerName;
   }
 
-  // Strip the existing "[유형] " prefix to recover the project title.
-  let projectTitle = contract.title.replace(/^\[[^\]]*\]\s*/, "");
+  let projectTitle = contract.title.replace(/^용역계약서\s*·\s*/, "").replace(/^\[[^\]]*\]\s*/, "");
   let facts: ContractComposeFacts | null = null;
   if (contract.quote_id) {
     const { data: q } = await admin
@@ -386,39 +384,44 @@ export async function changeContractTemplateAction(
       .eq("id", contract.quote_id)
       .maybeSingle();
     if (q) {
-      facts = composeFactsFromQuote(q as QuoteRow, customerName, kind);
+      facts = composeFactsFromQuote(q as QuoteRow, customerName);
       projectTitle = q.title as string;
     }
   }
   if (!facts) {
-    // No linked quote — derive minimal facts from the stored amount.
     const amount = contract.amount;
-    const depositRate = DEFAULT_DEPOSIT_RATE;
-    const depositAmount = Math.round((amount * depositRate) / 100);
+    const split = depositSplit(amount, DEFAULT_DEPOSIT_RATE);
+    const scope = scopeOverride ?? "etc";
+    const kind = scopeToTemplateKind(scope);
     facts = {
       kind,
       customerName,
       projectTitle,
       serviceType: null,
       amount,
-      depositRate,
-      depositAmount,
-      balanceAmount: amount - depositAmount,
+      depositRate: split.rate,
+      depositAmount: split.deposit,
+      balanceAmount: split.balance,
       monthlyAmount: amount,
       deliveryDays: null,
       revisionCount: defaultRevisionCount(kind),
       deliverables: [],
       recurring: kind === "maintenance",
+      scopeKey: scope,
     };
   }
+  // Apply scope override if the admin chose a specific work-scope.
+  if (scopeOverride) {
+    facts = { ...facts, scopeKey: scopeOverride, kind: scopeToTemplateKind(scopeOverride), recurring: scopeOverride === "maintenance" };
+  }
 
-  const title = contractTitleFor(kind, projectTitle);
+  const title = contractTitleFor(facts.kind, projectTitle);
   const body = await composeBody(facts);
   const nextVersion = contract.current_version + 1;
 
   const { error } = await admin
     .from("contracts")
-    .update({ template_kind: kind, title, body, current_version: nextVersion })
+    .update({ template_kind: facts.kind, title, body, current_version: nextVersion })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
 
@@ -428,7 +431,7 @@ export async function changeContractTemplateAction(
     title,
     body,
     amount: contract.amount,
-    snapshot: { template_kind: kind, changed_by: me.id, source: "template_change" },
+    snapshot: { scope: facts.scopeKey, changed_by: me.id, source: "regenerate" },
     created_by: me.id,
   });
 
@@ -436,8 +439,8 @@ export async function changeContractTemplateAction(
     actor_id: me.id,
     entity_type: "contract",
     entity_id: id,
-    action: "contract_template_changed",
-    metadata: { template_kind: kind, version: nextVersion },
+    action: "contract_regenerated",
+    metadata: { scope: facts.scopeKey, version: nextVersion },
   });
   revalidatePath(`/admin/contracts/${id}`);
   return { ok: true };

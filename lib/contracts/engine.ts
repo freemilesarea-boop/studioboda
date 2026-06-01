@@ -10,7 +10,9 @@
 import { company } from "@/lib/company";
 import {
   contractTemplateLabels,
+  workScopeChecklist,
   type ContractTemplateKind,
+  type ServiceScopeKey,
 } from "./templates";
 import type {
   ClauseCondition,
@@ -34,6 +36,8 @@ export type ContractComposeFacts = {
   /** 견적항목/산출물 라벨 목록 (견적별 조항 입력) */
   deliverables: string[];
   recurring: boolean;
+  /** 업무 범위 체크리스트에서 ● 표시할 서비스 분류 */
+  scopeKey: ServiceScopeKey;
 };
 
 function tokenMap(f: ContractComposeFacts): Record<string, string> {
@@ -56,6 +60,7 @@ function tokenMap(f: ContractComposeFacts): Record<string, string> {
     revisionCount: String(f.revisionCount),
     deliveryText,
     deliverables,
+    workScope: workScopeChecklist(f.scopeKey),
   };
 }
 
@@ -105,31 +110,25 @@ export type ComposedContract = {
 };
 
 function header(f: ContractComposeFacts): string {
-  const label = contractTemplateLabels[f.kind];
-  if (f.recurring) {
-    return [
-      `「${label}」`,
-      ``,
-      `${company.name}(이하 "갑")와 ${f.customerName}(이하 "을")은 아래 유지보수·구독 서비스에 관하여 다음과 같이 계약을 체결한다.`,
-      ``,
-      `· 서비스명: ${f.projectTitle}`,
-      f.serviceType ? `· 서비스 구분: ${f.serviceType}` : ``,
-      `· 월 이용요금: ${fmt(f.monthlyAmount)}원 (VAT 별도)`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-  }
+  // 제목은 항상 "용역계약서". 서비스는 계약명 + 업무 범위 체크리스트로 표현.
+  const amountLine = f.recurring
+    ? `· 월 이용요금: ${fmt(f.monthlyAmount)}원 (VAT 별도)`
+    : `· 총 계약금액: ${fmt(f.amount)}원 (VAT 별도)`;
+  const meta = [
+    `· 계약명: ${f.projectTitle}`,
+    f.serviceType ? `· 서비스 구분: ${f.serviceType}` : null,
+    amountLine,
+  ].filter((l): l is string => Boolean(l));
   return [
-    `「${label}」`,
+    `「용역계약서」`,
     ``,
-    `${company.name}(이하 "갑")와 ${f.customerName}(이하 "을")은 아래 프로젝트의 제작 용역에 관하여 다음과 같이 계약을 체결한다.`,
+    `${company.name}(이하 "갑")와 ${f.customerName}(이하 "을")은 아래 용역에 관하여 다음과 같이 계약을 체결한다.`,
     ``,
-    `· 프로젝트명: ${f.projectTitle}`,
-    f.serviceType ? `· 서비스 구분: ${f.serviceType}` : ``,
-    `· 총 계약금액: ${fmt(f.amount)}원 (VAT 별도)`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+    ...meta,
+    ``,
+    `[업무 범위]`,
+    workScopeChecklist(f.scopeKey),
+  ].join("\n");
 }
 
 /**

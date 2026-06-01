@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getProfile } from "@/lib/auth";
 import { getMyContract, getContractDepositInfo } from "@/lib/queries/contracts";
 import { ContractDocument } from "@/components/ContractDocument";
-import { contractTemplateLabels } from "@/lib/contracts/templates";
 import { contractStage, contractStageLabels } from "@/lib/contracts/stage";
 import { ContractSign } from "./ContractSign";
 
@@ -64,10 +63,7 @@ export default async function MyContractDetailPage({
         </h2>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <Summary label="계약번호" value={contract.contract_number} mono />
-          <Summary
-            label="계약 유형"
-            value={contractTemplateLabels[contract.template_kind]}
-          />
+          <Summary label="계약 유형" value="용역계약서" />
           <Summary label="계약 금액" value={`${fmt(contract.amount)}원`} accent />
           <Summary label="진행 상태" value={contractStageLabels[stage]} />
         </dl>
