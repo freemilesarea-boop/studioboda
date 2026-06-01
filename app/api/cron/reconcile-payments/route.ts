@@ -19,12 +19,12 @@ async function run(req: NextRequest) {
     return new NextResponse("UNAUTHORIZED", { status: 401 });
   }
   const result = await reconcilePendingPaymentsCore();
-  if (result.paid > 0) {
+  if (result.paid > 0 || result.refunded > 0) {
     await logActivity({
       entity_type: "payment",
       entity_id: null,
       action: "cron_reconcile_applied",
-      metadata: { checked: result.checked, paid: result.paid },
+      metadata: { checked: result.checked, paid: result.paid, refunded: result.refunded },
     });
   }
   return NextResponse.json({ ok: true, ranAt: new Date().toISOString(), ...result });
