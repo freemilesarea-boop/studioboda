@@ -18,7 +18,7 @@ const jsonLd = {
   name: "STUDIO BODA",
   alternateName: "스튜디오 보다",
   url: "https://studioboda.kr",
-  email: "hello@studioboda.kr",
+  email: "contact@swk.today",
   description:
     "AI가 초안을 잡고 디렉터가 완성합니다. 상세페이지, 광고, SNS, 썸네일, 브랜드 디자인까지.",
   slogan: "See it. Make it. Ship it tomorrow.",

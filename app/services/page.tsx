@@ -173,7 +173,7 @@ function EmptyState() {
         서비스 데이터를 불러오지 못했습니다
       </p>
       <p className="mt-1 text-[12px] text-ink-50">
-        잠시 후 다시 시도해주세요. 문의는 hello@studioboda.kr.
+        잠시 후 다시 시도해주세요. 문의는 contact@swk.today.
       </p>
     </div>
   );

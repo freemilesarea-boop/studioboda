@@ -26,23 +26,24 @@ export const company = {
   // Public-safe identity (always shown)
   name: "STUDIO BODA",
   korName: "스튜디오 보다",
-  email: "hello@studioboda.kr",
+  // 사업자등록증상 상호
+  legalName: "루베르 콘텐츠 스튜디오",
+  email: "contact@swk.today",
   // City-level location is public-safe and may be shown even before the
   // full registered address is finalized.
   locationShort: "Seoul, KR",
 
-  // --- 전자상거래법 표기 의무 항목 (fill before launch) ---
-  representativeName: null as string | null, // 대표자명
-  businessRegistrationNumber: null as string | null, // 사업자등록번호 (예: 123-45-67890)
-  mailOrderSalesNumber: null as string | null, // 통신판매업 신고번호 (예: 2026-서울XX-0000)
-  phone: null as string | null, // 대표 전화번호
-  address: null as string | null, // 사업장 전체 주소
+  // --- 전자상거래법 표기 의무 항목 ---
+  representativeName: "이승현" as string | null, // 대표자명
+  businessRegistrationNumber: "234-52-00922" as string | null, // 사업자등록번호
+  mailOrderSalesNumber: "2026-서울성동-0724" as string | null, // 통신판매업 신고번호
+  phone: null as string | null, // 대표 전화번호 (미등록)
+  address: "서울특별시 성동구 왕십리로 326 세신빌딩 6층 614호" as string | null, // 사업장 전체 주소
 
   // --- 개인정보 보호책임자 (PIPA) ---
-  // privacyOfficerName: 실명 지정 전까지 null → 방침 페이지는 직책/이메일만 노출
-  privacyOfficerName: null as string | null,
+  privacyOfficerName: "이승현" as string | null,
   privacyOfficerTitle: "개인정보 보호책임자",
-  privacyOfficerEmail: "hello@studioboda.kr",
+  privacyOfficerEmail: "contact@swk.today",
 } as const;
 
 /**
@@ -52,11 +53,21 @@ export const company = {
  */
 export function companyBusinessLine(): string {
   const parts: string[] = [];
+  if (company.legalName) parts.push(company.legalName);
   if (company.representativeName) parts.push(`대표 ${company.representativeName}`);
   if (company.businessRegistrationNumber)
     parts.push(`사업자등록번호 ${company.businessRegistrationNumber}`);
   if (company.mailOrderSalesNumber)
     parts.push(`통신판매업 ${company.mailOrderSalesNumber}`);
+  return parts.join(" · ");
+}
+
+/** Second footer line: 주소 · 이메일 (omits empties). */
+export function companyContactLine(): string {
+  const parts: string[] = [];
+  if (company.address) parts.push(company.address);
+  if (company.phone) parts.push(`Tel ${company.phone}`);
+  if (company.email) parts.push(company.email);
   return parts.join(" · ");
 }
 

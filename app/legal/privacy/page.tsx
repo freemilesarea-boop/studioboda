@@ -94,7 +94,7 @@ export default function PrivacyPage() {
       <Section title="6. 정보주체의 권리">
         <p>회원은 언제든지 다음 권리를 행사할 수 있습니다.</p>
         <ul className="boda-list">
-          <li>개인정보 열람·정정·삭제 요청 (마이페이지 또는 hello@studioboda.kr)</li>
+          <li>개인정보 열람·정정·삭제 요청 (마이페이지 또는 contact@swk.today)</li>
           <li>처리 정지 요청</li>
           <li>회원 탈퇴 (마이페이지)</li>
         </ul>

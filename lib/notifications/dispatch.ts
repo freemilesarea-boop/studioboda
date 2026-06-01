@@ -287,6 +287,6 @@ function genericEmailHtml(
       <p><b>${esc(name)}</b>님, ${esc(summary)}</p>
     </td></tr><tr><td style="padding:22px 30px 0;">
       <a href="${esc(link)}" style="display:inline-block;background:#6E5BFF;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:700;font-size:13px;">확인하기 →</a>
-    </td></tr><tr><td style="padding:26px 30px 30px;font-size:11px;color:#7E7E8C;border-top:1px solid #E6E6EC;margin-top:24px;">© 2026 STUDIO BODA · hello@studioboda.kr</td></tr></table>
+    </td></tr><tr><td style="padding:26px 30px 30px;font-size:11px;color:#7E7E8C;border-top:1px solid #E6E6EC;margin-top:24px;">© 2026 STUDIO BODA · contact@swk.today</td></tr></table>
   </td></tr></table></body></html>`;
 }

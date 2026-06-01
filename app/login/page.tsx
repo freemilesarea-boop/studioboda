@@ -104,7 +104,7 @@ export default async function LoginPage({
           </div>
 
           <p className="mt-5 text-center font-mono text-[10px] tracking-wide text-ink-50 sm:text-left">
-            © 2026 Studio BODA · hello@studioboda.kr
+            © 2026 Studio BODA · contact@swk.today
           </p>
         </div>
       </div>

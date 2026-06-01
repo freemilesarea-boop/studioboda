@@ -65,10 +65,13 @@ export function Footer() {
       <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-1 text-[11px] text-ink-50">
           <p>{brand.copyright}</p>
-          <p className="num font-mono text-[10px]">
-            {footerMeta.hq}
-            {footerMeta.business ? ` · ${footerMeta.business}` : ""}
-          </p>
+          {footerMeta.business ? (
+            <p className="text-[10.5px] leading-[1.6]">{footerMeta.business}</p>
+          ) : null}
+          {footerMeta.contact ? (
+            <p className="text-[10.5px] leading-[1.6]">{footerMeta.contact}</p>
+          ) : null}
+          <p className="num font-mono text-[10px]">{footerMeta.hq}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <FooterBadge>SSL 보안</FooterBadge>

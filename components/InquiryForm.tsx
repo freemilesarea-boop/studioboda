@@ -190,7 +190,7 @@ export function InquiryForm({
           문의가 정상적으로 접수되었습니다.
         </p>
         <p className={`mt-1.5 text-[12.5px] ${isDark ? "text-ink-30" : "text-ink-70"}`}>
-          평균 24시간 이내에 회신 드립니다. hello@studioboda.kr
+          평균 24시간 이내에 회신 드립니다. contact@swk.today
         </p>
         {authedProfile ? (
           <Link

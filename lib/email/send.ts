@@ -11,7 +11,7 @@ export async function sendEmail(opts: {
 }): Promise<{ ok: boolean; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from =
-    opts.from ?? process.env.RESEND_FROM ?? "STUDIO BODA <hello@studioboda.kr>";
+    opts.from ?? process.env.RESEND_FROM ?? "STUDIO BODA <contact@swk.today>";
 
   if (!key) {
     console.log(
