@@ -36,7 +36,7 @@ function wrapper(title: string, body: string, ctaLabel?: string, ctaHref?: strin
             }
             <tr>
               <td style="padding:28px 32px 32px;font-size:11px;color:#7E7E8C;border-top:1px solid #E6E6EC;margin-top:24px;">
-                © 2026 STUDIO BODA · 스튜디오 보다 · <a href="mailto:hello@studioboda.kr" style="color:#6E5BFF;text-decoration:none;">hello@studioboda.kr</a>
+                © 2026 STUDIO BODA · 스튜디오 보다 · <a href="mailto:contact@swk.today" style="color:#6E5BFF;text-decoration:none;">contact@swk.today</a>
               </td>
             </tr>
           </table>

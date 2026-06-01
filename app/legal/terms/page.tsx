@@ -128,7 +128,7 @@ export default function TermsPage() {
       </Section>
 
       <p className="mt-12 text-[12px] text-ink-50">
-        문의: hello@studioboda.kr · STUDIO BODA · 스튜디오 보다
+        문의: contact@swk.today · STUDIO BODA · 스튜디오 보다
       </p>
     </div>
   );

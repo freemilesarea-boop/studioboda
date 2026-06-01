@@ -188,7 +188,7 @@ export function CaseStudyModal({ item, onClose }: Props) {
                 실제 클라이언트 동의 하에 정리된 케이스입니다.
               </div>
               <a
-                href={`mailto:hello@studioboda.kr?subject=${encodeURIComponent(
+                href={`mailto:contact@swk.today?subject=${encodeURIComponent(
                   `[${item.client}] 비슷한 프로젝트 문의`,
                 )}`}
                 className="group inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-ink-100 px-5 text-[12px] font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.985]"

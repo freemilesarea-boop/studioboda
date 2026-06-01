@@ -1,4 +1,4 @@
-import { companyBusinessLine } from "./company";
+import { companyBusinessLine, companyContactLine } from "./company";
 
 export const brand = {
   name: "STUDIO BODA",
@@ -8,7 +8,7 @@ export const brand = {
   mainMessage: "당신의 브랜드를 한 번 더 보다.",
   description:
     "AI가 초안을 잡고 디렉터가 완성합니다. 상세페이지, 광고, SNS, 썸네일, 브랜드 디자인까지.",
-  email: "hello@studioboda.kr",
+  email: "contact@swk.today",
   location: "Seoul, KR",
   copyright: "© 2026 Studio BODA. All rights reserved.",
 };
@@ -923,7 +923,7 @@ export const footerLinks = [
       { label: "문의하기", href: "/#inquiry" },
       { label: "이용약관", href: "/legal/terms" },
       { label: "개인정보처리방침", href: "/legal/privacy" },
-      { label: "hello@studioboda.kr", href: "mailto:hello@studioboda.kr" },
+      { label: "contact@swk.today", href: "mailto:contact@swk.today" },
     ],
   },
 ] as const;
@@ -934,6 +934,7 @@ export const footerMeta = {
   // Derived from lib/company.ts — empty string until real 사업자 정보 is set,
   // so the footer omits the line rather than showing a placeholder number.
   business: companyBusinessLine(),
+  contact: companyContactLine(),
   privacy: "개인정보 보호 · SSL 보안 · NDA 가능",
 };
 

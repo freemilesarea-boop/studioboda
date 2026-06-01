@@ -124,7 +124,7 @@ export default async function SettingsPage() {
       <AdminCard title="브랜드 기본 정보">
         <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
           <Row label="브랜드" value="STUDIO BODA" />
-          <Row label="이메일" value="hello@studioboda.kr" />
+          <Row label="이메일" value="contact@swk.today" />
           <Row label="위치" value="Seoul, KR · KST" />
           <Row label="응답" value="평균 24시간 이내" />
         </dl>
