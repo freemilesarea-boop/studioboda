@@ -130,3 +130,91 @@ export async function setLeadAmountAction(
   revalidatePath("/admin/crm");
   return { ok: true };
 }
+
+// ============================================================
+// Inquiry pipeline sync — payment/quote/project → inquiries.status
+// ============================================================
+// The admin 문의 목록 UI reads inquiries.status (not lead_status). Payment
+// completion previously only touched quote.payment_status + lead_status, so the
+// list stayed on "견적 발송". This derives the correct inquiries.status (and
+// keeps lead_status in sync) from the linked quote's payment state.
+//
+// Monotonic: never downgrades a further-along status (e.g. completed→quoted).
+// Reused by the webhook, reconcile, and manual paths.
+
+const INQUIRY_RANK: Record<string, number> = {
+  new: 0,
+  contacted: 1,
+  quoted: 2,
+  converted: 3,
+  in_progress: 3,
+  completed: 4,
+  archived: 5,
+};
+
+const LEAD_FOR_INQUIRY: Record<string, LeadStatus> = {
+  in_progress: "in_progress",
+  completed: "completed",
+  quoted: "quoted",
+};
+
+export async function syncInquiryPipelineForQuote(
+  quoteId: string,
+  opts?: { actorId?: string | null },
+): Promise<void> {
+  const admin = createAdminSupabase();
+  const { data: quote } = await admin
+    .from("quotes")
+    .select("id, inquiry_id, payment_status")
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote?.inquiry_id) return;
+
+  // Authoritative paid signals from the payments ledger.
+  const { data: pays } = await admin
+    .from("payments")
+    .select("type, status")
+    .eq("quote_id", quoteId)
+    .eq("status", "paid");
+  const paidTypes = new Set((pays ?? []).map((p) => p.type as string));
+  const balancePaid = paidTypes.has("balance") || quote.payment_status === "fully_paid";
+  const depositPaid = paidTypes.has("deposit") || quote.payment_status === "deposit_paid";
+
+  let target: string | null = null;
+  if (balancePaid) target = "completed";
+  else if (depositPaid) target = "in_progress";
+  if (!target) return;
+
+  const { data: inq } = await admin
+    .from("inquiries")
+    .select("status, lead_status")
+    .eq("id", quote.inquiry_id)
+    .maybeSingle();
+  if (!inq) return;
+
+  const cur = (inq.status as string) ?? "new";
+  // Don't move backwards or out of archived.
+  if (cur === "archived") return;
+  if ((INQUIRY_RANK[target] ?? 0) <= (INQUIRY_RANK[cur] ?? 0)) return;
+
+  const patch: Record<string, string> = { status: target };
+  const lead = LEAD_FOR_INQUIRY[target];
+  if (lead) patch.lead_status = lead;
+
+  await admin.from("inquiries").update(patch).eq("id", quote.inquiry_id);
+  await logActivity({
+    actor_id: opts?.actorId ?? null,
+    entity_type: "inquiry",
+    entity_id: quote.inquiry_id as string,
+    action: "inquiry_status_synced",
+    metadata: { from: cur, to: target, quote_id: quoteId, source: "payment_pipeline" },
+  });
+  await logCrmActivity({
+    inquiryId: quote.inquiry_id as string,
+    actorId: opts?.actorId ?? null,
+    type: "status_change",
+    fromStatus: cur,
+    toStatus: target,
+    body: target === "completed" ? "본결제 완료 → 완료" : "예약금 결제 완료 → 진행",
+  });
+}

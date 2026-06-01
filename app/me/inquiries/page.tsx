@@ -16,6 +16,8 @@ const TONE: Record<InquiryStatus, string> = {
   contacted: "bg-sky/15 text-sky",
   quoted: "bg-warning/15 text-warning",
   converted: "bg-success/15 text-success",
+  in_progress: "bg-iris/15 text-iris",
+  completed: "bg-success/15 text-success",
   archived: "bg-ink-5 text-ink-70",
 };
 

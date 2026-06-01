@@ -5,6 +5,8 @@ export type InquiryStatus =
   | "contacted"
   | "quoted"
   | "converted"
+  | "in_progress"
+  | "completed"
   | "archived";
 export type QuoteStatus =
   | "draft"
@@ -398,7 +400,9 @@ export const inquiryStatusLabels: Record<InquiryStatus, string> = {
   new: "신규",
   contacted: "응답 완료",
   quoted: "견적 발송",
-  converted: "전환 완료",
+  converted: "진행",
+  in_progress: "진행",
+  completed: "완료",
   archived: "보관",
 };
 
