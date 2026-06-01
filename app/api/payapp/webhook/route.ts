@@ -8,6 +8,7 @@ import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
 import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
+import { dispatchKakao } from "@/lib/notifications/dispatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -192,6 +193,14 @@ export async function POST(req: Request) {
       amount: payment.amount,
       title: payment.title,
     });
+    // Kakao 알림톡 — 예약금 결제 완료 (in_app/email already handled). Best-effort.
+    if (payment.type === "deposit") {
+      void dispatchKakao({
+        userId: payment.user_id,
+        type: "deposit_paid",
+        payload: { amount: payment.amount, title: payment.title },
+      });
+    }
     void notifyStaff("payment_paid", {
       payment_id: payment.id,
       type: payment.type,

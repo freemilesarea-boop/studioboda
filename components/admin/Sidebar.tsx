@@ -19,6 +19,7 @@ const NAV = [
   { href: "/admin/reviews", label: "Reviews", icon: "ti-star" },
   { href: "/admin/faq", label: "FAQ", icon: "ti-help-circle" },
   { href: "/admin/members", label: "Members", icon: "ti-users" },
+  { href: "/admin/notifications/settings", label: "알림 설정", icon: "ti-bell-cog" },
   { href: "/admin/settings", label: "Settings", icon: "ti-settings" },
 ];
 

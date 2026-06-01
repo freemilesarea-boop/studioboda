@@ -17,6 +17,7 @@ import { getEffectiveClauseBlocks } from "@/lib/queries/contract-clauses";
 import { siteUrl } from "@/lib/company";
 import { depositSplit } from "@/lib/payments/constants";
 import { ensureDepositPaymentForQuote } from "@/lib/payments/provision";
+import { dispatchKakao } from "@/lib/notifications/dispatch";
 import { composeContract, type ContractComposeFacts } from "./engine";
 import {
   contractTitleFor,
@@ -363,6 +364,12 @@ export async function sendContractIfDraft(
     contract_number: contract.contract_number,
     quote_id: contract.quote_id,
     title: contract.title,
+  });
+  // Kakao 알림톡 (email already sent below; in_app above). Best-effort.
+  void dispatchKakao({
+    userId: contract.client_id,
+    type: "contract_sent",
+    payload: { contract_id: contractId, title: contract.title },
   });
   void notifyStaff("contract_sent", {
     contract_id: contractId,
