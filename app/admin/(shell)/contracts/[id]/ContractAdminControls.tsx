@@ -11,9 +11,8 @@ import {
   sendContractAction,
 } from "@/lib/actions/contracts";
 import {
-  CONTRACT_TEMPLATE_KINDS,
-  contractTemplateLabels,
-  type ContractTemplateKind,
+  SERVICE_SCOPE_ROWS,
+  type ServiceScopeKey,
 } from "@/lib/contracts/templates";
 import { useToast } from "@/components/admin/Toast";
 import type { Contract } from "@/lib/types/db";
@@ -53,31 +52,47 @@ export function ContractAdminControls({ contract }: { contract: Contract }) {
       </p>
 
       <div className="mt-4">
-        <label className="text-[12px] font-bold text-ink-70">계약서 유형</label>
-        <select
-          value={contract.template_kind}
-          disabled={pending || locked}
-          onChange={(e) =>
-            run(
-              () =>
-                changeContractTemplateAction(
-                  contract.id,
-                  e.target.value as ContractTemplateKind,
-                ),
-              "계약서 유형을 변경하고 본문을 재생성했습니다",
-            )
-          }
-          className="mt-1 w-full rounded-lg border border-ink-15 px-3 py-2 text-[13px] disabled:opacity-60"
-        >
-          {CONTRACT_TEMPLATE_KINDS.map((k) => (
-            <option key={k} value={k}>
-              {contractTemplateLabels[k]}
-            </option>
-          ))}
-        </select>
+        <label className="text-[12px] font-bold text-ink-70">
+          계약서 재생성 · 업무 범위
+        </label>
+        <div className="mt-1.5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={pending || locked}
+            onClick={() =>
+              run(
+                () => changeContractTemplateAction(contract.id),
+                "견적 기준으로 계약서를 재생성했습니다",
+              )
+            }
+            className="rounded-lg bg-ink-100 px-3 py-1.5 font-display text-[12px] font-bold text-white disabled:opacity-50"
+          >
+            견적 기준 재생성
+          </button>
+          <select
+            disabled={pending || locked}
+            defaultValue=""
+            onChange={(e) => {
+              const v = e.target.value as ServiceScopeKey | "";
+              if (!v) return;
+              run(
+                () => changeContractTemplateAction(contract.id, v),
+                "업무 범위를 변경하고 본문을 재생성했습니다",
+              );
+            }}
+            className="rounded-lg border border-ink-15 px-3 py-1.5 text-[12.5px] disabled:opacity-60"
+          >
+            <option value="">업무 범위 직접 지정…</option>
+            {SERVICE_SCOPE_ROWS.map((r) => (
+              <option key={r.key} value={r.key}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <p className="mt-1 text-[11px] text-ink-50">
-          유형을 바꾸면 표준 본문이 새 버전으로 재생성됩니다. 발송 전 아래에서 본문을
-          직접 수정할 수 있습니다.
+          제목은 항상 「용역계약서」이며, 업무 범위 체크리스트에 해당 서비스가 ● 표시됩니다.
+          서명 완료 건은 변경할 수 없습니다.
         </p>
       </div>
 

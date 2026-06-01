@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { company } from "@/lib/company";
-import { contractTemplateLabels } from "@/lib/contracts/templates";
 import { contractStatusLabels, type Contract } from "@/lib/types/db";
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
@@ -93,7 +92,7 @@ export function ContractDocument({
 
           <section className="mt-8">
             <p className="font-display text-[10px] font-bold uppercase tracking-[0.12em] text-iris">
-              {contractTemplateLabels[c.template_kind]}
+              용역계약서
             </p>
             <h2 className="mt-1 font-display text-[18px] font-extrabold tracking-[-0.02em] text-ink-100">
               {c.title}

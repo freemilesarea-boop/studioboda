@@ -3,6 +3,7 @@ import type {
   CreatePaymentInput,
   CreatePaymentResult,
   PaymentProvider,
+  PaymentStatusQuery,
   WebhookEvent,
   WebhookStatus,
 } from "./types";
@@ -154,6 +155,51 @@ export const payappProvider: PaymentProvider = {
       rawState: body.pay_state ?? null,
       raw: body,
     };
+  },
+
+  async queryPaymentStatus(providerPaymentNo): Promise<PaymentStatusQuery> {
+    let env;
+    try {
+      env = payappEnv();
+    } catch {
+      return { ok: false, error: "PayApp 환경변수가 누락되었습니다" };
+    }
+    const body = new URLSearchParams();
+    body.set("cmd", "paycheck");
+    body.set("userid", env.SHOP_ID);
+    body.set("mul_no", providerPaymentNo);
+    if (env.API_KEY) body.set("linkkey", env.API_KEY);
+    try {
+      const res = await fetch(PAYAPP_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      const parsed = parseFormBody(await res.text());
+      // PayApp returns pay_state on a successful lookup.
+      const rawState = parsed.pay_state ?? parsed.state ?? null;
+      if (!rawState) {
+        return {
+          ok: false,
+          error:
+            parsed.errorMessage ||
+            parsed.errormessage ||
+            parsed.message ||
+            "PayApp 상태 조회 실패",
+        };
+      }
+      return {
+        ok: true,
+        status: stateToStatus(rawState),
+        amount: parsed.price ? Number(parsed.price) : null,
+        rawState,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "PayApp 상태 조회 네트워크 오류",
+      };
+    }
   },
 
   async cancelPayment(providerPaymentNo, reason) {

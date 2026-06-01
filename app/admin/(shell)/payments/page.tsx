@@ -12,6 +12,7 @@ import {
   type PaymentType,
 } from "@/lib/types/db";
 import { RefundButton } from "./RefundButton";
+import { ReconcileButton } from "./ReconcileButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -148,7 +149,8 @@ export default async function AdminPaymentsPage({
             결제 관리
           </h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <ReconcileButton />
           <a
             href={csvHref}
             className="inline-flex h-10 items-center rounded-lg border border-ink-15 bg-white px-4 font-display text-[12.5px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100"
