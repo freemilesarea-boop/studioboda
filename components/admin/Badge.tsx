@@ -35,6 +35,8 @@ const inquiryTone: Record<InquiryStatus, keyof typeof tone> = {
   contacted: "sky",
   quoted: "warning",
   converted: "success",
+  in_progress: "iris",
+  completed: "success",
   archived: "neutral",
 };
 

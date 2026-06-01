@@ -8,6 +8,7 @@ import { dispatchKakao } from "@/lib/notifications/dispatch";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
+import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import { revalidatePath } from "next/cache";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
@@ -87,6 +88,11 @@ export async function applyPaidSideEffects(
       /* best-effort */
     }
     await tryKickoffForQuote(payment.quote_id);
+  }
+
+  // Sync 문의 목록 상태 (inquiries.status) — deposit→진행, balance→완료.
+  if (payment.quote_id) {
+    await syncInquiryPipelineForQuote(payment.quote_id);
   }
 
   await logActivity({

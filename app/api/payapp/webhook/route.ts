@@ -8,6 +8,7 @@ import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
 import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
+import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import { dispatchKakao } from "@/lib/notifications/dispatch";
 
 export const runtime = "nodejs";
@@ -172,6 +173,11 @@ export async function POST(req: Request) {
       }
     }
     // type='extra' has no automatic side-effects
+
+    // Sync 문의 목록 상태 (inquiries.status): deposit→진행, balance→완료.
+    if (payment.quote_id) {
+      await syncInquiryPipelineForQuote(payment.quote_id);
+    }
   }
 
   await logActivity({
