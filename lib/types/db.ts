@@ -262,6 +262,7 @@ export type ProjectFile = {
   uploaded_by: string | null;
   visibility: Visibility;
   folder: FileFolder;
+  category: string | null;
   is_final: boolean;
   created_at: string;
 };
@@ -741,4 +742,115 @@ export type FaqItem = {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+// ============================================================
+// Phase 4 — Project Workspace (project management system)
+// ============================================================
+
+export type BriefStatus = "draft" | "submitted";
+
+export type ProjectBrief = {
+  id: string;
+  project_id: string;
+  organization_id: string | null;
+  company_name: string | null;
+  manager_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  production_type: string | null;
+  purpose: string | null;
+  target_audience: string | null;
+  desired_mood: string | null;
+  reference_urls: string | null;
+  competitor_urls: string | null;
+  must_requirements: string | null;
+  status: BriefStatus;
+  submitted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const PRODUCTION_TYPES = [
+  "상세페이지",
+  "SNS콘텐츠",
+  "홈페이지",
+  "브랜딩",
+  "기타",
+] as const;
+export type ProductionType = (typeof PRODUCTION_TYPES)[number];
+
+export type RevisionPriority = "low" | "normal" | "high";
+export type RevisionStatus =
+  | "requested"
+  | "reviewing"
+  | "in_progress"
+  | "done";
+
+export const revisionPriorityLabels: Record<RevisionPriority, string> = {
+  low: "낮음",
+  normal: "보통",
+  high: "높음",
+};
+
+export const revisionStatusLabels: Record<RevisionStatus, string> = {
+  requested: "요청",
+  reviewing: "검토중",
+  in_progress: "작업중",
+  done: "완료",
+};
+
+export type RevisionAttachment = {
+  name: string;
+  path: string;
+  size: number | null;
+  type: string | null;
+};
+
+export type RevisionRequest = {
+  id: string;
+  project_id: string;
+  requester_id: string | null;
+  title: string;
+  content: string;
+  priority: RevisionPriority;
+  status: RevisionStatus;
+  attachments: RevisionAttachment[];
+  admin_note: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectDeliverable = {
+  id: string;
+  project_id: string;
+  version: number;
+  title: string;
+  file_name: string;
+  file_path: string;
+  file_type: string | null;
+  file_size: number | null;
+  notes: string | null;
+  is_latest: boolean;
+  uploaded_by: string | null;
+  created_at: string;
+};
+
+// 자료실 categories for customer-uploaded materials.
+export const FILE_CATEGORIES = [
+  "logo",
+  "product",
+  "reference",
+  "document",
+  "etc",
+] as const;
+export type FileCategory = (typeof FILE_CATEGORIES)[number];
+
+export const fileCategoryLabels: Record<FileCategory, string> = {
+  logo: "로고",
+  product: "제품사진",
+  reference: "레퍼런스",
+  document: "문서",
+  etc: "기타",
 };

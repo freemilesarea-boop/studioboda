@@ -15,9 +15,12 @@ import {
   type Payment,
   type Profile,
   type Project,
+  type ProjectBrief,
   type ProjectComment,
+  type ProjectDeliverable,
   type ProjectFile,
   type Quote,
+  type RevisionRequest,
 } from "@/lib/types/db";
 import { ProjectControls } from "./ProjectControls";
 import { CommentForm } from "./CommentForm";
@@ -27,6 +30,8 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AIToolsPanel } from "./AIToolsPanel";
 import { AIAssetsList } from "./AIAssetsList";
 import { KickoffOverride } from "./KickoffOverride";
+import { RevisionsAdmin } from "./RevisionsAdmin";
+import { DeliverablesAdmin } from "./DeliverablesAdmin";
 import { kickoffReadinessForQuote } from "@/lib/projects/kickoff";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +64,9 @@ export default async function ProjectDetailPage({
     { data: quoteRow },
     { data: payments },
     { data: brand },
+    { data: briefRow },
+    { data: revisionRows },
+    { data: deliverableRows },
   ] = await Promise.all([
     admin
       .from("project_files")
@@ -96,6 +104,17 @@ export default async function ProjectDetailPage({
           .eq("user_id", p.user_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    admin.from("project_briefs").select("*").eq("project_id", p.id).maybeSingle(),
+    admin
+      .from("revision_requests")
+      .select("*")
+      .eq("project_id", p.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("project_deliverables")
+      .select("*")
+      .eq("project_id", p.id)
+      .order("version", { ascending: false }),
   ]);
 
   const team = (staff ?? []) as Profile[];
@@ -117,6 +136,10 @@ export default async function ProjectDetailPage({
     "id" | "type" | "amount" | "status" | "paid_at" | "created_at"
   >[];
   const brandRow = brand as BrandProfile | null;
+  const brief = briefRow as ProjectBrief | null;
+  const revisions = (revisionRows ?? []) as RevisionRequest[];
+  const deliverables = (deliverableRows ?? []) as ProjectDeliverable[];
+  const openRevisions = revisions.filter((r) => r.status !== "done").length;
 
   // Kickoff gate readiness (계약서 서명 + 예약금 결제) for the status checklist.
   const kickoff = p.quote_id
@@ -246,7 +269,25 @@ export default async function ProjectDetailPage({
             <AIToolsPanel projectId={p.id} />
           </AdminCard>
 
-          <AdminCard title="메시지 · 내부 메모">
+          <AdminCard
+            title={`고객 브리프${brief?.status === "submitted" ? " · 제출됨" : brief ? " · 작성중" : " · 미작성"}`}
+          >
+            {brief ? (
+              <BriefView brief={brief} />
+            ) : (
+              <p className="text-[12.5px] text-ink-50">
+                고객이 아직 브리프를 작성하지 않았습니다.
+              </p>
+            )}
+          </AdminCard>
+
+          <AdminCard
+            title={`수정 요청${openRevisions ? ` · 진행 ${openRevisions}건` : ""}`}
+          >
+            <RevisionsAdmin requests={revisions} />
+          </AdminCard>
+
+          <AdminCard title="메시지 · 채팅 · 내부 메모">
             <CommentForm projectId={p.id} />
             <div className="mt-4">
               <CommentsList
@@ -272,6 +313,10 @@ export default async function ProjectDetailPage({
               projectId={p.id}
               files={(files ?? []) as ProjectFile[]}
             />
+          </AdminCard>
+
+          <AdminCard title="산출물 · 버전 관리">
+            <DeliverablesAdmin projectId={p.id} deliverables={deliverables} />
           </AdminCard>
 
           {quote ? (
@@ -385,6 +430,36 @@ function Row({
         {value}
       </dd>
     </div>
+  );
+}
+
+function BriefView({ brief }: { brief: ProjectBrief }) {
+  const rows: Array<[string, string | null]> = [
+    ["회사명", brief.company_name],
+    ["담당자", brief.manager_name],
+    ["연락처", brief.contact_phone],
+    ["이메일", brief.contact_email],
+    ["제작 유형", brief.production_type],
+    ["제작 목적", brief.purpose],
+    ["목표 고객층", brief.target_audience],
+    ["원하는 분위기", brief.desired_mood],
+    ["참고 사이트", brief.reference_urls],
+    ["경쟁사", brief.competitor_urls],
+    ["필수 요청사항", brief.must_requirements],
+  ];
+  return (
+    <dl className="space-y-2">
+      {rows.map(([label, value]) => (
+        <div key={label} className="text-[12.5px]">
+          <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+            {label}
+          </dt>
+          <dd className="mt-0.5 whitespace-pre-wrap text-ink-100">
+            {value?.trim() ? value : <span className="text-ink-30">—</span>}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
