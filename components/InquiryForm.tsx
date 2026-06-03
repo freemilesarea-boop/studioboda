@@ -2,8 +2,28 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { createInquiryAction } from "@/lib/actions/inquiries";
+import {
+  confirmInquiryFileAction,
+  createInquiryAction,
+  createInquiryUploadUrlAction,
+} from "@/lib/actions/inquiries";
 import { createBrowserAuthSupabase } from "@/lib/supabase/browser";
+import { INQUIRY_BUCKET } from "@/lib/env";
+import {
+  INQUIRY_FILE_CATEGORIES,
+  inquiryFileCategoryLabels,
+  type InquiryFileCategory,
+} from "@/lib/types/db";
+
+const INQUIRY_FILE_ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.zip";
+const INQUIRY_FILE_MAX = 100 * 1024 * 1024;
+
+type StagedFile = { id: string; file: File; category: InquiryFileCategory };
+
+const fmtSize = (n: number) => {
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+};
 
 const SERVICES = [
   "상세페이지",
@@ -54,6 +74,10 @@ export function InquiryForm({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [staged, setStaged] = useState<StagedFile[]>([]);
+  const [uploadCategory, setUploadCategory] =
+    useState<InquiryFileCategory>("reference");
+  const [uploadNote, setUploadNote] = useState<string | null>(null);
   const [authedProfile, setAuthedProfile] = useState<
     | {
         name?: string | null;
@@ -154,9 +178,59 @@ export function InquiryForm({
     ? "mb-1.5 block font-display text-[11px] font-bold uppercase tracking-[0.08em] text-ink-30"
     : "mb-1.5 block font-display text-[11px] font-bold uppercase tracking-[0.08em] text-ink-50";
 
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    const next: StagedFile[] = [];
+    for (const file of Array.from(list)) {
+      if (file.size === 0) continue;
+      if (file.size > INQUIRY_FILE_MAX) {
+        setError(`${file.name}: 100MB를 초과해 제외했습니다`);
+        continue;
+      }
+      next.push({
+        id: Math.random().toString(36).slice(2),
+        file,
+        category: uploadCategory,
+      });
+    }
+    if (next.length) setStaged((s) => [...s, ...next]);
+  }
+
+  // Upload all staged files to the inquiry-files bucket after the inquiry row
+  // exists. Best-effort: the inquiry succeeds even if an attachment fails.
+  async function uploadStaged(inquiryId: string): Promise<number> {
+    if (staged.length === 0) return 0;
+    const supabase = createBrowserAuthSupabase();
+    let okCount = 0;
+    for (const s of staged) {
+      try {
+        const urlRes = await createInquiryUploadUrlAction(inquiryId, s.file.name);
+        if (!urlRes.ok) continue;
+        const up = await supabase.storage
+          .from(INQUIRY_BUCKET)
+          .uploadToSignedUrl(urlRes.path, urlRes.token, s.file, {
+            contentType: s.file.type || "application/octet-stream",
+          });
+        if (up.error) continue;
+        const conf = await confirmInquiryFileAction(inquiryId, {
+          path: urlRes.path,
+          fileName: s.file.name,
+          size: s.file.size,
+          mime: s.file.type || null,
+          category: s.category,
+        });
+        if (conf.ok) okCount += 1;
+      } catch {
+        /* skip this file */
+      }
+    }
+    return okCount;
+  }
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setUploadNote(null);
     startTransition(async () => {
       const r = await createInquiryAction({
         name,
@@ -171,6 +245,16 @@ export function InquiryForm({
       if (!r.ok) {
         setError(r.error || "오류가 발생했습니다");
         return;
+      }
+      // r.id is present on real (non-honeypot) submissions.
+      if ("id" in r && r.id && staged.length > 0) {
+        setUploadNote(`첨부파일 ${staged.length}개 업로드 중…`);
+        const uploaded = await uploadStaged(r.id);
+        if (uploaded < staged.length) {
+          setUploadNote(
+            `첨부 ${uploaded}/${staged.length}개 업로드 완료 (일부 실패)`,
+          );
+        }
       }
       setDone(true);
       onSuccess?.();
@@ -192,6 +276,11 @@ export function InquiryForm({
         <p className={`mt-1.5 text-[12.5px] ${isDark ? "text-ink-30" : "text-ink-70"}`}>
           평균 24시간 이내에 회신 드립니다. contact@swk.today
         </p>
+        {staged.length > 0 ? (
+          <p className={`mt-1 text-[11.5px] ${isDark ? "text-ink-50" : "text-ink-50"}`}>
+            {uploadNote ?? `첨부파일 ${staged.length}개가 함께 전달되었습니다.`}
+          </p>
+        ) : null}
         {authedProfile ? (
           <Link
             href="/me"
@@ -340,6 +429,112 @@ export function InquiryForm({
           placeholder="브랜드·상품·목표·납기 등 관련 정보를 자유롭게 적어주세요."
         />
       </label>
+
+      {/* Reference attachments — optional, for quote estimation */}
+      <div
+        className={`rounded-lg border px-3 py-3 ${
+          isDark ? "border-white/10 bg-white/[0.03]" : "border-ink-15 bg-ink-5"
+        }`}
+      >
+        <p className={labelCls}>레퍼런스 자료 첨부 (선택)</p>
+        <p
+          className={`mb-2.5 text-[11px] leading-[1.6] ${
+            isDark ? "text-ink-30" : "text-ink-70"
+          }`}
+        >
+          견적 산정을 위한 레퍼런스 자료가 있다면 첨부해 주세요. 로고, 제품사진,
+          참고 이미지, PDF, PPT, ZIP 파일을 업로드할 수 있습니다. 첨부하지 않아도
+          문의 접수는 가능합니다.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={uploadCategory}
+            onChange={(e) =>
+              setUploadCategory(e.target.value as InquiryFileCategory)
+            }
+            className={`${fieldCls} h-9 w-auto min-w-[130px] flex-none px-2 text-[12px]`}
+            aria-label="첨부 분류"
+          >
+            {INQUIRY_FILE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {inquiryFileCategoryLabels[c]}
+              </option>
+            ))}
+          </select>
+          <label
+            className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-[12px] font-bold ${
+              isDark
+                ? "border-white/15 bg-white/[0.04] text-white hover:border-iris-glow/60"
+                : "border-ink-15 bg-white text-ink-70 hover:border-iris/60 hover:text-ink-100"
+            }`}
+          >
+            <i className="ti ti-paperclip text-[14px]" aria-hidden />
+            파일 선택
+            <input
+              type="file"
+              multiple
+              accept={INQUIRY_FILE_ACCEPT}
+              className="hidden"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <span className={`text-[10.5px] ${isDark ? "text-ink-50" : "text-ink-50"}`}>
+            최대 100MB · 복수 선택
+          </span>
+        </div>
+
+        {staged.length > 0 ? (
+          <ul className="mt-2.5 space-y-1.5">
+            {staged.map((s) => (
+              <li
+                key={s.id}
+                className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[11.5px] ${
+                  isDark
+                    ? "border-white/10 bg-white/[0.04] text-white"
+                    : "border-ink-15 bg-white text-ink-100"
+                }`}
+              >
+                <i className="ti ti-file text-[14px] text-iris" aria-hidden />
+                <span className="min-w-0 flex-1 truncate" title={s.file.name}>
+                  {s.file.name}
+                </span>
+                <span
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                    isDark ? "bg-white/10 text-ink-30" : "bg-ink-5 text-ink-70"
+                  }`}
+                >
+                  {inquiryFileCategoryLabels[s.category]}
+                </span>
+                <span className={`shrink-0 ${isDark ? "text-ink-50" : "text-ink-50"}`}>
+                  {fmtSize(s.file.size)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStaged((arr) => arr.filter((x) => x.id !== s.id))
+                  }
+                  className="shrink-0 text-ink-50 hover:text-error"
+                  aria-label="첨부 제거"
+                >
+                  <i className="ti ti-x text-[13px]" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
+      {uploadNote ? (
+        <p
+          className={`text-[11.5px] ${isDark ? "text-ink-30" : "text-ink-70"}`}
+        >
+          {uploadNote}
+        </p>
+      ) : null}
 
       {error ? (
         <p

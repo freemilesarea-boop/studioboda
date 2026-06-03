@@ -854,3 +854,32 @@ export const fileCategoryLabels: Record<FileCategory, string> = {
   document: "문서",
   etc: "기타",
 };
+
+// ── 문의 첨부 (견적 산정용 레퍼런스) ──
+export const INQUIRY_FILE_CATEGORIES = [
+  "reference",
+  "product",
+  "logo",
+  "document",
+  "etc",
+] as const;
+export type InquiryFileCategory = (typeof INQUIRY_FILE_CATEGORIES)[number];
+
+export const inquiryFileCategoryLabels: Record<InquiryFileCategory, string> = {
+  reference: "레퍼런스 이미지",
+  product: "제품 사진",
+  logo: "로고",
+  document: "기획 문서",
+  etc: "기타",
+};
+
+export type InquiryFile = {
+  id: string;
+  inquiry_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  category: string | null;
+  created_at: string;
+};

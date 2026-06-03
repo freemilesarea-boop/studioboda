@@ -45,7 +45,23 @@ async function loadInquiries(
   const from = (page - 1) * PAGE_SIZE;
   query = query.range(from, from + PAGE_SIZE - 1);
   const { data, count } = await query;
-  return { rows: (data ?? []) as Inquiry[], total: count ?? 0 };
+  const rows = (data ?? []) as Inquiry[];
+
+  // Attachment counts for the visible page.
+  const fileCounts = new Map<string, number>();
+  if (rows.length > 0) {
+    const { data: fileRows } = await admin
+      .from("inquiry_files")
+      .select("inquiry_id")
+      .in(
+        "inquiry_id",
+        rows.map((r) => r.id),
+      );
+    for (const f of (fileRows ?? []) as { inquiry_id: string }[]) {
+      fileCounts.set(f.inquiry_id, (fileCounts.get(f.inquiry_id) ?? 0) + 1);
+    }
+  }
+  return { rows, total: count ?? 0, fileCounts };
 }
 
 export default async function InquiriesPage({
@@ -60,7 +76,7 @@ export default async function InquiriesPage({
   ) as InquiryStatus | "all";
   const q = (searchParams.q ?? "").trim();
   const page = Math.max(1, Number(searchParams.page ?? "1"));
-  const { rows, total } = await loadInquiries(status, q, page);
+  const { rows, total, fileCounts } = await loadInquiries(status, q, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
@@ -150,6 +166,12 @@ export default async function InquiriesPage({
                       >
                         {i.name}
                       </Link>
+                      {fileCounts.get(i.id) ? (
+                        <span className="ml-2 inline-flex items-center gap-0.5 rounded-full bg-iris/10 px-1.5 py-0.5 text-[10px] font-bold text-iris align-middle">
+                          <i className="ti ti-paperclip text-[11px]" aria-hidden />
+                          첨부 {fileCounts.get(i.id)}개
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-3 py-3 text-ink-70">{i.email}</td>
                     <td className="px-3 py-3 text-ink-70">{i.company ?? "—"}</td>

@@ -45,3 +45,4 @@ export const payappEnv = () => ({
 });
 
 export const STORAGE_BUCKET = "project-files" as const;
+export const INQUIRY_BUCKET = "inquiry-files" as const;
