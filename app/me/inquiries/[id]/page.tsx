@@ -7,9 +7,11 @@ import { getMyInquiry } from "@/lib/queries/customer";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import {
   inquiryStatusLabels,
+  type InquiryFile,
   type InquiryStatus,
   type Quote,
 } from "@/lib/types/db";
+import { MyInquiryFiles } from "./MyInquiryFiles";
 
 export const metadata: Metadata = {
   title: "문의 상세",
@@ -37,12 +39,20 @@ export default async function MyInquiryDetailPage({
   if (!inquiry) notFound();
 
   const admin = createAdminSupabase();
-  const { data: quotes } = await admin
-    .from("quotes")
-    .select("*")
-    .eq("inquiry_id", inquiry.id)
-    .eq("user_id", me.id)
-    .order("created_at", { ascending: false });
+  const [{ data: quotes }, { data: fileRows }] = await Promise.all([
+    admin
+      .from("quotes")
+      .select("*")
+      .eq("inquiry_id", inquiry.id)
+      .eq("user_id", me.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("inquiry_files")
+      .select("*")
+      .eq("inquiry_id", inquiry.id)
+      .order("created_at", { ascending: false }),
+  ]);
+  const files = (fileRows ?? []) as InquiryFile[];
 
   return (
     <div className="space-y-5">
@@ -84,6 +94,15 @@ export default async function MyInquiryDetailPage({
           {inquiry.company ? <Row label="회사" value={inquiry.company} /> : null}
         </dl>
       </section>
+
+      {files.length > 0 ? (
+        <section className="rounded-2xl border border-ink-15 bg-white p-5">
+          <h2 className="font-display text-[13px] font-bold text-ink-100">
+            첨부한 레퍼런스 · {files.length}개
+          </h2>
+          <MyInquiryFiles files={files} />
+        </section>
+      ) : null}
 
       <section className="rounded-2xl border border-ink-15 bg-white p-5">
         <h2 className="font-display text-[13px] font-bold text-ink-100">

@@ -4,8 +4,9 @@ import { format } from "date-fns";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { AdminCard } from "@/components/admin/Card";
 import { InquiryStatusBadge } from "@/components/admin/Badge";
-import type { Inquiry, Quote } from "@/lib/types/db";
+import type { Inquiry, InquiryFile, Quote } from "@/lib/types/db";
 import { InquiryActions } from "./InquiryActions";
+import { InquiryFilesPanel } from "./InquiryFilesPanel";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -19,17 +20,24 @@ export default async function InquiryDetailPage({
   params: { id: string };
 }) {
   const admin = createAdminSupabase();
-  const [{ data: inquiry }, { data: quotes }] = await Promise.all([
-    admin.from("inquiries").select("*").eq("id", params.id).maybeSingle(),
-    admin
-      .from("quotes")
-      .select("*")
-      .eq("inquiry_id", params.id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: inquiry }, { data: quotes }, { data: filesRows }] =
+    await Promise.all([
+      admin.from("inquiries").select("*").eq("id", params.id).maybeSingle(),
+      admin
+        .from("quotes")
+        .select("*")
+        .eq("inquiry_id", params.id)
+        .order("created_at", { ascending: false }),
+      admin
+        .from("inquiry_files")
+        .select("*")
+        .eq("inquiry_id", params.id)
+        .order("created_at", { ascending: false }),
+    ]);
   if (!inquiry) notFound();
   const i = inquiry as Inquiry;
   const qs = (quotes ?? []) as Quote[];
+  const files = (filesRows ?? []) as InquiryFile[];
 
   return (
     <div className="space-y-5">
@@ -79,6 +87,12 @@ export default async function InquiryDetailPage({
           />
         </AdminCard>
       </div>
+
+      <AdminCard
+        title={`레퍼런스 첨부${files.length ? ` · 첨부 ${files.length}개` : ""}`}
+      >
+        <InquiryFilesPanel files={files} />
+      </AdminCard>
 
       <AdminCard title="연결된 견적">
         {qs.length === 0 ? (
