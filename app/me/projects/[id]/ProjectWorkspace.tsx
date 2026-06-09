@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import {
-  projectStatusLabels,
   type ProjectBrief,
   type ProjectDeliverable,
   type ProjectFile,
@@ -10,6 +10,11 @@ import {
   type RevisionRequest,
 } from "@/lib/types/db";
 import type { ProjectComment } from "@/lib/queries/customer";
+import {
+  CUSTOMER_STAGES,
+  customerStage,
+  displayProgress,
+} from "@/lib/projects/customer-stage";
 import { BriefPanel } from "./BriefPanel";
 import { MaterialsPanel } from "./MaterialsPanel";
 import { ChatPanel } from "./ChatPanel";
@@ -18,22 +23,13 @@ import { DeliverablesPanel } from "./DeliverablesPanel";
 
 type Tab = "overview" | "brief" | "materials" | "chat" | "revisions" | "deliverables";
 
-const TIMELINE: ProjectStatus[] = [
-  "queued",
-  "briefing",
-  "ai_draft",
-  "designing",
-  "review",
-  "revision",
-  "delivered",
-  "completed",
-];
-
 export type ChecklistItem = { label: string; done: boolean };
 
 export function ProjectWorkspace({
   projectId,
   status,
+  billingStatus,
+  progress,
   myUserId,
   brief,
   materials,
@@ -46,6 +42,8 @@ export function ProjectWorkspace({
 }: {
   projectId: string;
   status: ProjectStatus;
+  billingStatus: string;
+  progress: number;
   myUserId: string;
   brief: ProjectBrief | null;
   materials: ProjectFile[];
@@ -60,6 +58,9 @@ export function ProjectWorkspace({
   const openRevisions = requests.filter((r) => r.status !== "done").length;
   const [tab, setTab] = useState<Tab>(briefDone ? "overview" : "brief");
 
+  const stage = customerStage(status, billingStatus);
+  const projectPct = displayProgress(progress, status, billingStatus);
+
   const tabs: Array<{ key: Tab; label: string; icon: string; badge?: number; dot?: boolean }> = [
     { key: "overview", label: "개요", icon: "ti-layout-dashboard" },
     { key: "brief", label: "브리프", icon: "ti-clipboard-text", dot: !briefDone },
@@ -70,8 +71,7 @@ export function ProjectWorkspace({
   ];
 
   const done = checklist.filter((c) => c.done).length;
-  const pct = checklist.length ? Math.round((done / checklist.length) * 100) : 0;
-  const activeIdx = TIMELINE.indexOf(status);
+  const briefPct = checklist.length ? Math.round((done / checklist.length) * 100) : 0;
 
   return (
     <div className="rounded-2xl border border-ink-15 bg-white">
@@ -124,42 +124,123 @@ export function ProjectWorkspace({
               </button>
             ) : null}
 
-            {/* 진행 단계 */}
+            {/* 진행 상황 요약 + Stepper */}
             <section>
-              <h3 className="mb-3 font-display text-[12px] font-bold uppercase tracking-caption text-ink-50">
-                진행 단계
-              </h3>
-              <ol className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-                {TIMELINE.map((s, i) => {
-                  const reached = activeIdx >= 0 && i <= activeIdx;
-                  const isCurrent = i === activeIdx;
-                  return (
-                    <li
-                      key={s}
-                      className={`rounded-md px-2 py-2 text-center font-display text-[10.5px] font-bold ${
-                        reached ? "bg-iris/10 text-iris" : "bg-ink-5 text-ink-50"
-                      } ${isCurrent ? "ring-2 ring-iris/50" : ""}`}
-                    >
-                      <span className="num block text-[9px] font-mono text-ink-50">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      {projectStatusLabels[s]}
-                    </li>
-                  );
-                })}
-              </ol>
+              {stage.cancelled ? (
+                <div className="rounded-xl border border-error/30 bg-error/[0.05] px-4 py-3 text-[12.5px] font-bold text-error">
+                  프로젝트가 취소되었습니다.
+                </div>
+              ) : (
+                <>
+                  <div className="rounded-xl border border-iris/20 bg-iris/[0.04] px-4 py-3.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <p className="font-display text-[13px] font-bold text-ink-100">
+                        현재 단계 ·{" "}
+                        <span className="text-iris">{stage.stageLabel}</span>
+                      </p>
+                      <p className="num font-display text-[13px] font-bold text-iris">
+                        진행률 {projectPct}%
+                      </p>
+                    </div>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                      <div
+                        className="h-full rounded-full bg-iris transition-[width] duration-500"
+                        style={{ width: `${projectPct}%` }}
+                      />
+                    </div>
+                    <p className="mt-2.5 text-[12px] text-ink-70">
+                      <span className="font-bold text-ink-100">지금 할 일:</span>{" "}
+                      {stage.description}
+                      {stage.nextLabel ? (
+                        <span className="text-ink-50">
+                          {" "}· 다음 단계: {stage.nextLabel}
+                        </span>
+                      ) : null}
+                    </p>
+                    {stage.ctaLabel ? (
+                      stage.ctaHref ? (
+                        <Link
+                          href={stage.ctaHref}
+                          className="mt-2.5 inline-flex items-center rounded-lg bg-iris px-3.5 py-1.5 font-display text-[12px] font-bold text-white hover:opacity-90"
+                        >
+                          {stage.ctaLabel} →
+                        </Link>
+                      ) : stage.ctaTab ? (
+                        <button
+                          type="button"
+                          onClick={() => setTab(stage.ctaTab as Tab)}
+                          className="mt-2.5 inline-flex items-center rounded-lg bg-iris px-3.5 py-1.5 font-display text-[12px] font-bold text-white hover:opacity-90"
+                        >
+                          {stage.ctaLabel} →
+                        </button>
+                      ) : null
+                    ) : null}
+                  </div>
+
+                  {/* 7단계 Stepper */}
+                  <ol className="mt-4 flex items-start gap-1 overflow-x-auto pb-1">
+                    {CUSTOMER_STAGES.map((s, i) => {
+                      const stepNo = i + 1;
+                      const isDone = stage.stepIndex > stepNo;
+                      const isCurrent = stage.stepIndex === stepNo;
+                      return (
+                        <li key={s.key} className="flex shrink-0 items-center gap-1">
+                          <div className="flex w-[60px] flex-col items-center text-center">
+                            <span
+                              className={`grid h-7 w-7 place-items-center rounded-full font-display text-[11px] font-bold ${
+                                isDone
+                                  ? "bg-iris text-white"
+                                  : isCurrent
+                                    ? "bg-white text-iris ring-2 ring-iris"
+                                    : "bg-ink-5 text-ink-50"
+                              }`}
+                            >
+                              {isDone ? (
+                                <i className="ti ti-check text-[13px]" aria-hidden />
+                              ) : (
+                                stepNo
+                              )}
+                            </span>
+                            <span
+                              className={`mt-1 text-[10px] leading-tight ${
+                                isCurrent
+                                  ? "font-bold text-iris"
+                                  : isDone
+                                    ? "text-ink-70"
+                                    : "text-ink-50"
+                              }`}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          {i < CUSTOMER_STAGES.length - 1 ? (
+                            <span
+                              className={`mt-3.5 h-0.5 w-4 shrink-0 ${
+                                isDone ? "bg-iris" : "bg-ink-15"
+                              }`}
+                            />
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
+              )}
             </section>
 
-            {/* 제출 체크리스트 */}
+            {/* 준비 완성도 (제출 자료 체크리스트) */}
             <section>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-1 flex items-center justify-between">
                 <h3 className="font-display text-[12px] font-bold uppercase tracking-caption text-ink-50">
-                  제출 체크리스트
+                  준비 완성도 · 제출 자료
                 </h3>
-                <span className="num font-display text-[12px] font-bold text-iris">{pct}%</span>
+                <span className="num font-display text-[12px] font-bold text-iris">{briefPct}%</span>
               </div>
+              <p className="mb-3 text-[11px] text-ink-50">
+                프로젝트 진행률과 별개로, 제작에 필요한 자료·브리프 준비 상태입니다.
+              </p>
               <div className="mb-3 h-2 overflow-hidden rounded-full bg-ink-5">
-                <div className="h-full rounded-full bg-iris transition-[width] duration-500" style={{ width: `${pct}%` }} />
+                <div className="h-full rounded-full bg-iris transition-[width] duration-500" style={{ width: `${briefPct}%` }} />
               </div>
               <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {checklist.map((c) => (

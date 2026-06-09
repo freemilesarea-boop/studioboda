@@ -3,10 +3,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { getProfile } from "@/lib/auth";
 import { listMyProjects } from "@/lib/queries/customer";
-import {
-  projectStatusLabels,
-  type ProjectStatus,
-} from "@/lib/types/db";
+import { type ProjectStatus } from "@/lib/types/db";
+import { customerStage, displayProgress } from "@/lib/projects/customer-stage";
 
 export const metadata: Metadata = {
   title: "내 프로젝트",
@@ -56,7 +54,10 @@ export default async function MyProjectsPage() {
         </div>
       ) : (
         <ul className="space-y-2.5">
-          {projects.map((p) => (
+          {projects.map((p) => {
+            const stage = customerStage(p.status, p.billing_status);
+            const pct = displayProgress(p.progress, p.status, p.billing_status);
+            return (
             <li
               key={p.id}
               className="rounded-2xl border border-ink-15 bg-white px-4 py-4 sm:px-5"
@@ -77,25 +78,30 @@ export default async function MyProjectsPage() {
                 <span
                   className={`rounded-full px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-caption ${TONE[p.status]}`}
                 >
-                  {projectStatusLabels[p.status]}
+                  {stage.stageLabel}
                 </span>
               </div>
               <div className="mt-3 flex items-center gap-3">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-15">
                   <div
                     className="h-full rounded-full bg-iris transition-[width] duration-500"
-                    style={{ width: `${p.progress}%` }}
+                    style={{ width: `${pct}%` }}
                   />
                 </div>
-                <span className="num text-[11px] font-bold text-ink-70">
-                  {p.progress}%
-                </span>
+                <span className="num text-[11px] font-bold text-ink-70">{pct}%</span>
                 <span className="text-[11px] text-ink-50">
                   · 생성 {format(new Date(p.created_at), "MM-dd")}
                 </span>
               </div>
+              {!stage.cancelled && stage.description ? (
+                <p className="mt-2 text-[11px] text-ink-50">
+                  <span className="font-bold text-ink-70">지금 할 일:</span>{" "}
+                  {stage.description}
+                </p>
+              ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
