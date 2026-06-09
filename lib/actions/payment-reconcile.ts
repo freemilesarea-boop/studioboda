@@ -10,6 +10,7 @@ import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
+import { syncQuotePaymentState } from "@/lib/payments/status";
 import { revalidatePath } from "next/cache";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
@@ -95,8 +96,9 @@ export async function applyPaidSideEffects(
     await ensureProjectForQuote(payment.quote_id, { source: "reconcile_balance" });
   }
 
-  // Sync 문의 목록 상태 (inquiries.status) — deposit→진행, balance→완료.
+  // Sync 결제 캐시 + 문의 목록 상태 from the ledger. Idempotent.
   if (payment.quote_id) {
+    await syncQuotePaymentState(payment.quote_id, { source: "reconcile_paid" });
     await syncInquiryPipelineForQuote(payment.quote_id);
   }
 
@@ -204,15 +206,9 @@ export async function reconcilePendingPaymentsCore(): Promise<{
           metadata: { reconciled_via: "reconcile_refund", last_webhook_state: q.rawState },
         })
         .eq("id", p.id);
-      // Reverse quote/project state.
+      // Reverse quote/project state from the ledger (single source of truth).
       if (p.quote_id) {
-        if (p.type === "deposit") {
-          await admin.from("quotes").update({ payment_status: "unpaid" }).eq("id", p.quote_id);
-          if (p.project_id) await admin.from("projects").update({ billing_status: "waiting_deposit" }).eq("id", p.project_id);
-        } else if (p.type === "balance") {
-          await admin.from("quotes").update({ payment_status: "deposit_paid" }).eq("id", p.quote_id);
-          if (p.project_id) await admin.from("projects").update({ billing_status: "in_progress" }).eq("id", p.project_id);
-        }
+        await syncQuotePaymentState(p.quote_id, { source: "reconcile_refund" });
         await syncInquiryPipelineForQuote(p.quote_id);
       }
       await logActivity({
