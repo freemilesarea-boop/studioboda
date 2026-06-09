@@ -67,7 +67,12 @@ export function DeliverablesAdmin({
         notes,
       });
       if (conf.ok) {
-        push(`v${conf.version} 산출물 업로드 완료`, "success");
+        push(
+          conf.delivered
+            ? `v${conf.version} 산출물 업로드 완료 · 프로젝트 상태가 최종전달로 변경되었습니다`
+            : `v${conf.version} 산출물 업로드 완료`,
+          "success",
+        );
         setTitle("");
         setNotes("");
         setFile(null);

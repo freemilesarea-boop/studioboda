@@ -378,17 +378,27 @@ export async function confirmDeliverableUploadAction(
   });
   if (error) return { ok: false as const, error: error.message };
 
-  // Mark project delivered + notify customer.
+  // Mark project delivered + advance billing + notify customer.
   const { data: project } = await admin
     .from("projects")
-    .select("user_id,title")
+    .select("user_id,title,status,billing_status")
     .eq("id", projectId)
     .maybeSingle();
-  await admin
-    .from("projects")
-    .update({ status: "delivered" })
-    .eq("id", projectId)
-    .not("status", "in", "(completed,cancelled)");
+
+  const prevStatus = project?.status as string | undefined;
+  const patch: { status?: string; billing_status?: string } = {};
+  // 최종전달 자동 전환 (완료/취소 상태는 보호).
+  if (prevStatus !== "completed" && prevStatus !== "cancelled" && prevStatus !== "delivered") {
+    patch.status = "delivered";
+  }
+  // 잔금 미결제(진행중)면 본결제 대기로. 이미 완료/대기는 유지.
+  if (project?.billing_status === "in_progress") {
+    patch.billing_status = "waiting_balance";
+  }
+  if (Object.keys(patch).length > 0) {
+    await admin.from("projects").update(patch).eq("id", projectId);
+  }
+
   if (project?.user_id) {
     void createNotification(project.user_id, "final_delivery_uploaded", {
       project_id: projectId,
@@ -404,9 +414,22 @@ export async function confirmDeliverableUploadAction(
     action: "deliverable_uploaded",
     metadata: { version: nextVersion, file_name: input.fileName, size: input.size },
   });
+  if (patch.status === "delivered") {
+    await logActivity({
+      actor_id: me.id,
+      entity_type: "project",
+      entity_id: projectId,
+      action: "project_status_auto_delivered",
+      metadata: { from: prevStatus ?? null, version: nextVersion },
+    });
+  }
   revalidatePath(`/admin/projects/${projectId}`);
   revalidatePath(`/me/projects/${projectId}`);
-  return { ok: true as const, version: nextVersion };
+  return {
+    ok: true as const,
+    version: nextVersion,
+    delivered: patch.status === "delivered",
+  };
 }
 
 export async function deleteDeliverableAction(deliverableId: string) {
