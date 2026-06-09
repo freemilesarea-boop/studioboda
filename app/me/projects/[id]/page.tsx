@@ -15,10 +15,10 @@ import {
 } from "@/lib/queries/customer";
 import {
   fileCategoryLabels,
-  projectStatusLabels,
   type FileCategory,
   type ProjectStatus,
 } from "@/lib/types/db";
+import { customerStage, displayProgress } from "@/lib/projects/customer-stage";
 import { RealtimeProjectRefresh } from "./RealtimeProjectRefresh";
 import { ProjectWorkspace, type ChecklistItem } from "./ProjectWorkspace";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -81,6 +81,14 @@ export default async function MyProjectDetailPage({
     { label: "브랜드 소개", done: brief?.status === "submitted" },
   ];
 
+  // 고객용 단계 + 자동 진행률(수동 progress 우선).
+  const stage = customerStage(project.status, project.billing_status);
+  const headerPct = displayProgress(
+    project.progress,
+    project.status,
+    project.billing_status,
+  );
+
   return (
     <div className="space-y-5">
       <RealtimeProjectRefresh projectId={project.id} />
@@ -111,14 +119,14 @@ export default async function MyProjectDetailPage({
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
               <div
                 className="h-full rounded-full bg-iris transition-[width] duration-500"
-                style={{ width: `${project.progress}%` }}
+                style={{ width: `${headerPct}%` }}
               />
             </div>
-            <span className="num font-display text-[13px] font-bold">{project.progress}%</span>
+            <span className="num font-display text-[13px] font-bold">{headerPct}%</span>
             <span
               className={`shrink-0 rounded-full px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-caption ${TONE[project.status]}`}
             >
-              {projectStatusLabels[project.status]}
+              {stage.stageLabel}
             </span>
           </div>
         </div>
@@ -127,6 +135,8 @@ export default async function MyProjectDetailPage({
       <ProjectWorkspace
         projectId={project.id}
         status={project.status}
+        billingStatus={project.billing_status}
+        progress={project.progress}
         myUserId={me.id}
         brief={brief}
         materials={materials}
