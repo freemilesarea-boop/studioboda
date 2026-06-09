@@ -386,9 +386,11 @@ export async function cancelPaymentAction(paymentId: string, reason: string) {
   return { ok: true as const };
 }
 
-// Refund — operational status only by default. The PayApp `paycancel` call is
-// attempted when there is a mul_no, but the user spec calls out that we should
-// not trust the PG-side refund flow yet. The DB always lands in 'refunded'.
+// Refund. PayApp `paycancel` is the source of truth: the DB is marked
+// `refunded` ONLY when the provider cancel succeeds (or there is no PayApp
+// transaction to cancel, i.e. a manual payment). If the provider fails we keep
+// the existing status, log `refund_provider_failed`, alert staff, and return an
+// error — so the site never shows "refunded" for money that wasn't returned.
 export async function refundPaymentAction(paymentId: string, reason: string) {
   const me = await requireStaff();
   const trimmed = (reason || "").trim().slice(0, 500);
@@ -404,27 +406,63 @@ export async function refundPaymentAction(paymentId: string, reason: string) {
   if (!payment)
     return { ok: false as const, error: "결제를 찾을 수 없습니다" };
   if (payment.status !== "paid") {
+    // 이미 failed/cancelled/refunded → provider 호출하지 않고 skip.
     return {
       ok: false as const,
       error: "결제 완료 상태인 청구만 환불 가능합니다",
     };
   }
 
-  // Best-effort PayApp cancel call. Whether successful or not, mark refunded
-  // operationally — the user spec notes that PG refund automation is paused
-  // and operators reconcile manually.
-  let providerNote: string | null = null;
+  // PayApp cancel — must succeed before we touch the DB. A payment with no
+  // mul_no is a manual/offline record (no PG charge), so it can be refunded
+  // operationally without a provider call.
+  let providerOk: boolean;
+  let providerNote: string;
   if (payment.payapp_mul_no) {
     const provider = getPaymentProvider();
-    if (provider.cancelPayment) {
-      const r = await provider.cancelPayment(
-        payment.payapp_mul_no,
-        trimmed,
-      );
+    if (!provider.cancelPayment) {
+      providerOk = false;
+      providerNote = "provider_unavailable";
+    } else {
+      const r = await provider.cancelPayment(payment.payapp_mul_no, trimmed);
+      providerOk = r.ok;
       providerNote = r.ok ? "provider_cancelled" : `provider_failed:${r.error ?? ""}`;
     }
+  } else {
+    providerOk = true;
+    providerNote = "manual_no_mul_no";
   }
 
+  // ── Provider FAILED → do NOT mark refunded. Keep status, alert ops. ──
+  if (!providerOk) {
+    await logActivity({
+      actor_id: me.id,
+      entity_type: "payment",
+      entity_id: paymentId,
+      action: "refund_provider_failed",
+      metadata: {
+        type: payment.type,
+        amount: payment.amount,
+        reason: trimmed,
+        provider: providerNote,
+        status_kept: payment.status,
+      },
+    });
+    void notifyStaff("payment_failed", {
+      payment_id: paymentId,
+      title: payment.title,
+      refund_failed: true,
+      reason: trimmed,
+      provider: providerNote,
+    });
+    return {
+      ok: false as const,
+      error:
+        "PayApp 환불에 실패해 DB 상태를 변경하지 않았습니다. PayApp 콘솔에서 직접 확인/환불하세요.",
+    };
+  }
+
+  // ── Provider OK → mark refunded + reverse downstream. ──
   await admin
     .from("payments")
     .update({

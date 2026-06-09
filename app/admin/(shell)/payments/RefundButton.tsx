@@ -80,7 +80,7 @@ export function RefundButton({
         />
         <p className="mt-1 text-[10px] text-ink-50">
           {mode === "refund"
-            ? "PayApp 환불 자동화는 보류 — 본 액션은 DB 상태만 환불로 표시하고 운영자가 PayApp 콘솔에서 수동 처리합니다."
+            ? "PayApp paycancel이 성공해야만 환불 처리됩니다. 실패 시 상태는 그대로 유지되고 'PayApp 콘솔 확인 필요'로 안내됩니다."
             : "PayApp 측에도 paycancel 요청을 시도합니다."}
         </p>
         <div className="mt-2 flex justify-end gap-1.5">

@@ -209,10 +209,19 @@ export const payappProvider: PaymentProvider = {
     } catch {
       return { ok: false, error: "PayApp 환경변수가 누락되었습니다" };
     }
+    // paycancel은 권한 작업이라 연동키(linkkey)가 필수다. 키 없이 호출하면
+    // PayApp가 "linkkey 값을 확인하세요"로 거절하므로 호출 전에 막는다.
+    if (!env.API_KEY) {
+      return {
+        ok: false,
+        error: "PayApp 연동키(PAYAPP_API_KEY)가 설정되지 않아 환불을 진행할 수 없습니다",
+      };
+    }
     const body = new URLSearchParams();
     body.set("cmd", "paycancel");
     body.set("userid", env.SHOP_ID);
     body.set("mul_no", providerPaymentNo);
+    body.set("linkkey", env.API_KEY); // 상태조회(paycheck)와 동일한 연동키
     if (reason) body.set("reason", reason.slice(0, 100));
 
     try {
