@@ -35,8 +35,7 @@ export async function findPaymentStateMismatchesAction(): Promise<
   const admin = createAdminSupabase();
   const { data: quotes, error } = await admin
     .from("quotes")
-    .select("id, title, payment_status")
-    .is("deleted_at", null);
+    .select("id, title, payment_status");
   if (error) return { ok: false, error: error.message };
 
   const out: PaymentMismatch[] = [];

@@ -13,6 +13,8 @@ import {
 } from "@/lib/types/db";
 import { RefundButton } from "./RefundButton";
 import { ReconcileButton } from "./ReconcileButton";
+import { getPaymentOpsHealth } from "@/lib/queries/payment-ops";
+import { PaymentOpsWidget } from "@/components/admin/PaymentOpsWidget";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -88,7 +90,11 @@ export default async function AdminPaymentsPage({
   if (from) q = q.gte("created_at", `${from}T00:00:00Z`);
   if (to) q = q.lte("created_at", `${to}T23:59:59Z`);
 
-  const [rowsRes, agg] = await Promise.all([q, paymentAggregates()]);
+  const [rowsRes, agg, opsHealth] = await Promise.all([
+    q,
+    paymentAggregates(),
+    getPaymentOpsHealth(),
+  ]);
   const rows = (rowsRes.data ?? []) as Payment[];
 
   // Hydrate buyer info for the list so admins see who owes what + whether
@@ -165,6 +171,8 @@ export default async function AdminPaymentsPage({
           </Link>
         </div>
       </div>
+
+      <PaymentOpsWidget health={opsHealth} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="미수금 합계" value={`${fmt(agg.unpaidTotal)}원`} tone="warning" />
