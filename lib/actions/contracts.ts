@@ -24,6 +24,8 @@ import {
   type QuoteRow,
 } from "@/lib/contracts/provisioning";
 import { ensureDepositPaymentForQuote } from "@/lib/payments/provision";
+import { sendAuditedEmail } from "@/lib/email/audited";
+import { siteUrl } from "@/lib/company";
 import type { Contract } from "@/lib/types/db";
 
 type Result<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
@@ -444,4 +446,86 @@ export async function changeContractTemplateAction(
   });
   revalidatePath(`/admin/contracts/${id}`);
   return { ok: true };
+}
+
+// ---- Admin: email a signed-contract copy (view link) to the client ---------
+// 서명 완료 계약서 사본을 계약자 이메일로 발송. 1차는 PDF 첨부 없이 로그인
+// 필요한 고객 계약 상세(/me/contracts/[id]) 링크를 전달한다. 발송 결과는
+// notification_deliveries(channel=email, event_type=contract_copy_sent) +
+// activity_logs(contract_copy_email_sent|failed)에 기록된다.
+export async function sendContractCopyEmailAction(
+  contractId: string,
+): Promise<Result<{ sentAt: string }>> {
+  await requireStaff();
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("contracts")
+    .select("*, client:client_id(email, name, company_name)")
+    .eq("id", contractId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!data) return { ok: false, error: "계약서를 찾을 수 없습니다" };
+
+  const contract = data as Contract;
+  const client = (
+    data as {
+      client: {
+        email: string | null;
+        name: string | null;
+        company_name: string | null;
+      } | null;
+    }
+  ).client;
+
+  // 서명 완료 계약서만 발송 가능 (고객 서명 또는 서명일 존재)
+  const signed =
+    Boolean(contract.client_signature) ||
+    Boolean(contract.signed_at) ||
+    contract.status === "signed";
+  if (!signed) {
+    return { ok: false, error: "서명이 완료된 계약서만 발송할 수 있습니다" };
+  }
+
+  const recipient = (client?.email ?? "").trim();
+  const name = client?.name ?? client?.company_name ?? "고객";
+  const signedAt = contract.signed_at
+    ? String(contract.signed_at).slice(0, 10)
+    : null;
+  const contractUrl = `${siteUrl}/me/contracts/${contract.id}`;
+
+  const res = await sendAuditedEmail({
+    to: recipient || null,
+    template: "contract_copy",
+    data: {
+      name,
+      contractTitle: contract.title,
+      contractNumber: contract.contract_number,
+      amount: contract.amount,
+      signedAt,
+      contractUrl,
+    },
+    eventType: "contract_copy_sent",
+    userId: contract.client_id,
+    party: "client",
+    metadata: { contract_id: contract.id },
+  });
+
+  await logActivity({
+    entity_type: "contract",
+    entity_id: contract.id,
+    action: res.ok ? "contract_copy_email_sent" : "contract_copy_email_failed",
+    metadata: { recipient: recipient || null, error: res.ok ? undefined : res.error },
+  });
+
+  if (!res.ok) {
+    const msg = !recipient
+      ? "계약자 이메일이 없어 발송할 수 없습니다"
+      : res.error === "RESEND_API_KEY missing"
+        ? "메일 발송 키(RESEND_API_KEY)가 설정되어 있지 않습니다"
+        : res.error ?? "메일 발송에 실패했습니다";
+    return { ok: false, error: msg };
+  }
+
+  revalidatePath(`/admin/contracts/${contract.id}`);
+  return { ok: true, sentAt: new Date().toISOString() };
 }

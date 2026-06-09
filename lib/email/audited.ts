@@ -61,6 +61,8 @@ export async function sendAuditedEmail<T extends TemplateName>(opts: {
   eventType: string;
   userId?: string | null;
   party?: EmailParty;
+  /** Extra metadata merged into the notification_deliveries audit row. */
+  metadata?: Record<string, unknown>;
 }): Promise<{ ok: boolean; error?: string }> {
   const to = (opts.to ?? "").trim();
   const party = opts.party ?? "client";
@@ -72,7 +74,7 @@ export async function sendAuditedEmail<T extends TemplateName>(opts: {
       status: "skipped",
       templateCode: opts.template,
       error: "no_recipient",
-      metadata: { party },
+      metadata: { party, ...opts.metadata },
     });
     return { ok: false, error: "no_recipient" };
   }
@@ -86,7 +88,7 @@ export async function sendAuditedEmail<T extends TemplateName>(opts: {
     toAddress: to,
     templateCode: opts.template,
     error: res.ok ? null : res.error ?? "send_failed",
-    metadata: { party },
+    metadata: { party, ...opts.metadata },
   });
 
   if (!res.ok) {
