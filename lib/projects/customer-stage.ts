@@ -54,13 +54,22 @@ function build(idx: number, percent: number, extra: Partial<CustomerStage>): Cus
   };
 }
 
+export type StageSignals = {
+  /** 계약 전자서명 완료 여부 (1단계 CTA 분기용) */
+  contractSigned?: boolean;
+  /** 예약금 결제 완료 여부 (1단계 CTA 분기용) */
+  depositPaid?: boolean;
+};
+
 /**
  * Map internal status + billing_status → customer stage.
  * Priority: cancelled → completed → 본결제 대기(waiting_balance) → status.
+ * `signals`는 1단계(계약·예약금)에서 서명/예약금 상태로 CTA를 분기할 때만 사용.
  */
 export function customerStage(
   status: ProjectStatus,
   billing: string | null | undefined,
+  signals?: StageSignals,
 ): CustomerStage {
   if (status === "cancelled") {
     return {
@@ -113,12 +122,28 @@ export function customerStage(
         ctaTab: "brief",
       });
     case "queued":
-    default:
-      return build(1, 10, {
-        description: "계약서 서명과 예약금 결제가 필요합니다.",
-        ctaLabel: "계약서 확인",
-        ctaHref: "/me/contracts",
-      });
+    default: {
+      // 1단계: 서명/예약금 상태로 "지금 할 일" CTA 분기.
+      let ctaLabel: string | null = "계약서 확인";
+      let ctaHref: string | null = "/me/contracts";
+      let description = "계약서 서명과 예약금 결제가 필요합니다.";
+      if (signals) {
+        if (!signals.contractSigned) {
+          ctaLabel = "계약서 서명하기";
+          ctaHref = "/me/contracts";
+          description = "계약서에 전자서명을 진행해주세요.";
+        } else if (!signals.depositPaid) {
+          ctaLabel = "예약금 결제하기";
+          ctaHref = "/me/payments";
+          description = "계약 서명이 완료되었습니다. 예약금을 결제해주세요.";
+        } else {
+          ctaLabel = null;
+          ctaHref = null;
+          description = "서명·예약금이 확인되었습니다. 곧 제작이 시작됩니다.";
+        }
+      }
+      return build(1, 10, { description, ctaLabel, ctaHref });
+    }
   }
 }
 

@@ -20,6 +20,7 @@ import {
   type ProjectStatus,
 } from "@/lib/types/db";
 import { customerStage, displayProgress } from "@/lib/projects/customer-stage";
+import { kickoffReadinessForQuote } from "@/lib/projects/kickoff";
 import { RealtimeProjectRefresh } from "./RealtimeProjectRefresh";
 import { ProjectWorkspace, type ChecklistItem } from "./ProjectWorkspace";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -91,8 +92,18 @@ export default async function MyProjectDetailPage({
     { label: "브랜드 소개", done: brief?.status === "submitted" },
   ];
 
+  // 1단계 CTA 분기용 신호: 계약 서명 + 예약금 결제 여부(실원장 기준).
+  const readiness = project.quote_id
+    ? await kickoffReadinessForQuote(project.quote_id)
+    : null;
+  const contractSigned = readiness?.contractSigned ?? false;
+  const depositPaid = readiness?.depositPaid ?? false;
+
   // 고객용 단계 + 자동 진행률(수동 progress 우선).
-  const stage = customerStage(project.status, project.billing_status);
+  const stage = customerStage(project.status, project.billing_status, {
+    contractSigned,
+    depositPaid,
+  });
   const headerPct = displayProgress(
     project.progress,
     project.status,
@@ -149,6 +160,8 @@ export default async function MyProjectDetailPage({
         progress={project.progress}
         dueDate={project.due_date}
         stageDates={stageDates}
+        contractSigned={contractSigned}
+        depositPaid={depositPaid}
         myUserId={me.id}
         brief={brief}
         materials={materials}
