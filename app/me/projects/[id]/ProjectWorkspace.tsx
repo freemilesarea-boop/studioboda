@@ -25,11 +25,28 @@ type Tab = "overview" | "brief" | "materials" | "chat" | "revisions" | "delivera
 
 export type ChecklistItem = { label: string; done: boolean };
 
+// ISO/date → "M/D"
+function fmtShort(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+// due_date(YYYY-MM-DD) → "D-7" / "D-DAY" / "D+2"
+function ddayLabel(due: string): string {
+  const d = new Date(`${due}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((d.getTime() - today.getTime()) / 86400000);
+  if (diff === 0) return "D-DAY";
+  return diff > 0 ? `D-${diff}` : `D+${-diff}`;
+}
+
 export function ProjectWorkspace({
   projectId,
   status,
   billingStatus,
   progress,
+  dueDate,
+  stageDates,
   myUserId,
   brief,
   materials,
@@ -44,6 +61,8 @@ export function ProjectWorkspace({
   status: ProjectStatus;
   billingStatus: string;
   progress: number;
+  dueDate: string | null;
+  stageDates: Record<string, string>;
   myUserId: string;
   brief: ProjectBrief | null;
   materials: ProjectFile[];
@@ -157,6 +176,15 @@ export function ProjectWorkspace({
                         </span>
                       ) : null}
                     </p>
+                    {dueDate ? (
+                      <p className="mt-1 text-[11.5px] text-ink-70">
+                        <span className="font-bold text-ink-100">예상 납기:</span>{" "}
+                        {dueDate}{" "}
+                        <span className="num font-bold text-iris">
+                          ({ddayLabel(dueDate)})
+                        </span>
+                      </p>
+                    ) : null}
                     {stage.ctaLabel ? (
                       stage.ctaHref ? (
                         <Link
@@ -212,6 +240,11 @@ export function ProjectWorkspace({
                             >
                               {s.label}
                             </span>
+                            {(isDone || isCurrent) && stageDates[s.key] ? (
+                              <span className="num mt-0.5 font-mono text-[9px] text-ink-50">
+                                {fmtShort(stageDates[s.key])}
+                              </span>
+                            ) : null}
                           </div>
                           {i < CUSTOMER_STAGES.length - 1 ? (
                             <span

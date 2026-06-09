@@ -122,6 +122,11 @@ export function customerStage(
   }
 }
 
+/** Customer stage key for a raw internal status (billing-agnostic). For timelines. */
+export function stageKeyForStatus(status: ProjectStatus): string {
+  return customerStage(status, null).stageKey;
+}
+
 /**
  * Hybrid progress: the manual projects.progress override wins when set (>0),
  * otherwise the status-derived auto percent. Keeps the manual field useful.
