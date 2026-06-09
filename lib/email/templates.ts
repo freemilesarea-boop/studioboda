@@ -199,6 +199,32 @@ export const contractSent = (d: ContractSentData) => ({
   ),
 });
 
+export type ContractCopyData = {
+  name: string;
+  contractTitle: string;
+  contractNumber: string;
+  amount: number;
+  signedAt: string | null; // YYYY-MM-DD or null
+  contractUrl: string;
+};
+export const contractCopy = (d: ContractCopyData) => ({
+  subject: "[STUDIO BODA] 서명 완료 계약서 사본을 전달드립니다",
+  html: wrapper(
+    "서명 완료 계약서 사본",
+    `<p>안녕하세요, STUDIO BODA입니다.<br />서명이 완료된 계약서 사본을 전달드립니다.</p>
+     <p>아래 링크에서 계약서를 확인하거나 브라우저 인쇄 기능을 통해 PDF로 저장하실 수 있습니다.</p>
+     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0;border:1px solid #E6E6EC;border-radius:12px;overflow:hidden;font-size:13px;">
+       <tr><td style="padding:10px 14px;background:#F6F6FA;color:#7E7E8C;">계약명</td><td style="padding:10px 14px;text-align:right;font-weight:700;">${escapeHtml(d.contractTitle)}</td></tr>
+       <tr><td style="padding:10px 14px;color:#7E7E8C;border-top:1px solid #E6E6EC;">계약번호</td><td style="padding:10px 14px;text-align:right;font-weight:700;border-top:1px solid #E6E6EC;">${escapeHtml(d.contractNumber)}</td></tr>
+       <tr><td style="padding:10px 14px;color:#7E7E8C;border-top:1px solid #E6E6EC;">계약금액</td><td style="padding:10px 14px;text-align:right;font-weight:700;border-top:1px solid #E6E6EC;">${fmt(d.amount)}원 <span style="color:#7E7E8C;font-weight:400;">(VAT 별도)</span></td></tr>
+       <tr><td style="padding:10px 14px;color:#7E7E8C;border-top:1px solid #E6E6EC;">서명일</td><td style="padding:10px 14px;text-align:right;font-weight:700;border-top:1px solid #E6E6EC;">${escapeHtml(d.signedAt ?? "-")}</td></tr>
+     </table>
+     <p style="margin:14px 0 0;color:#7E7E8C;font-size:12px;">로그인 후 마이페이지 &gt; 계약서에서도 확인할 수 있습니다.</p>`,
+    "계약서 보기",
+    d.contractUrl,
+  ),
+});
+
 // ───────────── render dispatcher ─────────────
 
 export type TemplateMap = {
@@ -208,6 +234,7 @@ export type TemplateMap = {
   payment_paid: PaymentPaidData;
   project_delivered: ProjectDeliveredData;
   contract_sent: ContractSentData;
+  contract_copy: ContractCopyData;
 };
 export type TemplateName = keyof TemplateMap;
 
@@ -228,6 +255,8 @@ export function renderTemplate<T extends TemplateName>(
       return projectDelivered(data as ProjectDeliveredData);
     case "contract_sent":
       return contractSent(data as ContractSentData);
+    case "contract_copy":
+      return contractCopy(data as ContractCopyData);
     default: {
       const _exhaustive: never = name;
       throw new Error(`Unknown template: ${String(_exhaustive)}`);

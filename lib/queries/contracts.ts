@@ -94,6 +94,27 @@ export async function adminGetContract(id: string): Promise<{
   };
 }
 
+/**
+ * Most recent successful "계약서 사본" email send time for a contract, derived
+ * from the notification_deliveries audit (no write to the contract itself).
+ */
+export async function getContractCopyLastSentAt(
+  contractId: string,
+): Promise<string | null> {
+  const admin = safeAdmin();
+  if (!admin) return null;
+  const { data } = await admin
+    .from("notification_deliveries")
+    .select("created_at")
+    .eq("event_type", "contract_copy_sent")
+    .eq("status", "sent")
+    .contains("metadata", { contract_id: contractId })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.created_at as string | null) ?? null;
+}
+
 export type ContractDepositInfo = {
   status: "paid" | "pending" | "none";
   amount: number | null;

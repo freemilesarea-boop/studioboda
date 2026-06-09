@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { requireStaff } from "@/lib/auth";
-import { adminGetContract } from "@/lib/queries/contracts";
+import { adminGetContract, getContractCopyLastSentAt } from "@/lib/queries/contracts";
 import { ContractDocument } from "@/components/ContractDocument";
 import { ContractAdminControls } from "./ContractAdminControls";
+import { ContractCopyEmailButton } from "./ContractCopyEmailButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -21,6 +22,11 @@ export default async function AdminContractDetailPage({
   const data = await adminGetContract(params.id);
   if (!data) notFound();
   const { contract, versions } = data;
+  const signed =
+    Boolean(contract.client_signature) ||
+    Boolean(contract.signed_at) ||
+    contract.status === "signed";
+  const copyLastSentAt = await getContractCopyLastSentAt(contract.id);
 
   return (
     <div className="space-y-5">
@@ -31,12 +37,20 @@ export default async function AdminContractDetailPage({
         >
           ← 계약서 목록
         </Link>
-        <Link
-          href={`/admin/print/contract/${contract.id}`}
-          className="rounded-lg border border-ink-15 bg-white px-3 py-1.5 font-display text-[12px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100"
-        >
-          인쇄 / PDF
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/print/contract/${contract.id}`}
+            className="rounded-lg border border-ink-15 bg-white px-3 py-1.5 font-display text-[12px] font-bold text-ink-70 hover:border-ink-30 hover:text-ink-100"
+          >
+            인쇄 / PDF
+          </Link>
+          <ContractCopyEmailButton
+            contractId={contract.id}
+            signed={signed}
+            recipientEmail={contract.client_email}
+            lastSentAt={copyLastSentAt}
+          />
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
