@@ -13,6 +13,7 @@ import {
 } from "@/lib/types/db";
 import { RefundButton } from "./RefundButton";
 import { ReconcileButton } from "./ReconcileButton";
+import { PayAppStatusButton } from "./PayAppStatusButton";
 import { getPaymentOpsHealth } from "@/lib/queries/payment-ops";
 import { PaymentOpsWidget } from "@/components/admin/PaymentOpsWidget";
 
@@ -422,11 +423,18 @@ export default async function AdminPaymentsPage({
                       })}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <RefundButton
-                        paymentId={p.id}
-                        status={p.status}
-                        amount={p.amount}
-                      />
+                      <div className="flex flex-col items-end gap-1.5">
+                        <RefundButton
+                          paymentId={p.id}
+                          status={p.status}
+                          amount={p.amount}
+                        />
+                        <PayAppStatusButton
+                          paymentId={p.id}
+                          hasMulNo={Boolean(p.payapp_mul_no)}
+                          localStatus={p.status}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

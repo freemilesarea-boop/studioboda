@@ -608,3 +608,81 @@ export async function requestTaxDocumentAction(formData: FormData) {
   revalidatePath("/me/payments");
   return { ok: true as const };
 }
+
+// ---- Admin: read-only PayApp status lookup (no DB state change) -------------
+// PayApp state(pay_state) → 관리자 표시용 한글 라벨. (payapp.ts stateToStatus와
+// 동일 매핑: 4=완료, 9=취소, 64/65/70=실패)
+const PAYAPP_STATE_LABELS: Record<string, string> = {
+  "1": "결제요청/대기",
+  "4": "결제완료",
+  "9": "취소/환불",
+  "64": "만료/실패",
+  "65": "결제거절",
+  "70": "결제실패",
+};
+
+/**
+ * Read-only PayApp status check for a single payment. Calls PayApp `paycheck`
+ * and returns the authoritative provider state alongside the local DB status.
+ * Does NOT mutate payment/quote/project. Audits to activity_logs. Staff only.
+ * No keys/secrets are returned (queryPaymentStatus exposes only state/amount).
+ */
+export async function checkPayAppPaymentStatusAction(paymentId: string) {
+  const me = await requireStaff();
+  const admin = createAdminSupabase();
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id, status, amount, payapp_mul_no, title")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment) return { ok: false as const, error: "결제를 찾을 수 없습니다" };
+  if (!payment.payapp_mul_no) {
+    return { ok: false as const, error: "PayApp 거래번호(mul_no)가 없어 조회할 수 없습니다" };
+  }
+
+  const provider = getPaymentProvider();
+  if (!provider.queryPaymentStatus) {
+    return { ok: false as const, error: "상태 조회를 지원하지 않는 결제 제공자입니다" };
+  }
+
+  const q = await provider.queryPaymentStatus(payment.payapp_mul_no);
+  if (!q.ok) {
+    return { ok: false as const, error: q.error ?? "PayApp 상태 조회 실패" };
+  }
+
+  const rawState = q.rawState ?? "";
+  const label = PAYAPP_STATE_LABELS[rawState] ?? "알 수 없음";
+  const localStatus = payment.status as string;
+  const providerPaid = q.status === "paid";
+  const localPaid = localStatus === "paid";
+  // 핵심 위험: PayApp는 결제완료인데 로컬은 paid가 아닌 경우(미환불 가능성).
+  const mismatch = providerPaid !== localPaid;
+
+  await logActivity({
+    actor_id: me.id,
+    entity_type: "payment",
+    entity_id: paymentId,
+    action: "payapp_status_checked",
+    metadata: {
+      mul_no: payment.payapp_mul_no,
+      provider_state: rawState,
+      provider_status: q.status,
+      local_status: localStatus,
+      mismatch,
+    },
+  });
+
+  return {
+    ok: true as const,
+    mul_no: payment.payapp_mul_no,
+    current_local_status: localStatus,
+    provider_state: rawState,
+    provider_state_label: label,
+    provider_status: q.status,
+    provider_amount: q.amount ?? null,
+    amount_match: q.amount == null ? null : q.amount === payment.amount,
+    provider_raw_summary: `state=${rawState || "?"} · mapped=${q.status} · amount=${q.amount ?? "—"}`,
+    mismatch,
+    checked_at: new Date().toISOString(),
+  };
+}
