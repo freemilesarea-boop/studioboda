@@ -188,7 +188,7 @@ export function Sidebar() {
                         className={`group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors duration-150 ${
                           active
                             ? "bg-iris/15 text-white"
-                            : "text-ink-40 hover:bg-white/[0.04] hover:text-white"
+                            : "text-ink-30 hover:bg-white/[0.04] hover:text-white"
                         }`}
                       >
                         <i
