@@ -47,6 +47,8 @@ export function ProjectWorkspace({
   progress,
   dueDate,
   stageDates,
+  contractSigned,
+  depositPaid,
   myUserId,
   brief,
   materials,
@@ -63,6 +65,8 @@ export function ProjectWorkspace({
   progress: number;
   dueDate: string | null;
   stageDates: Record<string, string>;
+  contractSigned: boolean;
+  depositPaid: boolean;
   myUserId: string;
   brief: ProjectBrief | null;
   materials: ProjectFile[];
@@ -77,7 +81,10 @@ export function ProjectWorkspace({
   const openRevisions = requests.filter((r) => r.status !== "done").length;
   const [tab, setTab] = useState<Tab>(briefDone ? "overview" : "brief");
 
-  const stage = customerStage(status, billingStatus);
+  const stage = customerStage(status, billingStatus, {
+    contractSigned,
+    depositPaid,
+  });
   const projectPct = displayProgress(progress, status, billingStatus);
 
   const tabs: Array<{ key: Tab; label: string; icon: string; badge?: number; dot?: boolean }> = [
