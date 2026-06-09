@@ -8,6 +8,7 @@ import {
   getMyProject,
   getProjectBrief,
   getProjectReadAt,
+  getProjectStageTimeline,
   listClientVisibleComments,
   listDeliverables,
   listProjectMaterials,
@@ -50,16 +51,25 @@ export default async function MyProjectDetailPage({
   const project = await getMyProject(me.id, params.id);
   if (!project) notFound();
 
-  const [brief, materials, messages, requests, deliverables, assigned, readAt] =
-    await Promise.all([
-      getProjectBrief(project.id),
-      listProjectMaterials(project.id),
-      listClientVisibleComments(project.id),
-      listRevisionRequests(project.id),
-      listDeliverables(project.id),
-      getAssignedProfile(project.assigned_to),
-      getProjectReadAt(project.id, me.id),
-    ]);
+  const [
+    brief,
+    materials,
+    messages,
+    requests,
+    deliverables,
+    assigned,
+    readAt,
+    stageDates,
+  ] = await Promise.all([
+    getProjectBrief(project.id),
+    listProjectMaterials(project.id),
+    listClientVisibleComments(project.id),
+    listRevisionRequests(project.id),
+    listDeliverables(project.id),
+    getAssignedProfile(project.assigned_to),
+    getProjectReadAt(project.id, me.id),
+    getProjectStageTimeline(project.id, project.created_at),
+  ]);
 
   // Unread = messages from others newer than my last read.
   const readMs = readAt ? new Date(readAt).getTime() : 0;
@@ -137,6 +147,8 @@ export default async function MyProjectDetailPage({
         status={project.status}
         billingStatus={project.billing_status}
         progress={project.progress}
+        dueDate={project.due_date}
+        stageDates={stageDates}
         myUserId={me.id}
         brief={brief}
         materials={materials}

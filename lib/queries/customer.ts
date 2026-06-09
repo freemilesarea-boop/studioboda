@@ -242,3 +242,47 @@ export async function customerDashboardCounts(userId: string) {
     openInquiries: openInquiries.count ?? 0,
   };
 }
+
+// ---- 고객 단계별 진입 날짜 (Stepper 표시용, read-only) ----------------------
+// activity_logs의 상태 전이 이벤트로 각 고객 단계의 "최초 진입 시각"을 복원한다.
+// 1단계(계약·예약금)는 항상 project.created_at.
+export async function getProjectStageTimeline(
+  projectId: string,
+  createdAt: string,
+): Promise<Record<string, string>> {
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("activity_logs")
+    .select("action, metadata, created_at")
+    .eq("entity_type", "project")
+    .eq("entity_id", projectId)
+    .order("created_at", { ascending: true });
+
+  const { customerStage, stageKeyForStatus } = await import(
+    "@/lib/projects/customer-stage"
+  );
+  type Status = Parameters<typeof customerStage>[0];
+
+  const dates: Record<string, string> = { contract_deposit: createdAt };
+  const set = (key: string, ts: string) => {
+    if (key && !dates[key]) dates[key] = ts; // earliest wins (ordered asc)
+  };
+
+  for (const row of (data ?? []) as Array<{
+    action: string;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+  }>) {
+    const a = row.action;
+    let status: string | null = null;
+    if (a === "status_changed") status = (row.metadata?.status as string) ?? null;
+    else if (a === "project_kickoff") status = "briefing";
+    else if (a === "brief_submitted") status = "ai_draft";
+    else if (a === "revision_requested") status = "revision";
+    else if (a === "deliverable_uploaded" || a === "project_status_auto_delivered")
+      status = "delivered";
+    if (!status) continue;
+    set(stageKeyForStatus(status as Status), row.created_at);
+  }
+  return dates;
+}
