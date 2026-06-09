@@ -3,11 +3,12 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { createNotification, notifyStaff } from "@/lib/notifications";
-import { sendTemplate } from "@/lib/email/send";
+import { sendAuditedEmail } from "@/lib/email/audited";
 import { parseRecurringEvent } from "@/lib/payments/providers/payapp-recurring";
 import { handleRecurringWebhook } from "@/lib/subscriptions/webhook-handler";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
+import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import { dispatchKakao } from "@/lib/notifications/dispatch";
 
@@ -152,10 +153,14 @@ export async function POST(req: Request) {
           .update({ payment_status: "deposit_paid" })
           .eq("id", payment.quote_id);
       }
+      // Deposit confirmed → guarantee a project exists (idempotent), then run
+      // the kickoff gate. Without this, a customer-self-accepted quote would
+      // have no project and the gate would fall through with `no_project`.
       // Kickoff gate: deposit paid alone does NOT start the project. The
       // project enters 진행중 only when the contract is also signed.
       // tryKickoffForQuote checks both conditions and is idempotent.
       if (payment.quote_id) {
+        await ensureProjectForQuote(payment.quote_id, { source: "webhook_deposit" });
         await tryKickoffForQuote(payment.quote_id);
       }
     } else if (payment.type === "balance") {
@@ -164,6 +169,9 @@ export async function POST(req: Request) {
           .from("quotes")
           .update({ payment_status: "fully_paid" })
           .eq("id", payment.quote_id);
+        // Safety: a balance payment implies the project should already exist;
+        // ensure it (idempotent) before completion side-effects below.
+        await ensureProjectForQuote(payment.quote_id, { source: "webhook_balance" });
       }
       if (payment.project_id) {
         await admin
@@ -238,11 +246,18 @@ export async function POST(req: Request) {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://studioboda.vercel.app";
       if (recipient) {
-        void sendTemplate(recipient, "payment_paid", {
-          name: displayName,
-          paymentTitle: payment.title,
-          amount: payment.amount,
-          meUrl: `${siteUrl}/me/projects`,
+        void sendAuditedEmail({
+          to: recipient,
+          template: "payment_paid",
+          data: {
+            name: displayName,
+            paymentTitle: payment.title,
+            amount: payment.amount,
+            meUrl: `${siteUrl}/me/projects`,
+          },
+          eventType: "payment_paid",
+          userId: payment.user_id,
+          party: "client",
         });
       }
     }

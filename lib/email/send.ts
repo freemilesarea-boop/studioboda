@@ -14,8 +14,11 @@ export async function sendEmail(opts: {
     opts.from ?? process.env.RESEND_FROM ?? "STUDIO BODA <contact@swk.today>";
 
   if (!key) {
-    console.log(
-      "[email] RESEND_API_KEY missing — skipping send.",
+    // Ops-visible: surface as an error (not info) so it stands out in logs, and
+    // return a stable reason that audited senders persist to
+    // notification_deliveries / activity_logs for the admin panel.
+    console.error(
+      "[email] RESEND_API_KEY missing — email NOT sent. Set it in Vercel env.",
       JSON.stringify({ to: opts.to, subject: opts.subject }),
     );
     return { ok: false, error: "RESEND_API_KEY missing" };

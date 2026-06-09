@@ -6,7 +6,7 @@ import { logActivity } from "@/lib/activity";
 import { getProfile, requireStaff } from "@/lib/auth";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { createNotification, notifyStaff } from "@/lib/notifications";
-import { sendTemplate } from "@/lib/email/send";
+import { sendAuditedEmail } from "@/lib/email/audited";
 import { depositSplit } from "@/lib/payments/constants";
 import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import type { PaymentType } from "@/lib/types/db";
@@ -286,11 +286,18 @@ export async function createPaymentAction(input: CreateInput) {
     });
   }
   if (buyerEmail) {
-    void sendTemplate(buyerEmail, "payment_requested", {
-      name: buyerName || buyerEmail,
-      paymentTitle: title,
-      amount,
-      payUrl: result.payUrl,
+    void sendAuditedEmail({
+      to: buyerEmail,
+      template: "payment_requested",
+      data: {
+        name: buyerName || buyerEmail,
+        paymentTitle: title,
+        amount,
+        payUrl: result.payUrl,
+      },
+      eventType: "payment_requested",
+      userId,
+      party: "client",
     });
   }
 

@@ -7,6 +7,7 @@ import { createNotification, notifyStaff } from "@/lib/notifications";
 import { dispatchKakao } from "@/lib/notifications/dispatch";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
+import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
 import { revalidatePath } from "next/cache";
@@ -80,14 +81,18 @@ export async function applyPaidSideEffects(
     });
   }
 
-  // Deposit paid → ensure contract exists/sent + try kickoff gate.
+  // Deposit paid → ensure project + contract exist/sent + try kickoff gate.
   if (payment.type === "deposit" && payment.quote_id) {
+    await ensureProjectForQuote(payment.quote_id, { source: "reconcile_deposit" });
     try {
       await provisionContractForPaidDeposit(payment.quote_id);
     } catch {
       /* best-effort */
     }
     await tryKickoffForQuote(payment.quote_id);
+  } else if (payment.type === "balance" && payment.quote_id) {
+    // Balance reconciled → ensure the project exists before completion.
+    await ensureProjectForQuote(payment.quote_id, { source: "reconcile_balance" });
   }
 
   // Sync 문의 목록 상태 (inquiries.status) — deposit→진행, balance→완료.

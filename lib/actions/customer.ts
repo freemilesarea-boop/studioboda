@@ -5,6 +5,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { notifyStaff } from "@/lib/notifications";
 import { getProfile } from "@/lib/auth";
+import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import { STORAGE_BUCKET } from "@/lib/env";
 
 async function requireMember() {
@@ -49,9 +50,22 @@ export async function acceptMyQuoteAction(quoteId: string) {
     metadata: { total_price: quote.total_price },
   });
 
+  // Customer acceptance must also provision the project (idempotent) so the
+  // deposit-paid kickoff gate has a project to advance. Mirrors the admin
+  // accept path; best-effort so a failure never blocks the acceptance.
+  try {
+    await ensureProjectForQuote(quoteId, {
+      actorId: me.id,
+      source: "customer_accept",
+    });
+  } catch {
+    /* best-effort — project can also be ensured at deposit-paid time */
+  }
+
   revalidatePath("/me/quotes");
   revalidatePath(`/me/quotes/${quoteId}`);
   revalidatePath("/me");
+  revalidatePath("/me/projects");
   return { ok: true as const };
 }
 

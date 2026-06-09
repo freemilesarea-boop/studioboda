@@ -5,9 +5,10 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { requireStaff } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
-import { sendTemplate } from "@/lib/email/send";
+import { sendAuditedEmail } from "@/lib/email/audited";
 import { quoteSchema, type QuoteInput } from "@/lib/schemas";
 import { DEFAULT_DEPOSIT_RATE } from "@/lib/payments/constants";
+import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import type { QuoteOption, QuoteStatus } from "@/lib/types/db";
 
 const totalFor = (base: number, options: QuoteOption[]) =>
@@ -120,57 +121,35 @@ export async function setQuoteStatusAction(id: string, status: QuoteStatus) {
     if (recipient) {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://studioboda.vercel.app";
-      void sendTemplate(recipient, "quote_received", {
-        name: profile?.name ?? profile?.company_name ?? recipient,
-        quoteTitle: quote.title,
-        totalPrice: quote.total_price,
-        deliveryDays: quote.delivery_days,
-        quoteUrl: `${siteUrl}/me/quotes/${id}`,
+      void sendAuditedEmail({
+        to: recipient,
+        template: "quote_received",
+        data: {
+          name: profile?.name ?? profile?.company_name ?? recipient,
+          quoteTitle: quote.title,
+          totalPrice: quote.total_price,
+          deliveryDays: quote.delivery_days,
+          quoteUrl: `${siteUrl}/me/quotes/${id}`,
+        },
+        eventType: "quote_received",
+        userId: quote.user_id,
+        party: "client",
       });
     }
   }
 
-  // accepted → auto-create project
+  // accepted → mark inquiry converted + ensure a project exists (idempotent).
+  // ensureProjectForQuote is the single source of truth for project creation
+  // and — unlike the previous inline insert — populates project.user_id so the
+  // project shows up in the customer's /me/projects.
   if (status === "accepted") {
-    let clientName = "";
-    let company: string | null = null;
     if (quote.inquiry_id) {
-      const { data: inq } = await admin
-        .from("inquiries")
-        .select("name,company")
-        .eq("id", quote.inquiry_id)
-        .maybeSingle();
-      clientName = inq?.name ?? "";
-      company = inq?.company ?? null;
       await admin
         .from("inquiries")
         .update({ status: "converted" })
         .eq("id", quote.inquiry_id);
     }
-    const { data: created, error: pErr } = await admin
-      .from("projects")
-      .insert({
-        quote_id: id,
-        inquiry_id: quote.inquiry_id,
-        client_name: clientName || quote.title,
-        company,
-        title: quote.title,
-        service_type: quote.service_type,
-        status: "queued",
-        priority: "normal",
-        progress: 0,
-      })
-      .select("id")
-      .single();
-    if (!pErr && created) {
-      await logActivity({
-        actor_id: me.id,
-        entity_type: "project",
-        entity_id: created.id,
-        action: "created",
-        metadata: { from_quote: id },
-      });
-    }
+    await ensureProjectForQuote(id, { actorId: me.id, source: "admin_accept" });
   }
 
   revalidatePath("/admin/quotes");

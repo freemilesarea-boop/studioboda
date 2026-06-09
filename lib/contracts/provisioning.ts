@@ -11,7 +11,7 @@
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/activity";
 import { createNotification, notifyStaff } from "@/lib/notifications";
-import { sendTemplate } from "@/lib/email/send";
+import { sendAuditedEmail } from "@/lib/email/audited";
 import { logCrmActivity } from "@/lib/actions/crm";
 import { getEffectiveClauseBlocks } from "@/lib/queries/contract-clauses";
 import { siteUrl } from "@/lib/company";
@@ -248,11 +248,14 @@ export async function emailContractToParties(
     const recipient = profile?.email ?? null;
     if (recipient) {
       const name = profile?.name ?? profile?.company_name ?? "고객";
-      const res = await sendTemplate(
-        recipient,
-        "contract_sent",
-        baseData(name, opts?.payUrl ?? null),
-      );
+      const res = await sendAuditedEmail({
+        to: recipient,
+        template: "contract_sent",
+        data: baseData(name, opts?.payUrl ?? null),
+        eventType: "contract_sent",
+        userId: contract.client_id,
+        party: "client",
+      });
       clientOk = res.ok;
       await logActivity({
         entity_type: "contract",
@@ -284,11 +287,14 @@ export async function emailContractToParties(
     .in("role", ["admin", "manager"]);
   for (const s of staff ?? []) {
     if (!s.email) continue;
-    const res = await sendTemplate(
-      s.email,
-      "contract_sent",
-      baseData(s.name ?? "STUDIO BODA", null),
-    );
+    const res = await sendAuditedEmail({
+      to: s.email,
+      template: "contract_sent",
+      data: baseData(s.name ?? "STUDIO BODA", null),
+      eventType: "contract_sent",
+      userId: null,
+      party: "staff",
+    });
     if (!res.ok) {
       await logActivity({
         entity_type: "contract",
