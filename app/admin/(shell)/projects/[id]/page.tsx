@@ -33,6 +33,7 @@ import { KickoffOverride } from "./KickoffOverride";
 import { RevisionsAdmin } from "./RevisionsAdmin";
 import { DeliverablesAdmin } from "./DeliverablesAdmin";
 import { kickoffReadinessForQuote } from "@/lib/projects/kickoff";
+import { calculateQuotePaymentStatusFromPayments } from "@/lib/payments/status";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -147,6 +148,14 @@ export default async function ProjectDetailPage({
     : null;
   const contractSigned = kickoff?.contractSigned ?? false;
   const depositPaid = kickoff?.depositPaid ?? false;
+
+  // 실원장 기준 결제 상태 — 캐시(quote.payment_status)와 불일치 시 경고 배지.
+  const ledgerPay = p.quote_id
+    ? await calculateQuotePaymentStatusFromPayments(p.quote_id)
+    : null;
+  const payMismatch = Boolean(
+    quote && ledgerPay && (quote.payment_status ?? "unpaid") !== ledgerPay,
+  );
   const contractSent = Boolean(
     quote || paymentRows.length > 0 || contractSigned,
   );
@@ -321,6 +330,14 @@ export default async function ProjectDetailPage({
 
           {quote ? (
             <AdminCard title="견적 / 결제">
+              {payMismatch ? (
+                <div className="mb-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11.5px] font-bold text-warning">
+                  ⚠️ 결제 상태 불일치 감지 — 실제 결제 원장 확인 필요
+                  <span className="mt-0.5 block font-normal text-ink-70">
+                    캐시: {quote.payment_status ?? "unpaid"} · 실원장: {ledgerPay}
+                  </span>
+                </div>
+              ) : null}
               <dl className="space-y-2.5">
                 <Row label="견적" value={quote.title} />
                 <Row label="총액" value={fmtKRW(quote.total_price)} />

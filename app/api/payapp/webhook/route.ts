@@ -10,6 +10,7 @@ import { provisionContractForPaidDeposit } from "@/lib/contracts/provisioning";
 import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import { ensureProjectForQuote } from "@/lib/projects/ensure";
 import { syncInquiryPipelineForQuote } from "@/lib/actions/crm";
+import { syncQuotePaymentState } from "@/lib/payments/status";
 import { dispatchKakao } from "@/lib/notifications/dispatch";
 
 export const runtime = "nodejs";
@@ -183,9 +184,11 @@ export async function POST(req: Request) {
     // type='extra' has no automatic side-effects
   }
 
-  // Re-sync 문의 상태 from the updated ledger for ANY terminal event
-  // (paid→진행/완료, cancelled/refunded→견적 발송 복귀). Idempotent.
+  // Re-sync 문의 상태 + 결제 캐시(quote.payment_status / project.billing_status)
+  // from the updated ledger for ANY terminal event — including reversal
+  // (paid→failed/cancelled). Both are idempotent.
   if (payment.quote_id && event.status !== "pending") {
+    await syncQuotePaymentState(payment.quote_id, { source: "webhook" });
     await syncInquiryPipelineForQuote(payment.quote_id);
   }
 
