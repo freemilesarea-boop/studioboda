@@ -19,7 +19,11 @@
 import type { ContractTemplateKind } from "./templates";
 
 export type ClauseScope = "common" | "service" | "quote";
-export type ClauseCondition = "always" | "recurring" | "has_deliverables";
+export type ClauseCondition =
+  | "always"
+  | "recurring"
+  | "has_deliverables"
+  | "scope_website"; // 업무범위에 website가 체크된 제작 계약에만 삽입
 
 export type ContractClauseBlock = {
   id?: string;
@@ -35,27 +39,20 @@ export type ContractClauseBlock = {
   active: boolean;
 };
 
-const PROJECT: ContractTemplateKind[] = ["website", "detail_page"];
+// 제작 용역은 단일 조항군(detail_page = "일반 제작")으로 통합한다.
+// 서비스 종류는 업무 범위 체크박스로 표현하고, website가 체크된 경우에만
+// scope_website 조건 조항(반응형 퍼블리싱·소스코드 등)을 추가 삽입한다.
+const PROJECT: ContractTemplateKind[] = ["detail_page"];
 
 export const BUILTIN_CLAUSE_BLOCKS: ContractClauseBlock[] = [
   // ---- 목적 (service) -----------------------------------------------------
   {
-    key: "purpose_website",
+    key: "purpose_project",
     scope: "service",
-    template_kinds: ["website"],
+    template_kinds: PROJECT,
     condition: "always",
     title: "목적",
-    body: "본 계약은 갑이 을에게 제공하는 웹사이트 제작 용역의 범위, 일정, 대금 및 권리·의무를 정함을 목적으로 한다.",
-    sort_order: 10,
-    active: true,
-  },
-  {
-    key: "purpose_detail",
-    scope: "service",
-    template_kinds: ["detail_page"],
-    condition: "always",
-    title: "목적",
-    body: "본 계약은 갑이 을에게 제공하는 상세페이지·콘텐츠 제작 용역의 범위, 일정, 대금 및 권리·의무를 정함을 목적으로 한다.",
+    body: "본 계약은 갑이 을에게 제공하는 제작 용역(디자인·콘텐츠·웹 등 업무 범위에 표시된 항목)의 범위, 일정, 대금 및 권리·의무를 정함을 목적으로 한다.",
     sort_order: 10,
     active: true,
   },
@@ -72,23 +69,23 @@ export const BUILTIN_CLAUSE_BLOCKS: ContractClauseBlock[] = [
 
   // ---- 업무 범위 (service) ------------------------------------------------
   {
-    key: "scope_website",
+    key: "scope_project",
     scope: "service",
-    template_kinds: ["website"],
+    template_kinds: PROJECT,
     condition: "always",
     title: "업무 범위",
-    body: "갑은 다음 업무를 수행한다. ① 기획 및 정보 구조 설계, ② 디자인 시안 제작, ③ 반응형 퍼블리싱 및 프론트엔드 구현, ④ 합의된 페이지·기능의 개발, ⑤ 배포 및 게시. 본 계약에 명시되지 않은 기능·페이지·외부 연동은 업무 범위에서 제외된다.",
+    body: "갑은 본 계약 머리말의 [업무 범위]에 ● 표시된 항목 및 견적 포함 내역에 한하여 ① 기획·구성안 작성, ② 디자인 시안 제작, ③ 합의된 산출물의 제작을 수행한다. 업무 범위에 표시되지 않은 항목, 추가 콘텐츠, 다른 규격의 변형물은 업무 범위에서 제외되며 별도 견적으로 진행한다.",
     sort_order: 20,
     active: true,
   },
   {
-    key: "scope_detail",
+    key: "scope_website_tech",
     scope: "service",
-    template_kinds: ["detail_page"],
-    condition: "always",
-    title: "업무 범위",
-    body: "갑은 다음 업무를 수행한다. ① 기획 및 구성안 작성, ② 카피라이팅, ③ 디자인 시안 제작, ④ 합의된 콘텐츠(상세페이지·SNS·배너 등)의 제작. 본 계약에 명시되지 않은 추가 콘텐츠·다른 규격의 변형물은 업무 범위에서 제외된다.",
-    sort_order: 20,
+    template_kinds: PROJECT,
+    condition: "scope_website",
+    title: "웹 제작 추가 범위",
+    body: "업무 범위에 웹사이트/랜딩페이지/쇼핑몰 제작이 포함된 경우, 갑은 추가로 ① 정보 구조 설계, ② 반응형 퍼블리싱 및 프론트엔드 구현, ③ 합의된 페이지·기능의 개발, ④ 배포 및 게시를 수행한다. 소스코드·디자인 원본 파일의 제공 여부는 별도 협의에 따르며, 외부 서비스 연동·서버/도메인 관리는 포함되지 않는다.",
+    sort_order: 22,
     active: true,
   },
   {
@@ -102,24 +99,14 @@ export const BUILTIN_CLAUSE_BLOCKS: ContractClauseBlock[] = [
     active: true,
   },
 
-  // ---- 산출물 (service, 단건만) ------------------------------------------
+  // ---- 산출물 (service, 제작 단건) ---------------------------------------
   {
-    key: "deliverable_website",
+    key: "deliverable_project",
     scope: "service",
-    template_kinds: ["website"],
+    template_kinds: PROJECT,
     condition: "always",
     title: "산출물",
-    body: "갑은 ① 합의된 페이지로 구성된 반응형 웹사이트, ② 게시 가능한 형태의 결과물을 을에게 전달한다. 소스코드·디자인 원본 파일의 제공 여부는 별도 협의에 따른다.",
-    sort_order: 30,
-    active: true,
-  },
-  {
-    key: "deliverable_detail",
-    scope: "service",
-    template_kinds: ["detail_page"],
-    condition: "always",
-    title: "산출물",
-    body: "갑은 합의된 규격의 이미지 파일(JPG/PNG 등)을 을에게 전달한다. 작업 원본(PSD 등)의 제공 여부 및 비용은 별도 협의에 따른다.",
+    body: "갑은 합의된 규격의 산출물(이미지 파일 JPG/PNG, 웹 게시물 등)을 을에게 전달한다. 작업 원본(PSD/AI 등) 및 소스의 제공 여부와 비용은 별도 협의에 따른다.",
     sort_order: 30,
     active: true,
   },
@@ -180,24 +167,14 @@ export const BUILTIN_CLAUSE_BLOCKS: ContractClauseBlock[] = [
     active: true,
   },
 
-  // ---- 유지보수 범위 (service) -------------------------------------------
+  // ---- 납품 후 수정 / 유지보수 범위 (service, 제작 통합) -----------------
   {
-    key: "maint_website",
+    key: "maint_project",
     scope: "service",
-    template_kinds: ["website"],
+    template_kinds: PROJECT,
     condition: "always",
-    title: "유지보수 범위",
-    body: "본 계약은 제작 용역에 한하며, 게시 이후의 콘텐츠 수정·기능 추가·서버 및 도메인 관리 등 운영 업무는 포함되지 않는다. 게시 후 7일 이내 발견된 명백한 제작상 하자는 무상 보정하며, 그 외 유지보수는 별도의 유지보수 계약으로 진행한다.",
-    sort_order: 60,
-    active: true,
-  },
-  {
-    key: "maint_detail",
-    scope: "service",
-    template_kinds: ["detail_page"],
-    condition: "always",
-    title: "납품 후 수정",
-    body: "납품 완료 후 콘텐츠의 텍스트·이미지 변경 등 수정 요청은 본 계약의 포함 수정 범위 내에서 처리하며, 이를 초과하는 변경은 별도 비용이 발생한다.",
+    title: "납품 후 수정 및 유지보수 범위",
+    body: "납품 완료 후 텍스트·이미지 변경 등 수정 요청은 본 계약의 포함 수정 범위 내에서 처리하며, 이를 초과하는 변경은 별도 비용이 발생한다. 본 계약은 제작 용역에 한하며, 납품 이후의 운영·콘텐츠 추가·서버 및 도메인 관리 등은 포함되지 않는다. 납품 후 7일 이내 발견된 명백한 제작상 하자는 무상 보정하며, 그 외 유지보수는 별도 계약으로 진행한다.",
     sort_order: 60,
     active: true,
   },

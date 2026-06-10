@@ -22,9 +22,11 @@ import { composeContract, type ContractComposeFacts } from "./engine";
 import {
   contractTitleFor,
   defaultRevisionCount,
-  scopeToTemplateKind,
-  serviceScopeKey,
+  serviceScopeKeysFromQuote,
+  isRecurringScopes,
+  kindForScopes,
   type ContractTemplateKind,
+  type ServiceScopeKey,
 } from "./templates";
 import type { Contract, QuoteOption } from "@/lib/types/db";
 
@@ -46,9 +48,8 @@ export type QuoteRow = {
 export function composeFactsFromQuote(
   quote: QuoteRow,
   customerName: string,
-  // kind is optional/ignored — derived from service scope so the title is
-  // always 용역계약서 and the 업무 범위 reflects the real service.
-  _kind?: ContractTemplateKind,
+  // 관리자 체크박스 수동 지정 시 우선 사용. 없으면 견적 항목 기반 자동 분류.
+  scopeKeysOverride?: ServiceScopeKey[],
 ): ContractComposeFacts {
   const amount = quote.total_price ?? 0;
   const split = depositSplit(amount, quote.deposit_rate);
@@ -58,11 +59,17 @@ export function composeFactsFromQuote(
   const deliverables = options
     .map((o) => o?.label)
     .filter((l): l is string => typeof l === "string" && l.length > 0);
-  const scopeKey = serviceScopeKey({
-    serviceType: quote.service_type,
-    title: quote.title,
-  });
-  const kind = scopeToTemplateKind(scopeKey);
+  // 견적 항목(서비스타입 + 제목 + 각 옵션 라벨) → 업무범위 다중 자동 체크.
+  const scopeKeys =
+    scopeKeysOverride && scopeKeysOverride.length > 0
+      ? scopeKeysOverride
+      : serviceScopeKeysFromQuote({
+          serviceType: quote.service_type,
+          title: quote.title,
+          itemLabels: deliverables,
+        });
+  const recurring = isRecurringScopes(scopeKeys);
+  const kind = kindForScopes(scopeKeys);
   return {
     kind,
     customerName,
@@ -76,8 +83,8 @@ export function composeFactsFromQuote(
     deliveryDays: quote.delivery_days,
     revisionCount: defaultRevisionCount(kind),
     deliverables,
-    recurring: kind === "maintenance",
-    scopeKey,
+    recurring,
+    scopeKeys,
   };
 }
 
@@ -165,6 +172,7 @@ export async function ensureContractForQuote(
       status: "draft",
       created_by: opts?.actorId ?? null,
       current_version: 1,
+      metadata: { scope_keys: facts.scopeKeys },
     })
     .select("id, contract_number")
     .single();

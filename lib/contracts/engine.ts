@@ -36,8 +36,8 @@ export type ContractComposeFacts = {
   /** 견적항목/산출물 라벨 목록 (견적별 조항 입력) */
   deliverables: string[];
   recurring: boolean;
-  /** 업무 범위 체크리스트에서 ● 표시할 서비스 분류 */
-  scopeKey: ServiceScopeKey;
+  /** 업무 범위 체크리스트에서 ● 표시할 서비스 분류 (다중 체크) */
+  scopeKeys: ServiceScopeKey[];
 };
 
 function tokenMap(f: ContractComposeFacts): Record<string, string> {
@@ -60,7 +60,7 @@ function tokenMap(f: ContractComposeFacts): Record<string, string> {
     revisionCount: String(f.revisionCount),
     deliveryText,
     deliverables,
-    workScope: workScopeChecklist(f.scopeKey),
+    workScope: workScopeChecklist(f.scopeKeys),
   };
 }
 
@@ -79,6 +79,9 @@ function conditionMet(
       return f.recurring;
     case "has_deliverables":
       return f.deliverables.length > 0;
+    case "scope_website":
+      // website 항목이 체크된 제작 계약에만 웹 기술 조항 삽입.
+      return !f.recurring && f.scopeKeys.includes("website");
     case "always":
     default:
       return true;
@@ -127,7 +130,7 @@ function header(f: ContractComposeFacts): string {
     ...meta,
     ``,
     `[업무 범위]`,
-    workScopeChecklist(f.scopeKey),
+    workScopeChecklist(f.scopeKeys),
   ].join("\n");
 }
 

@@ -10,7 +10,8 @@ import { tryKickoffForQuote } from "@/lib/projects/kickoff";
 import {
   contractTitleFor,
   defaultRevisionCount,
-  scopeToTemplateKind,
+  kindForScopes,
+  isRecurringScopes,
   type ServiceScopeKey,
 } from "@/lib/contracts/templates";
 import { DEFAULT_DEPOSIT_RATE, depositSplit } from "@/lib/payments/constants";
@@ -354,7 +355,7 @@ export async function signContractAction(
 // given. Signed contracts are locked.
 export async function changeContractTemplateAction(
   id: string,
-  scopeOverride?: ServiceScopeKey,
+  scopeKeysOverride?: ServiceScopeKey[],
 ): Promise<Result> {
   const me = await requireStaff();
   const admin = createAdminSupabase();
@@ -375,6 +376,9 @@ export async function changeContractTemplateAction(
     customerName = p?.company_name || p?.name || customerName;
   }
 
+  const override =
+    scopeKeysOverride && scopeKeysOverride.length > 0 ? scopeKeysOverride : undefined;
+
   let projectTitle = contract.title.replace(/^용역계약서\s*·\s*/, "").replace(/^\[[^\]]*\]\s*/, "");
   let facts: ContractComposeFacts | null = null;
   if (contract.quote_id) {
@@ -386,15 +390,16 @@ export async function changeContractTemplateAction(
       .eq("id", contract.quote_id)
       .maybeSingle();
     if (q) {
-      facts = composeFactsFromQuote(q as QuoteRow, customerName);
+      // override 있으면 그 체크박스 기준, 없으면 견적 항목 기반 자동 분류.
+      facts = composeFactsFromQuote(q as QuoteRow, customerName, override);
       projectTitle = q.title as string;
     }
   }
   if (!facts) {
     const amount = contract.amount;
     const split = depositSplit(amount, DEFAULT_DEPOSIT_RATE);
-    const scope = scopeOverride ?? "etc";
-    const kind = scopeToTemplateKind(scope);
+    const scopeKeys = override ?? ["etc"];
+    const kind = kindForScopes(scopeKeys);
     facts = {
       kind,
       customerName,
@@ -408,13 +413,9 @@ export async function changeContractTemplateAction(
       deliveryDays: null,
       revisionCount: defaultRevisionCount(kind),
       deliverables: [],
-      recurring: kind === "maintenance",
-      scopeKey: scope,
+      recurring: isRecurringScopes(scopeKeys),
+      scopeKeys,
     };
-  }
-  // Apply scope override if the admin chose a specific work-scope.
-  if (scopeOverride) {
-    facts = { ...facts, scopeKey: scopeOverride, kind: scopeToTemplateKind(scopeOverride), recurring: scopeOverride === "maintenance" };
   }
 
   const title = contractTitleFor(facts.kind, projectTitle);
@@ -423,7 +424,16 @@ export async function changeContractTemplateAction(
 
   const { error } = await admin
     .from("contracts")
-    .update({ template_kind: facts.kind, title, body, current_version: nextVersion })
+    .update({
+      template_kind: facts.kind,
+      title,
+      body,
+      current_version: nextVersion,
+      metadata: {
+        ...((contract.metadata as Record<string, unknown>) ?? {}),
+        scope_keys: facts.scopeKeys,
+      },
+    })
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
 
@@ -433,7 +443,7 @@ export async function changeContractTemplateAction(
     title,
     body,
     amount: contract.amount,
-    snapshot: { scope: facts.scopeKey, changed_by: me.id, source: "regenerate" },
+    snapshot: { scope_keys: facts.scopeKeys, changed_by: me.id, source: "regenerate" },
     created_by: me.id,
   });
 
@@ -442,7 +452,7 @@ export async function changeContractTemplateAction(
     entity_type: "contract",
     entity_id: id,
     action: "contract_regenerated",
-    metadata: { scope: facts.scopeKey, version: nextVersion },
+    metadata: { scope_keys: facts.scopeKeys, version: nextVersion },
   });
   revalidatePath(`/admin/contracts/${id}`);
   return { ok: true };
