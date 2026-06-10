@@ -136,11 +136,45 @@ export function scopeToTemplateKind(scope: ServiceScopeKey): ContractTemplateKin
   return "detail_page";
 }
 
-/** Build the 업무 범위 checklist block with ● on the matched scope. */
-export function workScopeChecklist(active: ServiceScopeKey): string {
+/** Build the 업무 범위 checklist block with ● on every checked scope. */
+export function workScopeChecklist(active: ServiceScopeKey[]): string {
+  const set = new Set(active);
   return SERVICE_SCOPE_ROWS.map(
-    (r) => `${r.key === active ? "[●]" : "[ ]"} ${r.label}`,
+    (r) => `${set.has(r.key) ? "[●]" : "[ ]"} ${r.label}`,
   ).join("\n");
+}
+
+/**
+ * Derive the checked work-scopes from a quote's service_type/title AND each
+ * line item label (견적 항목 기반 자동 체크). Returns a de-duplicated, ordered
+ * list; drops "etc" when any specific scope is found. Always at least one.
+ */
+export function serviceScopeKeysFromQuote(input: {
+  serviceType?: string | null;
+  title?: string | null;
+  itemLabels?: string[];
+}): ServiceScopeKey[] {
+  const keys = new Set<ServiceScopeKey>();
+  keys.add(serviceScopeKey({ serviceType: input.serviceType, title: input.title }));
+  for (const label of input.itemLabels ?? []) {
+    if (label && label.trim()) keys.add(serviceScopeKey({ title: label }));
+  }
+  if (keys.size > 1) keys.delete("etc");
+  const ordered = SERVICE_SCOPE_ROWS.map((r) => r.key).filter((k) => keys.has(k));
+  return ordered.length ? ordered : ["etc"];
+}
+
+/** Recurring(구독/유지보수) iff every checked scope is maintenance. */
+export function isRecurringScopes(scopes: ServiceScopeKey[]): boolean {
+  return scopes.length > 0 && scopes.every((k) => k === "maintenance");
+}
+
+/**
+ * The clause set is binary: 구독(maintenance) vs 제작 용역(단일 통합).
+ * 제작 용역은 detail_page 키를 "일반 제작" 단일 조항군으로 사용한다.
+ */
+export function kindForScopes(scopes: ServiceScopeKey[]): ContractTemplateKind {
+  return isRecurringScopes(scopes) ? "maintenance" : "detail_page";
 }
 
 /** Backwards-compatible recommend (now scope-driven). */

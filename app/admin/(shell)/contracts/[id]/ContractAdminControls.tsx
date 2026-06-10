@@ -27,6 +27,16 @@ export function ContractAdminControls({ contract }: { contract: Contract }) {
   const [amount, setAmount] = useState(String(contract.amount));
   const [body, setBody] = useState(contract.body ?? "");
   const [signature, setSignature] = useState<string | null>(null);
+  const initialScopes = Array.isArray(
+    (contract.metadata as { scope_keys?: ServiceScopeKey[] } | null)?.scope_keys,
+  )
+    ? ((contract.metadata as { scope_keys?: ServiceScopeKey[] }).scope_keys as ServiceScopeKey[])
+    : [];
+  const [scopeKeys, setScopeKeys] = useState<ServiceScopeKey[]>(initialScopes);
+  const toggleScope = (k: ServiceScopeKey) =>
+    setScopeKeys((prev) =>
+      prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
+    );
 
   const locked = contract.status === "signed" || contract.status === "cancelled";
 
@@ -53,46 +63,60 @@ export function ContractAdminControls({ contract }: { contract: Contract }) {
 
       <div className="mt-4">
         <label className="text-[12px] font-bold text-ink-70">
-          계약서 재생성 · 업무 범위
+          업무 범위 (체크박스)
         </label>
-        <div className="mt-1.5 flex flex-wrap gap-2">
+        <div className="mt-1.5 grid grid-cols-1 gap-1 sm:grid-cols-2">
+          {SERVICE_SCOPE_ROWS.map((r) => (
+            <label
+              key={r.key}
+              className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[12px] ${
+                scopeKeys.includes(r.key)
+                  ? "border-iris/40 bg-iris/[0.06] text-ink-100"
+                  : "border-ink-15 text-ink-70"
+              } ${pending || locked ? "opacity-60" : "cursor-pointer"}`}
+            >
+              <input
+                type="checkbox"
+                className="accent-iris"
+                disabled={pending || locked}
+                checked={scopeKeys.includes(r.key)}
+                onChange={() => toggleScope(r.key)}
+              />
+              {r.label}
+            </label>
+          ))}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={pending || locked || scopeKeys.length === 0}
+            onClick={() =>
+              run(
+                () => changeContractTemplateAction(contract.id, scopeKeys),
+                "업무 범위를 적용하고 계약서를 재생성했습니다",
+              )
+            }
+            className="rounded-lg bg-iris px-3 py-1.5 font-display text-[12px] font-bold text-white disabled:opacity-50"
+          >
+            업무 범위 적용 (재생성)
+          </button>
           <button
             type="button"
             disabled={pending || locked}
             onClick={() =>
               run(
                 () => changeContractTemplateAction(contract.id),
-                "견적 기준으로 계약서를 재생성했습니다",
+                "견적 항목 기준으로 업무 범위를 자동 체크하고 재생성했습니다",
               )
             }
-            className="rounded-lg bg-ink-100 px-3 py-1.5 font-display text-[12px] font-bold text-white disabled:opacity-50"
+            className="rounded-lg border border-ink-15 bg-white px-3 py-1.5 font-display text-[12px] font-bold text-ink-70 disabled:opacity-50"
           >
-            견적 기준 재생성
+            견적 항목 기준 자동 체크
           </button>
-          <select
-            disabled={pending || locked}
-            defaultValue=""
-            onChange={(e) => {
-              const v = e.target.value as ServiceScopeKey | "";
-              if (!v) return;
-              run(
-                () => changeContractTemplateAction(contract.id, v),
-                "업무 범위를 변경하고 본문을 재생성했습니다",
-              );
-            }}
-            className="rounded-lg border border-ink-15 px-3 py-1.5 text-[12.5px] disabled:opacity-60"
-          >
-            <option value="">업무 범위 직접 지정…</option>
-            {SERVICE_SCOPE_ROWS.map((r) => (
-              <option key={r.key} value={r.key}>
-                {r.label}
-              </option>
-            ))}
-          </select>
         </div>
         <p className="mt-1 text-[11px] text-ink-50">
-          제목은 항상 「용역계약서」이며, 업무 범위 체크리스트에 해당 서비스가 ● 표시됩니다.
-          서명 완료 건은 변경할 수 없습니다.
+          제목은 항상 「용역계약서」이며, 체크한 업무 범위가 본문 [업무 범위]에 ● 표시됩니다.
+          웹사이트 항목 체크 시 웹 기술 조항이 추가됩니다. 서명 완료 건은 변경할 수 없습니다.
         </p>
       </div>
 
