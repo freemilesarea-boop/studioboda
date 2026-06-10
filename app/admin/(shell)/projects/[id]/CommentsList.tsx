@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useRealtimeComments } from "@/hooks/useRealtimeComments";
+import { markProjectReadStaffAction } from "@/lib/actions/project-workspace";
 import type { ProjectComment } from "@/lib/types/db";
 
 export function CommentsList({
@@ -13,6 +15,11 @@ export function CommentsList({
   initial: ProjectComment[];
 }) {
   const comments = useRealtimeComments(projectId, initial);
+
+  // 운영팀이 대화를 열람하면 읽음 기록 → 고객 화면에 "관리자 확인함" 노출.
+  useEffect(() => {
+    void markProjectReadStaffAction(projectId);
+  }, [projectId, comments.length]);
 
   if (comments.length === 0) {
     return (

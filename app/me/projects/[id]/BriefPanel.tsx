@@ -2,9 +2,22 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveBriefAction, type BriefInput } from "@/lib/actions/project-workspace";
+import {
+  createWorkspaceUploadUrlAction,
+  downloadProjectAttachmentAction,
+  saveBriefAction,
+  type BriefInput,
+} from "@/lib/actions/project-workspace";
 import { useToast } from "@/components/admin/Toast";
-import { PRODUCTION_TYPES, type ProjectBrief } from "@/lib/types/db";
+import {
+  PRODUCTION_TYPES,
+  type ProjectBrief,
+  type RevisionAttachment,
+} from "@/lib/types/db";
+import { fmtSize, uploadToSignedUrl } from "./uploadClient";
+import { FilePreviewModal, isPreviewable } from "./FilePreviewModal";
+
+const BRIEF_MAX = 50 * 1024 * 1024;
 
 const EMPTY: BriefInput = {
   company_name: "",
@@ -18,6 +31,7 @@ const EMPTY: BriefInput = {
   reference_urls: "",
   competitor_urls: "",
   must_requirements: "",
+  attachments: [],
 };
 
 export function BriefPanel({
@@ -41,16 +55,68 @@ export function BriefPanel({
           reference_urls: brief.reference_urls ?? "",
           competitor_urls: brief.competitor_urls ?? "",
           must_requirements: brief.must_requirements ?? "",
+          attachments: Array.isArray(brief.attachments) ? brief.attachments : [],
         }
       : EMPTY,
   );
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const { push } = useToast();
   const router = useRouter();
   const submitted = brief?.status === "submitted";
 
+  const attachments = form.attachments ?? [];
+
   const set = (k: keyof BriefInput) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  async function attach(file: File) {
+    if (file.size > BRIEF_MAX) {
+      push("첨부는 50MB 이하만 가능합니다", "error");
+      return;
+    }
+    setBusy(true);
+    const urlRes = await createWorkspaceUploadUrlAction(projectId, "brief", file.name);
+    if (!urlRes.ok) {
+      push(urlRes.error, "error");
+      setBusy(false);
+      return;
+    }
+    const up = await uploadToSignedUrl(urlRes.path, urlRes.token, file);
+    if (!up.ok) {
+      push(up.error, "error");
+      setBusy(false);
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      attachments: [
+        ...(f.attachments ?? []),
+        { name: file.name, path: urlRes.path, size: file.size, type: file.type || null },
+      ],
+    }));
+    setBusy(false);
+  }
+
+  function removeAttachment(path: string) {
+    setForm((f) => ({
+      ...f,
+      attachments: (f.attachments ?? []).filter((a) => a.path !== path),
+    }));
+  }
+
+  function openAttachment(a: RevisionAttachment, asPreview: boolean) {
+    startTransition(async () => {
+      const r = await downloadProjectAttachmentAction(projectId, a.path, a.name, asPreview);
+      if (!r.ok) {
+        push(r.error ?? "파일 열기 실패", "error");
+        return;
+      }
+      if (asPreview) setPreview({ url: r.url, name: a.name });
+      else window.open(r.url, "_blank", "noopener");
+    });
+  }
 
   function save(submit: boolean) {
     startTransition(async () => {
@@ -146,6 +212,76 @@ export function BriefPanel({
         </Field>
       </Section>
 
+      <Section title="참고 첨부파일">
+        <p className="-mt-1 text-[11.5px] text-ink-50">
+          참고 이미지·기획서·로고 시안 등을 브리프에 직접 첨부할 수 있습니다.
+          <b className="text-ink-70"> 저장 또는 제출해야 첨부가 보관됩니다.</b>
+        </p>
+        <label
+          className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ink-15 bg-ink-5 px-4 py-4 text-[12.5px] text-ink-70 transition-colors hover:border-ink-30 ${
+            busy ? "pointer-events-none opacity-60" : ""
+          }`}
+        >
+          <i
+            className={`ti ${busy ? "ti-loader-2 animate-spin" : "ti-paperclip"} text-[16px] text-ink-50`}
+            aria-hidden
+          />
+          {busy ? "업로드 중…" : "파일 선택 (이미지·pdf·doc·ppt·xls·zip · 최대 50MB)"}
+          <input
+            type="file"
+            className="hidden"
+            disabled={busy}
+            accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip"
+            onChange={(e) => {
+              if (e.target.files?.[0]) void attach(e.target.files[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+
+        {attachments.length > 0 ? (
+          <ul className="divide-y divide-ink-15 rounded-lg border border-ink-15">
+            {attachments.map((a) => (
+              <li key={a.path} className="flex items-center gap-3 px-3 py-2.5 text-[12.5px]">
+                <i className="ti ti-file text-[16px] text-ink-50" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-display font-bold text-ink-100" title={a.name}>
+                    {a.name}
+                  </p>
+                  <p className="mt-0.5 text-[10.5px] text-ink-50">{fmtSize(a.size)}</p>
+                </div>
+                {isPreviewable(a.name) ? (
+                  <button
+                    type="button"
+                    onClick={() => openAttachment(a, true)}
+                    disabled={pending}
+                    className="text-[11px] font-bold text-ink-50 hover:text-iris disabled:opacity-60"
+                  >
+                    미리보기
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => openAttachment(a, false)}
+                  disabled={pending}
+                  className="text-[11px] font-bold text-ink-50 hover:text-iris disabled:opacity-60"
+                >
+                  다운로드
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(a.path)}
+                  disabled={pending}
+                  className="text-[11px] text-ink-50 hover:text-error disabled:opacity-60"
+                >
+                  삭제
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </Section>
+
       <div className="flex flex-wrap items-center justify-end gap-2 border-t border-ink-15 pt-4">
         <button
           type="button"
@@ -164,6 +300,14 @@ export function BriefPanel({
           {pending ? "저장 중…" : submitted ? "수정 후 다시 제출 →" : "브리프 제출 →"}
         </button>
       </div>
+
+      {preview ? (
+        <FilePreviewModal
+          url={preview.url}
+          fileName={preview.name}
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
     </div>
   );
 }

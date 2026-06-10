@@ -57,6 +57,7 @@ export function ProjectWorkspace({
   deliverables,
   checklist,
   unreadCount,
+  staffReadAt,
   activitySlot,
 }: {
   projectId: string;
@@ -75,6 +76,7 @@ export function ProjectWorkspace({
   deliverables: ProjectDeliverable[];
   checklist: ChecklistItem[];
   unreadCount: number;
+  staffReadAt: string | null;
   activitySlot: ReactNode;
 }) {
   const briefDone = brief?.status === "submitted";
@@ -313,7 +315,12 @@ export function ProjectWorkspace({
           <MaterialsPanel projectId={projectId} myUserId={myUserId} files={materials} />
         ) : null}
         {tab === "chat" ? (
-          <ChatPanel projectId={projectId} myUserId={myUserId} messages={messages} />
+          <ChatPanel
+            projectId={projectId}
+            myUserId={myUserId}
+            messages={messages}
+            staffReadAt={staffReadAt}
+          />
         ) : null}
         {tab === "revisions" ? <RevisionsPanel projectId={projectId} requests={requests} /> : null}
         {tab === "deliverables" ? <DeliverablesPanel deliverables={deliverables} /> : null}

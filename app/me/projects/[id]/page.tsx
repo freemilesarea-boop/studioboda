@@ -8,6 +8,7 @@ import {
   getMyProject,
   getProjectBrief,
   getProjectReadAt,
+  getProjectStaffReadAt,
   getProjectStageTimeline,
   listClientVisibleComments,
   listDeliverables,
@@ -60,6 +61,7 @@ export default async function MyProjectDetailPage({
     deliverables,
     assigned,
     readAt,
+    staffReadAt,
     stageDates,
   ] = await Promise.all([
     getProjectBrief(project.id),
@@ -69,6 +71,7 @@ export default async function MyProjectDetailPage({
     listDeliverables(project.id),
     getAssignedProfile(project.assigned_to),
     getProjectReadAt(project.id, me.id),
+    getProjectStaffReadAt(project.id, me.id),
     getProjectStageTimeline(project.id, project.created_at),
   ]);
 
@@ -170,6 +173,7 @@ export default async function MyProjectDetailPage({
         deliverables={deliverables}
         checklist={checklist}
         unreadCount={unreadCount}
+        staffReadAt={staffReadAt}
         activitySlot={
           <ActivityTimeline entityType="project" entityId={project.id} limit={20} />
         }

@@ -34,6 +34,11 @@ const UPLOAD_KINDS = {
     maxBytes: 25 * 1024 * 1024,
     exts: ["jpg", "jpeg", "png", "webp", "gif", "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"],
   },
+  brief: {
+    folder: "brief",
+    maxBytes: 50 * 1024 * 1024,
+    exts: ["jpg", "jpeg", "png", "webp", "gif", "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"],
+  },
   revision: {
     folder: "revisions",
     maxBytes: 50 * 1024 * 1024,
@@ -192,6 +197,7 @@ export type BriefInput = {
   reference_urls: string;
   competitor_urls: string;
   must_requirements: string;
+  attachments?: RevisionAttachment[];
 };
 
 export async function saveBriefAction(
@@ -203,6 +209,14 @@ export async function saveBriefAction(
   if (!guard.ok) return err(guard.error);
 
   const clean = (v: string | undefined, n = 2000) => (v ?? "").trim().slice(0, n);
+
+  // 참고 첨부파일 — 반드시 이 프로젝트의 brief 트리 아래에 있어야 한다.
+  const attachments = (input.attachments ?? []).slice(0, 20).filter((a) => a?.path);
+  for (const a of attachments) {
+    if (!a.path.startsWith(`${projectId}/brief/`)) {
+      return err("잘못된 첨부 경로입니다");
+    }
+  }
   const production = PRODUCTION_TYPES.includes(input.production_type as ProductionType)
     ? input.production_type
     : "기타";
@@ -235,6 +249,7 @@ export async function saveBriefAction(
     reference_urls: clean(input.reference_urls),
     competitor_urls: clean(input.competitor_urls),
     must_requirements: clean(input.must_requirements),
+    attachments,
     status: submit ? "submitted" : "draft",
     submitted_at: submit ? new Date().toISOString() : null,
   };
@@ -329,6 +344,22 @@ export async function markProjectReadAction(projectId: string): Promise<Res> {
     .from("project_read_state")
     .upsert(
       { project_id: projectId, user_id: guard.me.id, last_read_at: new Date().toISOString() },
+      { onConflict: "project_id,user_id" },
+    );
+  return ok();
+}
+
+// 운영팀(스태프)이 프로젝트 대화를 열람했음을 기록 → 고객에게 "관리자 확인함" 표시.
+export async function markProjectReadStaffAction(projectId: string): Promise<Res> {
+  const me = await getProfile();
+  if (!me || !["admin", "manager", "designer"].includes(me.role)) {
+    return err("권한이 없습니다");
+  }
+  const admin = createAdminSupabase();
+  await admin
+    .from("project_read_state")
+    .upsert(
+      { project_id: projectId, user_id: me.id, last_read_at: new Date().toISOString() },
       { onConflict: "project_id,user_id" },
     );
   return ok();

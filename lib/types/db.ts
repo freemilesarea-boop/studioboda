@@ -765,6 +765,7 @@ export type ProjectBrief = {
   reference_urls: string | null;
   competitor_urls: string | null;
   must_requirements: string | null;
+  attachments: RevisionAttachment[];
   status: BriefStatus;
   submitted_at: string | null;
   created_at: string;
