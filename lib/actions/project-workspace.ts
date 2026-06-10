@@ -401,6 +401,7 @@ export async function createRevisionAction(
 // ── 산출물: customer download (signed URL, ownership verified) ────────
 export async function downloadDeliverableAction(
   deliverableId: string,
+  preview = false,
 ): Promise<Res<{ url: string }>> {
   const me = await getProfile();
   if (!me) return err("로그인이 필요합니다");
@@ -416,7 +417,7 @@ export async function downloadDeliverableAction(
 
   const { data, error } = await admin.storage
     .from(STORAGE_BUCKET)
-    .createSignedUrl(row.file_path, 60 * 10, { download: row.file_name });
+    .createSignedUrl(row.file_path, 60 * 10, preview ? {} : { download: row.file_name });
   if (error || !data) return err(error?.message ?? "다운로드 URL 발급 실패");
 
   await logActivity({
@@ -434,13 +435,14 @@ export async function downloadProjectAttachmentAction(
   projectId: string,
   path: string,
   fileName: string,
+  preview = false,
 ): Promise<Res<{ url: string }>> {
   const guard = await ownProject(projectId);
   if (!guard.ok) return err(guard.error);
   if (!path.startsWith(`${projectId}/`)) return err("접근 권한이 없습니다");
   const { data, error } = await guard.admin.storage
     .from(STORAGE_BUCKET)
-    .createSignedUrl(path, 60 * 10, { download: fileName });
+    .createSignedUrl(path, 60 * 10, preview ? {} : { download: fileName });
   if (error || !data) return err(error?.message ?? "다운로드 URL 발급 실패");
   return ok({ url: data.signedUrl });
 }

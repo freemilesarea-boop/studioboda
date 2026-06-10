@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { getProfile } from "@/lib/auth";
 import { listMyContracts } from "@/lib/queries/contracts";
 import { contractStatusLabels, type ContractStatus } from "@/lib/types/db";
+import { MeListFilter } from "@/components/me/MeListFilter";
 
 export const metadata: Metadata = {
   title: "계약서",
@@ -21,10 +22,31 @@ const TONE: Record<ContractStatus, string> = {
   cancelled: "bg-ink-5 text-ink-70",
 };
 
-export default async function MyContractsPage() {
+export default async function MyContractsPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; q?: string };
+}) {
   const me = await getProfile();
   if (!me) return null;
   const contracts = await listMyContracts(me.id);
+
+  const status = searchParams.status ?? "all";
+  const q = (searchParams.q ?? "").trim().toLowerCase();
+  const filtered = contracts.filter((c) => {
+    if (status !== "all" && c.status !== status) return false;
+    if (q && !`${c.title} ${c.contract_number}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const present = Array.from(new Set(contracts.map((c) => c.status))) as ContractStatus[];
+  const statusChips = [
+    { key: "all", label: "전체", count: contracts.length },
+    ...present.map((s) => ({
+      key: s,
+      label: contractStatusLabels[s],
+      count: contracts.filter((c) => c.status === s).length,
+    })),
+  ];
 
   return (
     <div className="space-y-5">
@@ -43,6 +65,16 @@ export default async function MyContractsPage() {
         </p>
       </header>
 
+      {contracts.length > 0 ? (
+        <MeListFilter
+          basePath="/me/contracts"
+          statuses={statusChips}
+          current={{ status, q: searchParams.q ?? "" }}
+          placeholder="계약명·번호 검색"
+          total={filtered.length}
+        />
+      ) : null}
+
       {contracts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-12 text-center">
           <i className="ti ti-file-text text-[26px] text-ink-30" aria-hidden />
@@ -50,9 +82,13 @@ export default async function MyContractsPage() {
             아직 발송된 계약서가 없습니다.
           </p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-10 text-center text-[13px] text-ink-50">
+          조건에 맞는 계약서가 없습니다.
+        </div>
       ) : (
         <ul className="space-y-2.5">
-          {contracts.map((c) => (
+          {filtered.map((c) => (
             <li key={c.id}>
               <Link
                 href={`/me/contracts/${c.id}`}

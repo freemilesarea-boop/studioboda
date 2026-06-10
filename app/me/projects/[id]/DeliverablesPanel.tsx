@@ -1,11 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { format } from "date-fns";
 import { downloadDeliverableAction } from "@/lib/actions/project-workspace";
 import type { ProjectDeliverable } from "@/lib/types/db";
 import { useToast } from "@/components/admin/Toast";
 import { fmtSize } from "./uploadClient";
+import { FilePreviewModal, isPreviewable } from "./FilePreviewModal";
 
 export function DeliverablesPanel({
   deliverables,
@@ -13,6 +14,7 @@ export function DeliverablesPanel({
   deliverables: ProjectDeliverable[];
 }) {
   const [pending, startTransition] = useTransition();
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const { push } = useToast();
 
   function download(id: string) {
@@ -20,6 +22,14 @@ export function DeliverablesPanel({
       const r = await downloadDeliverableAction(id);
       if (r.ok) window.open(r.url, "_blank", "noopener");
       else push(r.error ?? "다운로드 실패", "error");
+    });
+  }
+
+  function openPreview(id: string, name: string) {
+    startTransition(async () => {
+      const r = await downloadDeliverableAction(id, true);
+      if (r.ok) setPreview({ url: r.url, name });
+      else push(r.error ?? "미리보기 실패", "error");
     });
   }
 
@@ -70,6 +80,17 @@ export function DeliverablesPanel({
                 {fmtSize(d.file_size)} · {format(new Date(d.created_at), "yyyy-MM-dd HH:mm")}
               </p>
             </div>
+            {isPreviewable(d.file_name) ? (
+              <button
+                type="button"
+                onClick={() => openPreview(d.id, d.file_name)}
+                disabled={pending}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-ink-15 px-3 font-display text-[12px] font-bold text-ink-70 hover:border-iris hover:text-iris disabled:opacity-60"
+              >
+                <i className="ti ti-eye text-[14px]" aria-hidden />
+                미리보기
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => download(d.id)}
@@ -82,6 +103,13 @@ export function DeliverablesPanel({
           </div>
         </li>
       ))}
+      {preview ? (
+        <FilePreviewModal
+          url={preview.url}
+          fileName={preview.name}
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
     </ul>
   );
 }
