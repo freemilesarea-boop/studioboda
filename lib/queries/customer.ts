@@ -189,6 +189,25 @@ export async function getProjectReadAt(
   return (data?.last_read_at ?? null) as string | null;
 }
 
+// 운영팀(스태프)이 이 프로젝트 대화를 마지막으로 확인한 시각.
+// project_read_state 에는 프로젝트 소유자(고객)와 스태프 행만 존재하므로
+// 소유자 user_id 가 아닌 행 중 가장 최근 last_read_at 이 곧 "관리자 확인" 시각.
+export async function getProjectStaffReadAt(
+  projectId: string,
+  ownerUserId: string,
+): Promise<string | null> {
+  const admin = createAdminSupabase();
+  const { data } = await admin
+    .from("project_read_state")
+    .select("last_read_at,user_id")
+    .eq("project_id", projectId)
+    .neq("user_id", ownerUserId)
+    .order("last_read_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.last_read_at ?? null) as string | null;
+}
+
 export async function getAssignedProfile(
   id: string | null,
 ): Promise<Pick<Profile, "id" | "name" | "email" | "role"> | null> {

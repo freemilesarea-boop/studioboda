@@ -25,6 +25,7 @@ import {
 import { ProjectControls } from "./ProjectControls";
 import { CommentForm } from "./CommentForm";
 import { CommentsList } from "./CommentsList";
+import { BriefAttachments } from "./BriefAttachments";
 import { FilesPanel } from "./FilesPanel";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { AIToolsPanel } from "./AIToolsPanel";
@@ -464,19 +465,23 @@ function BriefView({ brief }: { brief: ProjectBrief }) {
     ["경쟁사", brief.competitor_urls],
     ["필수 요청사항", brief.must_requirements],
   ];
+  const attachments = Array.isArray(brief.attachments) ? brief.attachments : [];
   return (
-    <dl className="space-y-2">
-      {rows.map(([label, value]) => (
-        <div key={label} className="text-[12.5px]">
-          <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
-            {label}
-          </dt>
-          <dd className="mt-0.5 whitespace-pre-wrap text-ink-100">
-            {value?.trim() ? value : <span className="text-ink-30">—</span>}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <>
+      <dl className="space-y-2">
+        {rows.map(([label, value]) => (
+          <div key={label} className="text-[12.5px]">
+            <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-ink-50">
+              {label}
+            </dt>
+            <dd className="mt-0.5 whitespace-pre-wrap text-ink-100">
+              {value?.trim() ? value : <span className="text-ink-30">—</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <BriefAttachments attachments={attachments} />
+    </>
   );
 }
 

@@ -20,10 +20,12 @@ export function ChatPanel({
   projectId,
   myUserId,
   messages,
+  staffReadAt,
 }: {
   projectId: string;
   myUserId: string;
   messages: ProjectComment[];
+  staffReadAt: string | null;
 }) {
   const [body, setBody] = useState("");
   const [attaching, setAttaching] = useState<RevisionAttachment[]>([]);
@@ -35,6 +37,10 @@ export function ChatPanel({
 
   // Oldest → newest for a natural chat flow (query returns newest first).
   const ordered = [...messages].reverse();
+
+  // 읽음 표시: 내가 보낸 가장 최근 메시지 1건에만 "관리자 확인함/전송됨"을 노출.
+  const staffReadMs = staffReadAt ? new Date(staffReadAt).getTime() : 0;
+  const lastMineId = [...ordered].reverse().find((m) => m.author_id === myUserId)?.id ?? null;
 
   // Mark thread read whenever it opens or new messages arrive.
   useEffect(() => {
@@ -144,6 +150,18 @@ export function ChatPanel({
                       </ul>
                     ) : null}
                   </div>
+                  {mine && m.id === lastMineId ? (
+                    <span className="mt-0.5 px-1 text-[10px] text-ink-50">
+                      {staffReadMs >= new Date(m.created_at).getTime() ? (
+                        <span className="inline-flex items-center gap-0.5 text-iris">
+                          <i className="ti ti-checks text-[12px]" aria-hidden />
+                          관리자 확인함
+                        </span>
+                      ) : (
+                        "전송됨"
+                      )}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             );
