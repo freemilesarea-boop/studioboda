@@ -177,7 +177,7 @@ export async function postMyCommentAction(
 }
 
 // ---- File download (signed URL) -----------------------------------
-export async function getClientFileUrlAction(fileId: string) {
+export async function getClientFileUrlAction(fileId: string, preview = false) {
   const me = await requireMember();
   const admin = createAdminSupabase();
   const { data: row } = await admin
@@ -198,9 +198,11 @@ export async function getClientFileUrlAction(fileId: string) {
 
   const { data, error } = await admin.storage
     .from(STORAGE_BUCKET)
-    .createSignedUrl(row.file_path, 60 * 10, {
-      download: row.file_name,
-    });
+    .createSignedUrl(
+      row.file_path,
+      60 * 10,
+      preview ? {} : { download: row.file_name },
+    );
   if (error || !data) {
     return {
       ok: false as const,

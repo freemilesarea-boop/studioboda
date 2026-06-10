@@ -17,6 +17,7 @@ import {
 } from "@/lib/types/db";
 import { useToast } from "@/components/admin/Toast";
 import { fmtSize, uploadToSignedUrl } from "./uploadClient";
+import { FilePreviewModal, isPreviewable } from "./FilePreviewModal";
 
 const MAX = 100 * 1024 * 1024;
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.zip";
@@ -43,6 +44,7 @@ export function MaterialsPanel({
   const [category, setCategory] = useState<FileCategory>("logo");
   const [drag, setDrag] = useState(false);
   const [uploads, setUploads] = useState<Uploading[]>([]);
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const { push } = useToast();
   const router = useRouter();
@@ -110,6 +112,14 @@ export function MaterialsPanel({
       const r = await downloadProjectAttachmentAction(projectId, f.file_path, f.file_name);
       if (r.ok) window.open(r.url, "_blank", "noopener");
       else push(r.error ?? "다운로드 실패", "error");
+    });
+  }
+
+  function openPreview(f: ProjectFile) {
+    startTransition(async () => {
+      const r = await downloadProjectAttachmentAction(projectId, f.file_path, f.file_name, true);
+      if (r.ok) setPreview({ url: r.url, name: f.file_name });
+      else push(r.error ?? "미리보기 실패", "error");
     });
   }
 
@@ -226,6 +236,7 @@ export function MaterialsPanel({
         empty="아직 업로드한 자료가 없습니다."
         files={mine}
         onDownload={download}
+        onPreview={openPreview}
         onRemove={remove}
         pending={pending}
       />
@@ -234,8 +245,16 @@ export function MaterialsPanel({
         empty="운영팀이 공유한 자료가 없습니다."
         files={shared}
         onDownload={download}
+        onPreview={openPreview}
         pending={pending}
       />
+      {preview ? (
+        <FilePreviewModal
+          url={preview.url}
+          fileName={preview.name}
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -245,6 +264,7 @@ function FileList({
   empty,
   files,
   onDownload,
+  onPreview,
   onRemove,
   pending,
 }: {
@@ -252,6 +272,7 @@ function FileList({
   empty: string;
   files: ProjectFile[];
   onDownload: (f: ProjectFile) => void;
+  onPreview?: (f: ProjectFile) => void;
   onRemove?: (id: string) => void;
   pending: boolean;
 }) {
@@ -290,6 +311,16 @@ function FileList({
                     {fmtSize(f.file_size)} · {format(new Date(f.created_at), "yyyy-MM-dd HH:mm")}
                   </p>
                 </div>
+                {onPreview && isPreviewable(f.file_name) ? (
+                  <button
+                    type="button"
+                    onClick={() => onPreview(f)}
+                    disabled={pending}
+                    className="text-[11px] font-bold text-ink-50 hover:text-iris disabled:opacity-60"
+                  >
+                    미리보기
+                  </button>
+                ) : null}
                 {onRemove ? (
                   <button
                     type="button"

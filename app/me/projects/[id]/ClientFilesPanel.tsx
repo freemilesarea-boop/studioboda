@@ -1,11 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { format } from "date-fns";
 import { getClientFileUrlAction } from "@/lib/actions/customer";
 import type { ProjectFile } from "@/lib/types/db";
 import { fileFolderLabels } from "@/lib/types/db";
 import { useToast } from "@/components/admin/Toast";
+import { FilePreviewModal, isPreviewable } from "./FilePreviewModal";
 
 const fmtSize = (n: number | null) => {
   if (!n) return "—";
@@ -16,6 +17,7 @@ const fmtSize = (n: number | null) => {
 
 export function ClientFilesPanel({ files }: { files: ProjectFile[] }) {
   const [pending, startTransition] = useTransition();
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const { push } = useToast();
 
   function download(fileId: string) {
@@ -26,6 +28,14 @@ export function ClientFilesPanel({ files }: { files: ProjectFile[] }) {
       } else {
         push((r as { error?: string }).error ?? "다운로드 URL 발급 실패", "error");
       }
+    });
+  }
+
+  function openPreview(fileId: string, name: string) {
+    startTransition(async () => {
+      const r = await getClientFileUrlAction(fileId, true);
+      if (r.ok && r.url) setPreview({ url: r.url, name });
+      else push((r as { error?: string }).error ?? "미리보기 실패", "error");
     });
   }
 
@@ -70,6 +80,16 @@ export function ClientFilesPanel({ files }: { files: ProjectFile[] }) {
               {f.is_final ? " · 최종 산출물" : ""}
             </p>
           </div>
+          {isPreviewable(f.file_name) ? (
+            <button
+              type="button"
+              onClick={() => openPreview(f.id, f.file_name)}
+              disabled={pending}
+              className="rounded-md border border-ink-15 px-2.5 py-1 text-[11px] font-bold text-ink-70 hover:border-iris hover:text-iris disabled:opacity-60"
+            >
+              미리보기
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => download(f.id)}
@@ -80,6 +100,13 @@ export function ClientFilesPanel({ files }: { files: ProjectFile[] }) {
           </button>
         </li>
       ))}
+      {preview ? (
+        <FilePreviewModal
+          url={preview.url}
+          fileName={preview.name}
+          onClose={() => setPreview(null)}
+        />
+      ) : null}
     </ul>
   );
 }

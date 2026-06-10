@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { getProfile } from "@/lib/auth";
 import { listMyQuotes } from "@/lib/queries/customer";
 import { quoteStatusLabels, type QuoteStatus } from "@/lib/types/db";
+import { MeListFilter } from "@/components/me/MeListFilter";
 
 export const metadata: Metadata = {
   title: "내 견적",
@@ -21,10 +22,31 @@ const TONE: Record<QuoteStatus, string> = {
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
 
-export default async function MyQuotesPage() {
+export default async function MyQuotesPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; q?: string };
+}) {
   const me = await getProfile();
   if (!me) return null;
   const quotes = await listMyQuotes(me.id);
+
+  const status = searchParams.status ?? "all";
+  const q = (searchParams.q ?? "").trim().toLowerCase();
+  const filtered = quotes.filter((x) => {
+    if (status !== "all" && x.status !== status) return false;
+    if (q && !`${x.title} ${x.service_type ?? ""}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const present = Array.from(new Set(quotes.map((x) => x.status))) as QuoteStatus[];
+  const statusChips = [
+    { key: "all", label: "전체", count: quotes.length },
+    ...present.map((s) => ({
+      key: s,
+      label: quoteStatusLabels[s],
+      count: quotes.filter((x) => x.status === s).length,
+    })),
+  ];
 
   return (
     <div className="space-y-5">
@@ -40,6 +62,16 @@ export default async function MyQuotesPage() {
         </h1>
       </header>
 
+      {quotes.length > 0 ? (
+        <MeListFilter
+          basePath="/me/quotes"
+          statuses={statusChips}
+          current={{ status, q: searchParams.q ?? "" }}
+          placeholder="견적 제목·서비스 검색"
+          total={filtered.length}
+        />
+      ) : null}
+
       {quotes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-12 text-center">
           <i className="ti ti-file-invoice text-[26px] text-ink-30" aria-hidden />
@@ -50,9 +82,13 @@ export default async function MyQuotesPage() {
             문의가 검토되면 견적서가 발송됩니다.
           </p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-10 text-center text-[13px] text-ink-50">
+          조건에 맞는 견적이 없습니다.
+        </div>
       ) : (
         <ul className="space-y-2.5">
-          {quotes.map((q) => (
+          {filtered.map((q) => (
             <li
               key={q.id}
               className="rounded-2xl border border-ink-15 bg-white px-4 py-4 sm:px-5"

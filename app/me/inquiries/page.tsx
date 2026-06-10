@@ -5,6 +5,7 @@ import { ko } from "date-fns/locale";
 import { getProfile } from "@/lib/auth";
 import { listMyInquiries } from "@/lib/queries/customer";
 import { inquiryStatusLabels, type InquiryStatus } from "@/lib/types/db";
+import { MeListFilter } from "@/components/me/MeListFilter";
 
 export const metadata: Metadata = {
   title: "내 문의",
@@ -21,10 +22,34 @@ const TONE: Record<InquiryStatus, string> = {
   archived: "bg-ink-5 text-ink-70",
 };
 
-export default async function MyInquiriesPage() {
+export default async function MyInquiriesPage({
+  searchParams,
+}: {
+  searchParams: { status?: string; q?: string };
+}) {
   const me = await getProfile();
   if (!me) return null; // layout redirects
   const inquiries = await listMyInquiries(me.id, me.email);
+
+  const status = searchParams.status ?? "all";
+  const q = (searchParams.q ?? "").trim().toLowerCase();
+  const filtered = inquiries.filter((i) => {
+    if (status !== "all" && i.status !== status) return false;
+    if (q) {
+      const hay = `${i.service_type ?? ""} ${i.message ?? ""} ${i.budget_range ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const present = Array.from(new Set(inquiries.map((i) => i.status))) as InquiryStatus[];
+  const statusChips = [
+    { key: "all", label: "전체", count: inquiries.length },
+    ...present.map((s) => ({
+      key: s,
+      label: inquiryStatusLabels[s],
+      count: inquiries.filter((i) => i.status === s).length,
+    })),
+  ];
 
   return (
     <div className="space-y-5">
@@ -48,6 +73,16 @@ export default async function MyInquiriesPage() {
         </Link>
       </header>
 
+      {inquiries.length > 0 ? (
+        <MeListFilter
+          basePath="/me/inquiries"
+          statuses={statusChips}
+          current={{ status, q: searchParams.q ?? "" }}
+          placeholder="서비스·내용·예산 검색"
+          total={filtered.length}
+        />
+      ) : null}
+
       {inquiries.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-12 text-center">
           <i className="ti ti-mail text-[26px] text-ink-30" aria-hidden />
@@ -64,9 +99,13 @@ export default async function MyInquiriesPage() {
             견적 문의 →
           </Link>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink-15 bg-white px-5 py-10 text-center text-[13px] text-ink-50">
+          조건에 맞는 문의가 없습니다.
+        </div>
       ) : (
         <ul className="space-y-2.5">
-          {inquiries.map((i) => (
+          {filtered.map((i) => (
             <li
               key={i.id}
               className="rounded-2xl border border-ink-15 bg-white px-4 py-4 sm:px-5"
