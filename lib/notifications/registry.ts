@@ -302,6 +302,29 @@ export function notificationMeta(type: string): NotificationMeta {
   return NOTIFICATION_REGISTRY[type] ?? fallback;
 }
 
+// ── Category (결제 / 프로젝트 / 계약 / 기타) — 타입명 기반 파생 ──
+export type NotificationCategory = "payment" | "project" | "contract" | "system";
+
+export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> = {
+  payment: "결제",
+  project: "프로젝트",
+  contract: "계약",
+  system: "기타",
+};
+
+/** 알림 type을 고객용 카테고리로 분류. 우선순위: 결제 → 계약 → 프로젝트 → 기타. */
+export function notificationCategory(type: string): NotificationCategory {
+  const t = type.toLowerCase();
+  if (/(payment|deposit|balance|refund|tax|subscription|invoice|charged|paid)/.test(t)) {
+    return "payment";
+  }
+  if (/(contract|quote|sign)/.test(t)) return "contract";
+  if (/(project|file|revision|deliver|comment|brief|kickoff|started|completed)/.test(t)) {
+    return "project";
+  }
+  return "system";
+}
+
 /** Customer-facing event types that belong on the main-page progress banner. */
 export function isActionable(type: string): boolean {
   return NOTIFICATION_REGISTRY[type]?.actionable ?? false;
