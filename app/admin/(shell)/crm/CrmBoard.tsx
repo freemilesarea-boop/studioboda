@@ -9,6 +9,13 @@ import type { LeadCard } from "@/lib/queries/crm";
 
 const fmt = (n: number) => new Intl.NumberFormat("ko-KR").format(n);
 
+const PAY_BADGE: Record<string, { label: string; cls: string }> = {
+  deposit_paid: { label: "예약금", cls: "bg-success/15 text-success" },
+  fully_paid: { label: "완납", cls: "bg-success/15 text-success" },
+};
+const daysSince = (iso: string) =>
+  Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+
 export function CrmBoard({ initial }: { initial: LeadCard[] }) {
   const [cards, setCards] = useState<LeadCard[]>(initial);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -101,28 +108,55 @@ export function CrmBoard({ initial }: { initial: LeadCard[] }) {
                   {c.service_type ? (
                     <p className="mt-1 text-[11px] text-ink-70">{c.service_type}</p>
                   ) : null}
-                  {c.estimated_amount ? (
-                    <p className="num mt-1 text-[11px] font-bold text-iris">
-                      {fmt(c.estimated_amount)}원
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex items-center justify-between">
-                    <Link
-                      href={`/admin/inquiries/${c.id}`}
-                      className="text-[10.5px] text-iris hover:underline"
-                    >
-                      상세 →
-                    </Link>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {c.estimated_amount ? (
+                      <span className="num text-[11px] font-bold text-iris">
+                        {fmt(c.estimated_amount)}원
+                      </span>
+                    ) : null}
+                    {c.payment_status && PAY_BADGE[c.payment_status] ? (
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 font-display text-[9px] font-bold ${PAY_BADGE[c.payment_status].cls}`}
+                      >
+                        {PAY_BADGE[c.payment_status].label}
+                      </span>
+                    ) : null}
+                    {(() => {
+                      const d = daysSince(c.last_activity_at ?? c.created_at);
+                      if (d < 3) return null;
+                      return (
+                        <span
+                          className={`rounded-full px-1.5 py-0.5 font-display text-[9px] font-bold ${
+                            d >= 7 ? "bg-error/15 text-error" : "bg-warning/15 text-warning"
+                          }`}
+                        >
+                          정체 {d}일
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/inquiries/${c.id}`}
+                        className="text-[10.5px] text-iris hover:underline"
+                      >
+                        상세 →
+                      </Link>
+                      {c.project_id ? (
+                        <Link
+                          href={`/admin/projects/${c.project_id}`}
+                          className="num text-[10.5px] font-bold text-ink-70 hover:text-iris hover:underline"
+                        >
+                          {c.project_no} →
+                        </Link>
+                      ) : null}
+                    </div>
                     <span className="text-[10px] text-ink-30">
-                      {c.last_activity_at
-                        ? new Date(c.last_activity_at).toLocaleDateString("ko-KR", {
-                            month: "numeric",
-                            day: "numeric",
-                          })
-                        : new Date(c.created_at).toLocaleDateString("ko-KR", {
-                            month: "numeric",
-                            day: "numeric",
-                          })}
+                      {new Date(c.last_activity_at ?? c.created_at).toLocaleDateString(
+                        "ko-KR",
+                        { month: "numeric", day: "numeric" },
+                      )}
                     </span>
                   </div>
                 </div>
